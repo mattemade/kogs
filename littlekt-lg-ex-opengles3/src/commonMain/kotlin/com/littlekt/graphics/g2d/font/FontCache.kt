@@ -24,6 +24,7 @@ import com.littlekt.util.datastructure.internal.fill
  * @date 1/5/2022
  */
 open class FontCache(val pages: Int = 1) {
+    var width = 0f
     private val temp4 = Mat4() // used for rotating text
     private val layouts = mutableListOf<GlyphLayout>()
     private val tempGlyphCount = IntArray(pages)
@@ -229,6 +230,7 @@ open class FontCache(val pages: Int = 1) {
     private fun addToCache(
         layout: GlyphLayout, x: Float, y: Float, scaleX: Float, scaleY: Float, rotation: Angle, color: Color,
     ) {
+        width = 0f
         layouts += layout
         layout.runs.forEach { run ->
             var tx = x + run.x
@@ -252,6 +254,7 @@ open class FontCache(val pages: Int = 1) {
                     color
                 )
             }
+            width = maxOf(width, tx + run.glyphs.last().right * scaleX)
         }
     }
 

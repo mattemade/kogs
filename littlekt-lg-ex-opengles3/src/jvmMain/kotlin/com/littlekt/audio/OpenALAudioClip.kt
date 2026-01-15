@@ -161,7 +161,7 @@ class OpenALAudioClip(
 
     }
 
-    override fun release() = withDevice {
+    override fun release(): Unit = withDevice {
         if (bufferID == -1) return
 
         context.disposeSourceViaBufferID(bufferID)

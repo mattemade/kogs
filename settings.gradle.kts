@@ -37,4 +37,5 @@ include(
     ":littlekt-lg-ex-opengles3",
     ":game-utils",
     ":game",
+    ":gui:api",
 )

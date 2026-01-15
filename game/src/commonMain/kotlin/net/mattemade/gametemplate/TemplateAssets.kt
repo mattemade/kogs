@@ -5,6 +5,7 @@ import com.littlekt.Context
 import com.littlekt.PreparableGameAsset
 import com.littlekt.audio.AudioClipEx
 import com.littlekt.file.vfs.readAudioClipEx
+import com.littlekt.file.vfs.readBitmapFont
 import com.littlekt.graphics.g2d.TextureSlice
 import net.mattemade.gametemplate.resources.Music
 import net.mattemade.gametemplate.resources.Sound
@@ -47,6 +48,7 @@ class TemplateAssets(
 
     private val atlas by prepare(2) { runtimeTextureAtlasPacker.packAtlas() }
 
+    val font by pack(order = 3) { Fonts(context, textureFiles) }
 
     fun sprite(id: String): Sprite? =
         resourceSheet.spriteById[id]?.let { Sprite(it, gameContext) }
@@ -77,6 +79,8 @@ class TextureFiles(
     }
 
     val whitePixel by "texture/white_pixel.png".pack()
+    val bungee256 by "font/bungee_256_uppercase_0.png".pack()
+    val fredokaMedium128 by "font/fredoka_medium_128_0.png".pack()
 }
 
 class SoundFiles(context: Context, private val resourceSheet: TemplateResourceSheet) :
@@ -107,4 +111,23 @@ class MusicFiles(context: Context, private val resourceSheet: TemplateResourceSh
     }
 
 //    val music by prepare { context.resourcesVfs["music/music.ogg"].readAudioClipEx() }
+}
+
+
+class Fonts(context: Context, private val textures: TextureFiles) : AssetPack(context) {
+
+    val bungee256 by preparePlain {
+        context.resourcesVfs["font/bungee_256_uppercase.fnt"].readBitmapFont(
+            preloadedTextures = listOf(
+                textures.bungee256
+            )
+        )
+    }
+    val fredokaMedium128 by preparePlain {
+        context.resourcesVfs["font/fredoka_medium_128.fnt"].readBitmapFont(
+            preloadedTextures = listOf(
+                textures.fredokaMedium128
+            )
+        )
+    }
 }

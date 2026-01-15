@@ -78,6 +78,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api(project(":littlekt-lg-ex-opengles3"))
+                api(project(":gui:api"))
                 api(libs.kotlinx.coroutines.core)
                 api("com.soywiz.korlibs.korio:korio:4.0.10")
                 api("com.soywiz.korlibs.kbox2d:kbox2d:3.3.0")
