@@ -4,9 +4,14 @@ plugins {
 
 kotlin {
     jvm()
-    js()
+    js {
+        browser {
+            binaries.library()
+        }
+    }
 
     sourceSets {
         val commonMain by getting
+        val jsMain by getting
     }
 }

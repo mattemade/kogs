@@ -11,6 +11,8 @@ import com.littlekt.input.InputProcessor
 import com.littlekt.input.Key
 import com.littlekt.input.Pointer
 import com.littlekt.util.seconds
+import net.mattemade.fmod.systemCreate
+import net.mattemade.fmod.systemRelease
 import net.mattemade.gametemplate.scene.Scene
 import net.mattemade.gametemplate.scene.TemplateScene
 import net.mattemade.utils.network.SocketConnection
@@ -33,9 +35,11 @@ class TemplateGame(
 ) : ContextListener(context),
     Releasing by Self() {
 
-    var focused = true
+    var focused = false
         set(value) {
             if (!field && value) {
+                systemRelease(systemCreate())
+
                 context.audio.resume()
             } else if (field && !value) {
                 context.audio.suspend()

@@ -90,10 +90,18 @@ kotlin {
         //compilations.all { kotlinOptions.sourceMap = false }
     }
 
+    val multiplatformDependencies = listOf(
+        ":game-utils",
+        ":fmod",
+    )
+
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation(project(":game-utils"))
+                //implementation(project(":game-utils"))
+                multiplatformDependencies.forEach {
+                    implementation(project(it))
+                }
             }
         }
         val commonTest by getting {
@@ -116,4 +124,15 @@ kotlin {
         }
         val jsTest by getting
     }
+
+    // ensure resources of JS dependencies are copied are copied
+    multiplatformDependencies.forEach { dependency ->
+        tasks.named<ProcessResources>("jsProcessResources") {
+            val libResources = project(dependency)
+                .tasks.named<ProcessResources>("jsProcessResources")
+
+            from(libResources.map { it.destinationDir })
+        }
+    }
+
 }

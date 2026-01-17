@@ -38,4 +38,5 @@ include(
     ":game-utils",
     ":game",
     ":gui:api",
+    ":fmod",
 )
