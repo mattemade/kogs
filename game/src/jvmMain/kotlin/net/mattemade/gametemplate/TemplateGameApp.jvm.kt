@@ -33,7 +33,7 @@ fun main() {
                 println("POST $url $body")
             },
             connect = ::createDummySocket,
-            overrideResourcesFrom = "1qIjMvdd11NlvabaPQBJVQdI8dfGLCue-llXNMaweBmU"
+            //overrideResourcesFrom = "1qIjMvdd11NlvabaPQBJVQdI8dfGLCue-llXNMaweBmU"
         ).also { it.focus() }
     }
 }

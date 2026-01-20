@@ -2,21 +2,22 @@ package net.mattemade.utils
 
 import com.littlekt.graphics.Color
 import com.littlekt.graphics.g2d.Batch
-import com.littlekt.graphics.g2d.font.BitmapFont
-import com.littlekt.graphics.g2d.font.BitmapFontCache
 import com.littlekt.graphics.g2d.shape.ShapeRenderer
 import com.littlekt.graphics.toFloatBits
 import net.mattemade.gui.api.GuiColor
 import net.mattemade.gui.api.GuiRenderer
 import net.mattemade.gui.api.math.Vec2
+import net.mattemade.utils.msdf.MsdfFont
+import net.mattemade.utils.msdf.MsdfFontRenderer
 
 class GuiRenderer(
-    private val batch: Batch,
     private val shapeRenderer: ShapeRenderer,
-    private val bitmapFont: BitmapFont
+    private val msdfFont: MsdfFont,
 ) : GuiRenderer {
 
-
+    private val scale = 4f
+    private val msdfFontRenderer = MsdfFontRenderer(msdfFont)
+    private val textToDraw = AllocatedMutableBuffer<TextToDraw>(100) { TextToDraw("", 0f, 0f) }
 
     override fun drawRect(
         x: Float,
@@ -34,24 +35,53 @@ class GuiRenderer(
         y: Float,
         color: GuiColor
     ) {
-        bitmapCaches[text]?.let {
-            it.setPosition(x, y)
-            it.tint(color.toColor())
-            it.draw(batch)
+        textToDraw.mutate().apply {
+            line = text
+            this.x = x
+            this.y = y
         }
     }
 
     override fun measureText(text: String, into: Vec2) {
-        val scale = 0.1f
-        val cache = bitmapCaches.getOrPut(
-            text,
-            { BitmapFontCache(bitmapFont).apply { setText(text, x = 0f, y = 0f, scaleX = scale, scaleY = scale) } })
-        into.x = cache.width
-        into.y = bitmapFont.lineHeight * scale
+        msdfFont.measure(text, scale, into)
+    }
+
+    fun flushText(batch: Batch) {
+        msdfFontRenderer.drawAllTextAtOnce(batch) {
+            while (textToDraw.hasNext) {
+                textToDraw.pop?.let {
+                    draw(it.line, it.x, it.y, scale = scale, batch)
+                }
+            }
+        }
+    }
+
+    private class TextToDraw(var line: String, var x: Float, var y: Float)
+
+    private class AllocatedMutableBuffer<T>(initialCapacity: Int, private val allocate: () -> T) {
+        private val buffer = ArrayList<T>(initialCapacity)
+        private var position = -1
+
+        init {
+            repeat(initialCapacity) {
+                buffer += allocate()
+            }
+        }
+
+        fun mutate(): T {
+            if (++position > buffer.size) {
+                buffer += allocate()
+            }
+            return buffer[++position]
+        }
+
+        val hasNext: Boolean get() = position >= 0
+
+        val pop: T?
+            get() = buffer.getOrNull(position--)
     }
 
     companion object {
-        private val bitmapCaches = mutableMapOf<String, BitmapFontCache>()
         private val coloMapping = mapOf(
             GuiColor.CONTAINER_BACKGROUND to Color.LIGHT_GRAY,
             GuiColor.WIDGET_BACKGROUND to Color.DARK_GRAY,

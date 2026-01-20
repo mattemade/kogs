@@ -48,7 +48,7 @@ class TemplateScene(private val gameContext: TemplateGameContext): Scene {
         shapeRenderer: ShapeRenderer
     ) {
         if (guiRenderer == null) {
-            val renderer = GuiRenderer(batch, shapeRenderer, gameContext.assets.font.fredokaMedium128)
+            val renderer = GuiRenderer(shapeRenderer, gameContext.assets.font.fredokaMsdf)
             guiRenderer = renderer
             gui = GuiBox(renderer).apply {
                 add(GuiLabel("Hello, world!", renderer), GuiBox.Specs())
@@ -60,5 +60,6 @@ class TemplateScene(private val gameContext: TemplateGameContext): Scene {
             sprite.render(batch, -90f + index * 90f, -50f)
         }
         gui?.render(guiRect)
+        guiRenderer?.flushText(batch)
     }
 }

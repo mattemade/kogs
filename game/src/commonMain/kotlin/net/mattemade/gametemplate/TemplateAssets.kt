@@ -6,13 +6,18 @@ import com.littlekt.PreparableGameAsset
 import com.littlekt.audio.AudioClipEx
 import com.littlekt.file.vfs.readAudioClipEx
 import com.littlekt.file.vfs.readBitmapFont
+import com.littlekt.file.vfs.readTexture
 import com.littlekt.graphics.g2d.TextureSlice
+import com.littlekt.graphics.gl.TexMagFilter
+import com.littlekt.graphics.gl.TexMinFilter
 import net.mattemade.gametemplate.resources.Music
 import net.mattemade.gametemplate.resources.Sound
 import net.mattemade.gametemplate.resources.Sprite
 import net.mattemade.gametemplate.resources.TemplateResourceSheet
 import net.mattemade.utils.asset.AssetPack
 import net.mattemade.utils.atlas.RuntimeTextureAtlasPacker
+import net.mattemade.utils.msdf.MsdfFont
+import net.mattemade.utils.msdf.MsdfFontShader
 
 class TemplateAssets(
     context: Context,
@@ -22,6 +27,7 @@ class TemplateAssets(
 ) : AssetPack(context) {
     private val runtimeTextureAtlasPacker = RuntimeTextureAtlasPacker(context).releasing()
 
+    val shaders by pack(order = 0) { Shaders(context) }
     val resourceSheet by preparePlain(order = 0) {
         TemplateResourceSheet(
             if (overrideFromSheets != null) {
@@ -45,6 +51,7 @@ class TemplateAssets(
     val textureFiles by pack(order = 1) { TextureFiles(context, runtimeTextureAtlasPacker, resourceSheet) }
     val soundFiles by pack(order = 1) { SoundFiles(context, resourceSheet) }
     val musicFiles by pack(order = 1) { MusicFiles(context, resourceSheet) }
+
 
     private val atlas by prepare(2) { runtimeTextureAtlasPacker.packAtlas() }
 
@@ -129,5 +136,28 @@ class Fonts(context: Context, private val textures: TextureFiles) : AssetPack(co
                 textures.fredokaMedium128
             )
         )
+    }
+
+
+    private fun loadMsdfFont(name: String, lineHeight: Float, descender: Float): PreparableGameAsset<MsdfFont> =
+        preparePlain { MsdfFont(
+            atlas = context.resourcesVfs["font/$name.png"].readTexture(
+                minFilter = TexMinFilter.LINEAR,
+                magFilter = TexMagFilter.LINEAR,
+                mipmaps = false
+            ),
+            lineHeight = lineHeight,
+            descender = descender,
+            csvSpecs = context.resourcesVfs["font/$name.csv"].readLines(),
+        ) }
+
+    val fredokaMsdf by loadMsdfFont("fredoka", 1.2f, 0.236f)
+    val jbMonoMsdf by loadMsdfFont("jbmono", 1.32f, 0.3f)
+}
+
+class Shaders(context: Context) : AssetPack(context) {
+    val msdfShader by preparePlain {
+        MsdfFontShader.prepare(context)
+        MsdfFontShader.program
     }
 }

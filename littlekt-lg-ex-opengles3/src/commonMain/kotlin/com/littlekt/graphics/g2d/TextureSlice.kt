@@ -157,6 +157,11 @@ open class TextureSlice(
             TextureSlice(texture, this.x + x, this.y + y, width, height)
         }
 
+    fun sliceByBounds(left: Int, bottom: Int, right: Int, top: Int): TextureSlice =
+        derivedSlices.getOrPut("$left,$bottom,${right - left},${top - bottom}") {
+            TextureSlice(texture, this.x + left, this.y + bottom, width = right - left, height = top - bottom)
+        }
+
     /**
      * Slice this [TextureSlice] into smaller slices.
      * @param sliceWidth the width of the slice

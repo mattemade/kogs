@@ -137,6 +137,8 @@ fun Texture.slice() = TextureSlice(this)
 
 fun Texture.slice(sliceWidth: Int, sliceHeight: Int) = TextureSlice(this).slice(sliceWidth, sliceHeight)
 
+fun Texture.sliceByBounds(left: Int, bottom: Int, right: Int, top: Int): TextureSlice = TextureSlice(this).sliceByBounds(left, bottom, right, top)
+
 /**
  * Slice up the texture in a list of [TextureSlice] with the given size with an added border. This can be used to prevent atlas bleeding.
  * @param context the current context - used to prepare the newly created Texture.
