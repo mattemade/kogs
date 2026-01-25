@@ -3,6 +3,7 @@ package net.mattemade.utils.msdf
 import com.littlekt.graphics.Texture
 import com.littlekt.graphics.g2d.Batch
 import com.littlekt.graphics.g2d.TextureSlice
+import com.littlekt.graphics.slice
 import com.littlekt.graphics.sliceByBounds
 import com.littlekt.math.ceilToInt
 import com.littlekt.math.floorToInt
@@ -27,30 +28,43 @@ class MsdfFont(
 
     fun draw(text: String, x: Float, y: Float, scale: Float, batch: Batch) {
         var cursorX = x
-        val baselineY = y + (lineHeight - descender) * scale
+        var cursorY = y + (lineHeight - descender) * scale
         text.forEach {
-            specs[it]?.let { spec ->
-                batch.draw(
-                    slice = spec.slice,
-                    x = cursorX + spec.quadLeftBound * scale,
-                    y = baselineY + spec.quadBottomBound * scale,
-                    width = spec.quadWidth * scale,
-                    height = spec.quadHeight * scale,
-                )
-                cursorX += spec.horizontalAdvance * scale
+            if (it == '\n') {
+                cursorX = x
+                cursorY += lineHeight * scale
+            } else {
+                specs[it]?.let { spec ->
+                    batch.draw(
+                        slice = spec.slice,
+                        x = cursorX + spec.quadLeftBound * scale,
+                        y = cursorY + spec.quadBottomBound * scale,
+                        width = spec.quadWidth * scale,
+                        height = spec.quadHeight * scale,
+                    )
+                    cursorX += spec.horizontalAdvance * scale
+                }
             }
         }
     }
 
     fun measure(text: String, scale: Float, to: Vec2) {
         var cursorX = 0f
+        var lines = 1
+        to.x = 0f
         text.forEach {
-            specs[it]?.let { spec ->
-                cursorX += spec.horizontalAdvance * scale
+            if (it == '\n') {
+                to.x = maxOf( to.x, cursorX)
+                cursorX = 0f
+                lines++
+            } else {
+                specs[it]?.let { spec ->
+                    cursorX += spec.horizontalAdvance * scale
+                }
             }
         }
-        to.x = cursorX
-        to.y = lineHeight * scale
+        to.x = maxOf( to.x, cursorX)
+        to.y = lines * lineHeight * scale
     }
 
     /**
@@ -81,12 +95,14 @@ class MsdfFont(
             quadBottomBound = csvLineSplit[3].toFloat(),
             quadRightBound = csvLineSplit[4].toFloat(),
             quadTopBound = csvLineSplit[5].toFloat(),
-            slice = atlas.sliceByBounds(
-                left = csvLineSplit[6].toFloat().floorToInt(),
-                bottom = csvLineSplit[7].toFloat().floorToInt(),
-                right = csvLineSplit[8].toFloat().ceilToInt(),
-                top = csvLineSplit[9].toFloat().ceilToInt()
-            )
+            slice = atlas.slice().apply {
+                setSlice(
+                    u = csvLineSplit[6].toFloat() / atlas.width,
+                    v2 = csvLineSplit[7].toFloat()  / atlas.height,
+                    u2 = csvLineSplit[8].toFloat()  / atlas.width,
+                    v = csvLineSplit[9].toFloat() / atlas.height,
+                )
+            }
         )
     }
 

@@ -144,7 +144,7 @@ class Fonts(context: Context, private val textures: TextureFiles) : AssetPack(co
             atlas = context.resourcesVfs["font/$name.png"].readTexture(
                 minFilter = TexMinFilter.LINEAR,
                 magFilter = TexMagFilter.LINEAR,
-                mipmaps = false
+                mipmaps = false,
             ),
             lineHeight = lineHeight,
             descender = descender,

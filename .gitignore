@@ -19,3 +19,4 @@ captures
 .git
 wave-function-collapse/.httpCache
 wave-function-collapse/.storage
+fmod/src/*/resources

@@ -15,7 +15,7 @@ class GuiRenderer(
     private val msdfFont: MsdfFont,
 ) : GuiRenderer {
 
-    private val scale = 4f
+    private val scale = 3f
     private val msdfFontRenderer = MsdfFontRenderer(msdfFont)
     private val textToDraw = AllocatedMutableBuffer<TextToDraw>(100) { TextToDraw("", 0f, 0f) }
 
