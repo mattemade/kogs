@@ -39,4 +39,5 @@ include(
     ":game",
     ":gui:api",
     ":fmod",
+    ":concurrency",
 )

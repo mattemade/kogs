@@ -63,14 +63,40 @@ object MsdfFontShader {
                 return max(min(c.r, c.g), min(max(c.r, c.g), c.b));
             }
             
+            float screenPxRange() {
+                vec2 unitRange = vec2(distanceRange)/vec2(textureSize(u_texture, 0));
+                vec2 screenTexSize = vec2(1.0)/fwidth(v_texCoords);
+                return max(0.5*dot(unitRange, screenTexSize), 1.0);
+            }
+            
             void main() {
                 vec3 color = texture2D(u_texture, v_texCoords).rgb;
                 float distance = median(color) - 0.5; // thickness can be controlled here
-                float dxy = fwidth(distance);
-                float opacity = smoothstep(-dxy, dxy, distance);
+                
+//              simplier, but worse results:
+              float dxy = fwidth(distance);
+              float opacity = smoothstep(-dxy, dxy, distance);
+                
+//                float dxy = screenPxRange() * distance;
+//                float opacity = clamp(dxy + 0.5, 0.0, 1.0);
+                
                 gl_FragColor = vec4(v_color.rgb, v_color.a * opacity);
             }
         """.trimIndent()
+
+        /*void main() {
+    vec3 msd = texture(msdf, texCoord).rgb;
+    float sd = median(msd.r, msd.g, msd.b);
+    float screenPxDistance = screenPxRange()*(sd - 0.5);
+    float opacity = clamp(screenPxDistance + 0.5, 0.0, 1.0);
+    color = mix(bgColor, fgColor, opacity);
+}
+
+float screenPxRange() {
+    vec2 unitRange = vec2(distanceRange)/vec2(textureSize(u_texture, 0));
+    vec2 screenTexSize = vec2(1.0)/fwidth(texCoord);
+    return max(0.5*dot(unitRange, screenTexSize), 1.0);
+}*/
 
         val uTexture = ShaderParameter.UniformSample2D("u_texture")
 

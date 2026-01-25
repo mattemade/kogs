@@ -53,6 +53,10 @@ class TemplateScene(private val gameContext: TemplateGameContext): Scene {
             gui = GuiBox(renderer).apply {
                 add(GuiLabel("Hello, world!", renderer), GuiBox.Specs())
                 add(GuiLabel("Second label", renderer), GuiBox.Specs(10f, 10f))
+                add(GuiLabel("Optional challenges a.k.a. PTSD moments (it’s not necessary to include any of them):\n" +
+                        "Put a checkpoint or healing station that has a trap (which can damage or give nasty debuffs to the player)\n" +
+                        "Put an enemy character that can capture the player (and send the player to prison, where the player has to retrieve their equipments and escape)\n" +
+                        "Put a boss with an ability to self destruct upon getting defeated (which can damage and/or kill unsuspecting player).\n", renderer), GuiBox.Specs(-160f, -90f))
             }
         }
 

@@ -93,6 +93,7 @@ kotlin {
     val multiplatformDependencies = listOf(
         ":game-utils",
         ":fmod",
+        ":concurrency",
     )
 
     sourceSets {

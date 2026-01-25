@@ -29,7 +29,6 @@ class InputQueueProcessor(private val activeInputProcessors: List<InputProcessor
         queue.clear()
 
         processingQueue.forEach {
-            _currentEventTime = it.queueTime
             notifyProcessors(it, processors)
         }
         eventsPool.free(processingQueue)
@@ -40,6 +39,7 @@ class InputQueueProcessor(private val activeInputProcessors: List<InputProcessor
         event: InternalInputEvent,
         processors: List<InputProcessor>
     ) {
+        _currentEventTime = event.queueTime
         when (event.type) {
             InternalInputEventType.KEY_DOWN -> processors.keyDown(key = event.key)
             InternalInputEventType.KEY_UP -> processors.keyUp(key = event.key)
