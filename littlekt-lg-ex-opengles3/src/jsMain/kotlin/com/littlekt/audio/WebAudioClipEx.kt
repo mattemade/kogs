@@ -86,6 +86,9 @@ internal class WebAudioClipEx(private val audio: WebAudioEx) : AudioClipEx {
         activePipelines.get(id)?.let { it.gain.gain.value = max(0f, volume) }
     }
 
+    override fun getVolume(id: Int): Float =
+        activePipelines.get(id)?.gain?.gain?.value ?: 0f
+
     override fun setPositionAll(positionX: Float, positionY: Float) {
         activePipelines.values.forEach {
             it.panner.setPositionCompat(positionX, positionY)

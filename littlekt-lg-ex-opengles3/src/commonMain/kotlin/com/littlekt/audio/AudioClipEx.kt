@@ -31,7 +31,10 @@ interface AudioClipEx : AudioClip {
     ): Int
 
     fun setVolumeAll(volume: Float)
+
     fun setVolume(id: Int, volume: Float)
+    fun getVolume(id: Int): Float
+
     fun setPositionAll(positionX: Float, positionY: Float)
     fun setPosition(id: Int, positionX: Float, positionY: Float)
 

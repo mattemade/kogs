@@ -85,6 +85,7 @@ class OpenALAudioClip(
         scheduleAt: Float,
         onEnded: ((Int) -> Unit)?
     ): Int = withDeviceReturning {
+        if (true) return -1
         val sourceId = context.obtainSource()
 
         if (sourceId == -1) return -1
@@ -112,6 +113,10 @@ class OpenALAudioClip(
     override fun setVolume(id: Int, volume: Float) {
         
     }
+
+    override fun getVolume(id: Int): Float =
+        1f
+
 
     override fun setPositionAll(positionX: Float, positionY: Float) {
         

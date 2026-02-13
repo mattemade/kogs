@@ -20,7 +20,7 @@ import kotlinx.coroutines.async
 
 class RuntimeTextureAtlasPacker(private val context: Context, private val useMiMaps: Boolean = false, private val allowFiltering: Boolean = false) : Releasing by Self() {
 
-    private val mutableTextureAtlas = MutableTextureAtlas(context)
+    private val mutableTextureAtlas = MutableTextureAtlas(context, padding = 16)
     private val immutableTextureAtlas by lazy { mutableTextureAtlas.toImmutable(useMiMaps, allowFiltering).releasing() }
     private val slices = ConcurrentMutableMap<String, TextureSlice>()
     private val deferredSlices = ConcurrentMutableMap<String, Deferred<TextureSlice>>()
@@ -84,6 +84,18 @@ class RuntimeTextureAtlasPacker(private val context: Context, private val useMiM
 
             }.also { this.deferredSlices[normalizedPath] = it }
         }
+
+    fun add(normalizedPath: String, texture: Texture) {
+        val slice = TextureSlice(
+            texture,
+            x = 0,
+            y = 0,
+            width = texture.width,
+            height = texture.height
+        )
+        queue.add(TexturePlacement(normalizedPath, texture))
+        slices.put(normalizedPath, slice)
+    }
 
     data class TexturePlacement(val name: String, val texture: Texture)
 }

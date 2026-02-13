@@ -1,0 +1,146 @@
+Sprites!A1:AA1000
+63
+Sprite ID|Texture file|texture url|texture|Animation frames|Frame time, ms|Anchor X|Anchor Y
+Chair||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Chair_2.png|Chair_2.png|||0.5|0.75
+Floor||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/FLOOR_purple.png|FLOOR_purple.png
+Frog||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/customer_Frog.png|customer_Frog.png|||0.6|0.66
+Stote||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/customer_Stote.png|customer_Stote.png|||0.45|0.72
+Snake||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/customer_Snake.png|customer_Snake.png|||0.55|0.6
+Table||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Table_2.png|Table_2.png|||0.5|0.85
+Neil||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/BAND_Neil_the_Rat_and_Piano.png|BAND_Neil_the_Rat_and_Piano.png|||0.5|0.85
+Bernard||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/BAND_Bernard_the_Shoebill_and_Drumkit.png|BAND_Bernard_the_Shoebill_and_Drumkit.png|||0.5|0.85
+Stage||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Stage_extra_wide.png|Stage_extra_wide.png|||0|0
+Player empty skating||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Capybara_sprite_SKATING.png|Capybara_sprite_SKATING.png|||0.5|0.9
+Player hit||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Capybara_sprite_HIT.png|Capybara_sprite_HIT.png|||0.5|0.9
+Player skating||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Capybara_sprite_SKATING.png|Capybara_sprite_SKATING.png|||0.5|0.9
+Samuel||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/BAND_Samuel_the_Sloth_and_Sax_playing.png|BAND_Samuel_the_Sloth_and_Sax_playing.png|||0.5|0.75
+Cheesecake||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Plate_Cheesecake.png|Plate_Cheesecake.png|||0.5|0.5
+Flan||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Plate_Flan.png|Plate_Flan.png|||0.5|0.5
+Lettuce||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Plate_Lettuce.png|Plate_Lettuce.png|||0.5|0.5
+Soup||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Plate_Soup.png|Plate_Soup.png|||0.5|0.5
+Spaghetti||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Plate_Spaghetti.png|Plate_Spaghetti.png|||0.5|0.5
+Sushi||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Plate_Sushi.png|Plate_Sushi.png|||0.5|0.5
+Steak||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Plate_steak.png|Plate_steak.png|||0.5|0.5
+Milkshake||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Drink_b_milkshake.png|Drink_b_milkshake.png|||0.5|0.5
+Berry boba||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Drink_boba_berry.png|Drink_boba_berry.png|||0.5|0.5
+Choco boba||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Drink_boba_choco.png|Drink_boba_choco.png|||0.5|0.5
+Water||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Drink_s_water.png|Drink_s_water.png|||0.5|0.5
+Cola||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Drink_soda_cola.png|Drink_soda_cola.png|||0.5|0.5
+Sus||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Drink_soda_sus.png|Drink_soda_sus.png|||0.5|0.5
+Forbidden||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Drink_w_forbidden.png|Drink_w_forbidden.png|||0.5|0.5
+Wine||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Drink_wine.png|Drink_wine.png|||0.5|0.5
+Audrey||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/BAND_Audrey_the_Axolotl_and_Guitar.png|BAND_Audrey_the_Axolotl_and_Guitar.png|||0.5|0.85
+Brick wall||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/brick_wall.png|brick_wall.png|||0|0
+Curtain||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/certain.png|certain.png|||0|0
+Food station||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Station_Food.png|Station_Food.png|||0|0
+Drink station||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Station_Drink.png|Station_Drink.png|||0|0
+Bubble||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/thought_bubble.png|thought_bubble.png|||0.5|0.25
+Heart||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/thought_heart.png|thought_heart.png|||0.5|0.25
+Plant||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/potted_plant.png|potted_plant.png|||0.5|0.85
+Marlene||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/BAND_Marlene_the_Magpie_and_Bass.png|BAND_Marlene_the_Magpie_and_Bass.png|||0.5|0.85
+White dog||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/customer_White_Dog.png|customer_White_Dog.png|||0.45|0.825
+Donkey||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/customer_Donkey.png|customer_Donkey.png|||0.6|0.775
+Crow||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/customer_Crow.png|customer_Crow.png|||0.4|0.85
+Lizard||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/customer_Lizard.png|customer_Lizard.png|||0.5|0.65
+Fox||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/customer_Fox.png|customer_Fox.png|||0.52|0.8
+Hedgehog||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/customer_Hedgehog.png|customer_Hedgehog.png|||0.51|0.95
+Banana peel||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Hazard_banana_peel.png|Hazard_banana_peel.png|||0.5|0.75
+Fork||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Hazard_fork.png|Hazard_fork.png|||0.5|0.75
+Napkins||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Hazard_napkins.png|Hazard_napkins.png|||0.5|0.75
+Peanut butter||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Hazard_peanut_butter.png|Hazard_peanut_butter.png|||0.5|0.75
+Shell||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Hazard_shell.png|Hazard_shell.png|||0.5|0.75
+Spoon||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Hazard_spoon.png|Hazard_spoon.png|||0.5|0.75
+Water cup||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Hazard_water_cup.png|Hazard_water_cup.png|||0.5|0.75
+Coin||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Hazard_coin.png|Hazard_coin.png|||0.5|0.75
+Tacos||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Plate_Tacos.png|Plate_Tacos.png|||0.5|0.5
+Burger||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Plate_Burger.png|Plate_Burger.png|||0.5|0.5
+Fries||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Plate_Fries.png|Plate_Fries.png|||0.5|0.5
+Powerup calm down||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Power_Up_calm_down.png|Power_Up_calm_down.png|||0.5|0.85
+Powerup cleanup||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Power_Up_cleanup.png|Power_Up_cleanup.png|||0.5|0.85
+Powerup speed boost||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Power_Up_speed_boost.png|Power_Up_speed_boost.png|||0.5|0.85
+Powerup stack stabilizer||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Power_Up_stack_stabilizer.png|Power_Up_stack_stabilizer.png|||0.5|0.85
+Powerup sticky fingers||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Power_Up_sticky_fingers.png|Power_Up_sticky_fingers.png|||0.5|0.85
+Gray heart||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/thought_heart_gray.png|thought_heart_gray.png|||0.5|0.5
+Pink heart||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/thought_heart.png|thought_heart.png|||0.5|0.5
+Coin heart||https://demo.mattemade.net/files/in-progress/bigmode2026/texture/Hazard_coin.png|Hazard_coin.png|||0.5|0.66
+Sounds!A1:AB1006
+35
+Sound ID|Sound file|Probability|Min playback rate, %|Max playback rate, %|Min volume, %|Max volume, %|Notes
+Roll|Roller_skate_1_fragment.wav|||||1
+Hit table|Table_Collision_5.wav||||10|2.5
+Hit table|Table_Collision_6.wav||||10|2.5
+Hit table|Table_Collision_7.wav||||10|2.5
+Hit table|Table_Collision_1.wav||||10|2.5
+Hit table|Table_Collision_2.wav||||10|2.5
+Hit table|Table_Collision_4.wav||||10|2.5
+Hit wall|Wall_Impact_1.wav||||10|2.5
+Hit wall|Wall_Impact_2.wav||||10|2.5
+Hit wall|Wall_Impact_3.wav||||10|2.5
+Hit chair|Chair_impact_1.wav||||10|2.5
+Hit chair|Chair_impact_2.wav||||10|2.5
+Hit chair|Chair_impact_3.wav||||10|2.5
+Deliver|plates.wav||100|100|10|10
+Deliver|plates_2.wav||100|100|10|10
+Deliver|plates_3.wav||100|100|10|10
+Brake|Brakes.wav||||0|2.5
+Hit snake table|Table_Collision_3_snake_table.wav||||10|2.5
+Banana slip|slip on banana peel.mp3||||15|15
+Banana throw|banana peel thrown.mp3||||10|10
+Banana land|banana peel lands.mp3||||10|10
+Coin throw|coin toss.mp3||||10|10
+Coin lands|coin lands.mp3||||10|10
+Coin pick|pick up coin.mp3||||10|10
+Plate crash|plate crashes.mp3||||10|10
+Power spawn|power up spawns.mp3||||10|10
+Power pick|pick up power up.mp3||||10|10
+Pick drink|pick drink up.mp3||||20|20
+Deliver drink|set drink down.mp3||||20|20
+Nicely delivered|harp chord.wav||||10|10
+Level ends|victory fanfare.mp3||||10|10
+Stack|Bowls_stack_2.wav||||10|10
+Stack|Bowls_stack.wav||||10|10
+Snake so long|snake_what_took_you_so_long.wav||||10|10
+Music!A1:AA1000
+7
+Music ID|Music file|BPM|Notes
+Level 1|mouse house.mp3|200
+Level 2|piano and bass.mp3|241
+Level 3|Rock Around the Block 2_4_26.mp3|241
+Level 4|Rock Around the Block with guitar 2_4_26.mp3|241|duplicating just to let game have a proper transition
+Level 5|blue wop 2_4_26.mp3|200
+Level 6|blue wop 2_4_26.mp3|200|bonus level that never ends
+Levels!A1:AD1000
+7
+Level|Orders to deliver|Min time to order|Max time to order|Min time between orders|Table layout|Food station|Drink station|Horizontal table layout bias|Impatience time|Time to throw|Notes|||(old values)
+1|6|2|5|0|1, 2|TRUE|FALSE|1.5|7|7|"tutorial"|||1|3|2|2|0|1, 2|TRUE|FALSE|1.5|5|3
+2|8|2|5|2|1, 2, 1|TRUE|TRUE|1|7|7||||2|5|2|2|2|1, 2, 1|TRUE|TRUE|1|4|3.5
+3|12|2|5|2|2, 3, 2, 1|TRUE|TRUE|1|7|7||||3|7|2|2|2|2, 3, 2, 1|TRUE|TRUE|1|3.5|3
+4|18|2|5|2|2, 3, 2, 3, 2|TRUE|TRUE|1|7|7||||4|9|2|2|2|2, 3, 2, 3, 2|TRUE|TRUE|1|3|2.5
+5|26|2|5|2|3, 2, 3, 2, 3|TRUE|TRUE|1|7|7||||5|15|2|2|2|3, 2, 3, 2, 3|TRUE|TRUE|1|2.5|2
+6|60|600|600|2|3, 3, 3, 3|TRUE|TRUE|1|2|2|post-game "bonus level" that never ends|||6|-1|2|2|2|3, 2, 3, 2, 3|TRUE|TRUE|1|2|2
+PowerUps!A1:AC1000
+7
+Level|Power up|Chance|Additve tint color, RGB(255,255,255)|Active time|Speed boost|Sticky fingers: plates never fall|Calm down: temporarily stop impatience timers|Stack stabilizer|Cleanup Hazards: remove all
+1|Powerup speed boost|1|255, 128, 128|10|TRUE|FALSE|FALSE|FALSE|FALSE
+2|Powerup sticky fingers|1|128, 128, 255|10|FALSE|TRUE|FALSE|FALSE|FALSE
+3|Powerup calm down|1|128, 255, 128|10|FALSE|FALSE|TRUE|FALSE|FALSE
+4|Powerup cleanup|1|255, 128, 255|10|FALSE|FALSE|FALSE|FALSE|TRUE
+5|Powerup stack stabilizer|1|255, 255, 255|0|FALSE|FALSE|FALSE|TRUE|FALSE
+6|Heart|1|255, 255, 128|10|TRUE|TRUE|TRUE|TRUE|TRUE
+Hazards!A1:Z1000
+8
+Type|Chance factor|Real chance
+Fork|10|21.27659574
+Napkins|10|21.27659574
+Spoon|10|21.27659574
+Water cup|10|21.27659574
+Banana peel|5|10.63829787
+Peanut butter|1|2.127659574
+Shell|1|2.127659574
+Parameters!A1:Z992
+5
+Name|Value|Final build values
+Start from level|1|1
+Min restaurant width factor|0.75|0.75
+Max restaurant width factor|1.2716715|1.2716715
+Music volume|0.1|0.1

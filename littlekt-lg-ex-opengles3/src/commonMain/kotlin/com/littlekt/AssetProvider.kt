@@ -57,7 +57,9 @@ open class AssetProvider(val context: Context) {
     val fullyLoaded: Boolean
         get() = totalAssetsLoading.value == 0 && prepared
 
-    private var job: Job? = null
+    //private var job: Job? = null
+
+    private val jobs = mutableListOf<Job>()
 
 
     /**
@@ -65,15 +67,22 @@ open class AssetProvider(val context: Context) {
      */
     fun update() {
         if (totalAssetsLoading.value > 0) return
-        if (!prepared && job?.isActive != true) {
-            job = KtScope.launch {
-                assetsToPrepare.fastForEach {
+        if (!prepared && jobs.isEmpty()) {
+            assetsToPrepare.fastForEach {
+                var job: Job? = null
+                job = KtScope.launch {
                     it.prepare()
+                    job?.let {
+                        jobs.remove(it)
+                    }
+                    if (jobs.isEmpty()) {
+                        prepared = true
+                        onFullyLoaded?.invoke()
+                    }
                 }
-                assetsToPrepare.clear()
-                prepared = true
-                onFullyLoaded?.invoke()
+                jobs += job
             }
+            assetsToPrepare.clear()
         }
     }
 
@@ -285,6 +294,25 @@ class PreparableGameAsset<T>(val action: suspend () -> T) {
     suspend fun prepare() {
         result = action.invoke()
         isPrepared = true
+    }
+}
+
+class DeferredPreparableGameAsset<T>(val action: suspend (() -> Unit) -> T) {
+    private var isPrepared = false
+    private var result: T? = null
+
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
+        if (isPrepared) {
+            return result!!
+        } else {
+            throw IllegalStateException("Asset not prepared yet!")
+        }
+    }
+
+    suspend fun prepare() {
+        result = action.invoke {
+            isPrepared = true
+        }
     }
 }
 
