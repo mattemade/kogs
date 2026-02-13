@@ -85,6 +85,11 @@ actual suspend fun VfsFile.readAudioClip(): AudioClip = readAudioClipEx()
  * @return the loaded audio clip
  */
 actual suspend fun VfsFile.readAudioClipEx(): AudioClipEx {
+    if (true) {
+        // sound does not really work in JVM :/
+        vfs.context as LwjglContext
+        return OpenALAudioClip(vfs.context.audioContext, ByteArray(0), 1, 1)
+    }
     try {
         val asset = read()
         // TODO refactor the sound handling to check the actual file headers

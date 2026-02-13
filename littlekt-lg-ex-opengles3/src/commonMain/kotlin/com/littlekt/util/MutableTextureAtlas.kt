@@ -78,7 +78,7 @@ class MutableTextureAtlas(val context: Context, options: PackingOptions = Packin
             pages += AtlasPage(meta, frames = frames)
             textures["texture_$index"] = Texture(PixmapTextureData(pixmap, useMiMaps)).also {
                 if (allowFiltering) {
-                    it.minFilter = TexMinFilter.LINEAR
+                    it.minFilter = if (useMiMaps) TexMinFilter.LINEAR_MIPMAP_LINEAR else TexMinFilter.LINEAR
                     it.magFilter = TexMagFilter.LINEAR
                 }
                 it.prepare(context)

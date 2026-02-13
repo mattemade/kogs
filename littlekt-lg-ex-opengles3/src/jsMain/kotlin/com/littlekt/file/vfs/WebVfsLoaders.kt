@@ -111,7 +111,7 @@ actual suspend fun VfsFile.readAudioClip(): AudioClip {
  */
 actual suspend fun VfsFile.readAudioClipEx(): AudioClipEx {
     val url = if (isHttpUrl()) path else "${vfs.baseDir}/$path"
-    return WebAudioClipEx(WebAudioEx.create(vfs.job, url, vfs.logger)?: error("Could not create WebAudioEx"))
+    return WebAudioClipEx(WebAudioEx.create(vfs.job, url, vfs.logger)?: error("Could not create WebAudioEx $url"))
 }
 
 /**
@@ -131,7 +131,7 @@ actual suspend fun VfsFile.readAudioStream(): AudioStream {
 
 actual suspend fun VfsFile.readAudioStreamEx(): AudioStreamEx {
     val url = if (isHttpUrl()) path else "${vfs.baseDir}/$path"
-    return WebAudioStreamEx(WebAudioEx.create(vfs.job, url, vfs.logger)?: error("Could not create WebAudioEx"))
+    return WebAudioStreamEx(WebAudioEx.create(vfs.job, url, vfs.logger)?: error("Could not create WebAudioEx $url"))
 }
 
 actual suspend fun VfsFile.writePixmap(pixmap: Pixmap) {

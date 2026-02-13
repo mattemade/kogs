@@ -40,4 +40,5 @@ include(
     ":gui:api",
     ":fmod",
     ":concurrency",
+    ":bigmode",
 )
