@@ -9,6 +9,7 @@ import kotlin.time.Duration
  * @date 2/28/2022
  */
 class TiledTileset(
+    val source: String,
     val tileWidth: Int,
     val tileHeight: Int,
     val tiles: List<Tile>

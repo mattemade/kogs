@@ -36,9 +36,9 @@ plugins {
 include(
     ":littlekt-lg-ex-opengles3",
     ":game-utils",
-    ":game",
+    //":game",
     ":gui:api",
     ":fmod",
-    ":concurrency",
     ":bigmode",
+    ":platformer",
 )

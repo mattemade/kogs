@@ -297,7 +297,7 @@ class PreparableGameAsset<T>(val action: suspend () -> T) {
     }
 }
 
-class DeferredPreparableGameAsset<T>(val action: suspend (() -> Unit) -> T) {
+class DeferredPreparableGameAsset<T>(val scheduledAction: ((T) -> Unit) -> Unit) {
     private var isPrepared = false
     private var result: T? = null
 
@@ -309,8 +309,9 @@ class DeferredPreparableGameAsset<T>(val action: suspend (() -> Unit) -> T) {
         }
     }
 
-    suspend fun prepare() {
-        result = action.invoke {
+    fun prepare() {
+        scheduledAction.invoke {
+            result = it
             isPrepared = true
         }
     }

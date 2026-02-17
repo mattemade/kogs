@@ -17,6 +17,7 @@ import com.littlekt.graphics.gl.PixmapTextureData
 import com.littlekt.graphics.gl.TexMagFilter
 import com.littlekt.graphics.gl.TexMinFilter
 import kotlinx.browser.document
+import kotlinx.browser.window
 import kotlinx.coroutines.CompletableDeferred
 import org.w3c.dom.CanvasRenderingContext2D
 import org.w3c.dom.HTMLCanvasElement
@@ -112,6 +113,23 @@ actual suspend fun VfsFile.readAudioClip(): AudioClip {
 actual suspend fun VfsFile.readAudioClipEx(): AudioClipEx {
     val url = if (isHttpUrl()) path else "${vfs.baseDir}/$path"
     return WebAudioClipEx(WebAudioEx.create(vfs.job, url, vfs.logger)?: error("Could not create WebAudioEx $url"))
+}
+
+actual fun VfsFile.readAudioClipExDeferred(callback: (AudioClipEx) -> Unit) {
+    TODO()
+}
+
+actual fun VfsFile.readPixmapDeferred(callback: (Pixmap) -> Unit) {
+    TODO()
+}
+
+actual fun VfsFile.readTextureDeferred(
+    minFilter: TexMinFilter,
+    magFilter: TexMagFilter,
+    mipmaps: Boolean,
+    callback: (Texture) -> Unit
+) {
+    TODO()
 }
 
 /**

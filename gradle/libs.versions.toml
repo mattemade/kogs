@@ -10,6 +10,7 @@ kotlinx-serialization = "1.9.0"
 lwjgl = "3.3.6"
 mp3-decoder = "1.0.1"
 ktor = "3.3.3"
+fleks = "2.12"
 
 [libraries]
 kotlinx-atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "kotlinx-atomicfu" }
@@ -26,6 +27,7 @@ mp3-decoder = { module = "fr.delthas:javamp3", version.ref = "mp3-decoder" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+fleks = { module = "io.github.quillraven.fleks:Fleks", version.ref = "fleks" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

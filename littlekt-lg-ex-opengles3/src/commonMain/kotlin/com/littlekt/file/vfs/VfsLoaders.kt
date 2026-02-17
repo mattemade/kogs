@@ -315,6 +315,7 @@ internal expect suspend fun ByteArray.readPixmap(): Pixmap
  */
 expect suspend fun VfsFile.readPixmap(): Pixmap
 
+expect fun VfsFile.readPixmapDeferred(callback: (Pixmap) -> Unit)
 /**
  * Loads an image from the path as a [Texture]. This will call [Texture.prepare] before returning!
  *
@@ -325,6 +326,13 @@ expect suspend fun VfsFile.readTexture(
     magFilter: TexMagFilter = TexMagFilter.NEAREST,
     mipmaps: Boolean = true,
 ): Texture
+
+expect fun VfsFile.readTextureDeferred(
+    minFilter: TexMinFilter = TexMinFilter.NEAREST,
+    magFilter: TexMagFilter = TexMagFilter.NEAREST,
+    mipmaps: Boolean = true,
+    callback: (Texture) -> Unit,
+)
 
 /**
  * Loads audio from the path as an [AudioClip].
@@ -339,6 +347,8 @@ expect suspend fun VfsFile.readAudioClip(): AudioClip
  * @return the loaded audio clip
  */
 expect suspend fun VfsFile.readAudioClipEx(): AudioClipEx
+
+expect fun VfsFile.readAudioClipExDeferred(callback: (AudioClipEx) -> Unit)
 
 /**
  * Streams audio from the path as an [AudioStream].

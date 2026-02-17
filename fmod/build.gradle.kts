@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
 }
@@ -9,11 +11,14 @@ kotlin {
         browser {}
     }
 
+    @OptIn(ExperimentalWasmDsl::class)
+    wasmJs() {
+        binaries.library()
+        browser {}
+    }
+
     sourceSets {
         val commonMain by getting {
-        }
-        val jsMain by getting {
-           // resources.srcDir("src/jsMain/resources")
         }
         val jvmMain by getting {
             dependencies {

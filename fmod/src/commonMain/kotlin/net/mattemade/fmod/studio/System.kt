@@ -11,5 +11,5 @@ class StudioAdvancedSettings(
 )
 
 expect class System {
-    expect fun setAdvancedSettings(settings: StudioAdvancedSettings)
+    fun setAdvancedSettings(settings: StudioAdvancedSettings)
 }
