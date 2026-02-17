@@ -46,8 +46,8 @@ class PixelRender(
     }
 
     fun render(dt: Duration) {
-        preRenderCall(dt, targetCamera)
         target.begin()
+        preRenderCall(dt, targetCamera)
         if (clear) {
             context.gl.clearColor(Color.CLEAR)
             context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)

@@ -209,3 +209,20 @@ actual suspend fun VfsFile.writePixmap(pixmap: Pixmap) {
     val file = File(path)
     PixmapIO.writePNG(file, pixmap, Pixmap.Format.RGBA8888)
 }
+
+actual fun VfsFile.readAudioClipExDeferred(callback: (AudioClipEx) -> Unit) {
+    TODO()
+}
+
+actual fun VfsFile.readPixmapDeferred(callback: (Pixmap) -> Unit) {
+    TODO()
+}
+
+actual fun VfsFile.readTextureDeferred(
+    minFilter: TexMinFilter,
+    magFilter: TexMagFilter,
+    mipmaps: Boolean,
+    callback: (Texture) -> Unit
+) {
+    TODO()
+}

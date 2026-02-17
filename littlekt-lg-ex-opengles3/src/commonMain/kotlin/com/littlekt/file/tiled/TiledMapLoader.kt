@@ -8,7 +8,8 @@ import com.littlekt.file.vfs.pathInfo
 import com.littlekt.file.vfs.readTexture
 import com.littlekt.graph.node.resource.HAlign
 import com.littlekt.graph.node.resource.VAlign
-import com.littlekt.graphics.*
+import com.littlekt.graphics.Color
+import com.littlekt.graphics.Texture
 import com.littlekt.graphics.g2d.TextureAtlas
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledGroupLayer
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledImageLayer
@@ -17,6 +18,8 @@ import com.littlekt.graphics.g2d.tilemap.tiled.TiledMap
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledObjectLayer
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledTilesLayer
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledTileset
+import com.littlekt.graphics.slice
+import com.littlekt.graphics.sliceWithBorder
 import com.littlekt.math.Rect
 import com.littlekt.math.geom.Point
 import com.littlekt.math.geom.degrees
@@ -107,6 +110,7 @@ internal constructor(
                         },
                     tiles = tiles
                 )
+
             "objectgroup" -> layerData.toObjectLayer(mapData, tiles)
             "imagelayer" -> {
                 TiledImageLayer(
@@ -133,6 +137,7 @@ internal constructor(
                         }
                 )
             }
+
             "group" ->
                 TiledGroupLayer(
                     type = layerData.type,
@@ -150,6 +155,7 @@ internal constructor(
                     properties = layerData.properties.toTiledMapProperty(),
                     layers = layerData.layers.map { instantiateLayer(mapData, it, tiles) }
                 )
+
             else -> error("Unsupported TiledLayer '${layerData.type}")
         }
     }
@@ -157,31 +163,41 @@ internal constructor(
     private suspend fun loadTileSet(gid: Int, source: String): TiledTileset {
         val tilesetData = sharedTileSets.getOrPut(source) { root[source].decodeFromString<TiledTilesetData>() }
         // attempt to get texture from atlas and slice it directly without adding any bordering
+        val imageFileName = tilesetData.image.pathInfo.baseName
         val slices =
-            atlas
-                ?.get(tilesetData.image.pathInfo.baseName)
-                ?.slice
-                ?.slice(tilesetData.tilewidth, tilesetData.tileheight, tilesetBorder)
-                ?.flatten()
-                ?: root[tilesetData.image]
-                    .readTexture()
-                    .let { // atlas not available so we load it manually
-                        val result =
-                            it.sliceWithBorder(
-                                root.vfs.context,
-                                tilesetData.tilewidth,
-                                tilesetData.tileheight,
-                                tilesetBorder,
-                                mipmaps
-                            )
-                        it.release()
-                        result.getOrNull(0)?.let { slice -> textures += slice.texture }
-                        result
+            if (imageFileName.isNotEmpty()) {
+                atlas
+                    ?.get(imageFileName)
+                    ?.slice
+                    ?.slice(tilesetData.tilewidth, tilesetData.tileheight, tilesetBorder)
+                    ?.flatten()
+                    ?: root[tilesetData.image]
+                        .readTexture()
+                        .let { // atlas not available so we load it manually
+                            val result =
+                                it.sliceWithBorder(
+                                    root.vfs.context,
+                                    tilesetData.tilewidth,
+                                    tilesetData.tileheight,
+                                    tilesetBorder,
+                                    mipmaps
+                                )
+                            it.release()
+                            result.getOrNull(0)?.let { slice -> textures += slice.texture }
+                            result
+                        }
+            } else { // decorative tile, it's just an image
+                tilesetData.tiles.mapNotNull { tile ->
+                    tile.image?.let { imageName ->
+                        atlas?.get(imageName)?.slice ?: root[imageName].readTexture().slice()
                     }
+                }
+            }
 
         val offsetX = tilesetData.tileoffset?.x ?: 0
         val offsetY = tilesetData.tileoffset?.y ?: 0
         return TiledTileset(
+            source = source,
             tileWidth = tilesetData.tilewidth,
             tileHeight = tilesetData.tileheight,
             tiles =
@@ -291,66 +307,66 @@ internal constructor(
                     name = objectData.name,
                     type = objectData.type,
                     bounds =
-                    Rect(
-                        objectData.x,
-                        mapData.height * mapData.tileheight - objectData.y,
-                        objectData.width,
-                        objectData.height
-                    ),
+                        Rect(
+                            objectData.x,
+                            /*mapData.height * mapData.tileheight - */objectData.y,
+                            objectData.width,
+                            objectData.height
+                        ),
                     rotation = objectData.rotation.degrees,
                     visible = objectData.visible,
                     shape =
-                    when {
-                        objectData.ellipse ->
-                            TiledMap.Object.Shape.Ellipse(
-                                objectData.width,
-                                objectData.height
-                            )
+                        when {
+                            objectData.ellipse ->
+                                TiledMap.Object.Shape.Ellipse(
+                                    objectData.width,
+                                    objectData.height
+                                )
 
-                        objectData.point -> TiledMap.Object.Shape.Point
-                        objectData.polygon != null ->
-                            TiledMap.Object.Shape.Polygon(
-                                objectData.polygon.map { Point(it.x, -it.y) }
-                            )
+                            objectData.point -> TiledMap.Object.Shape.Point
+                            objectData.polygon != null ->
+                                TiledMap.Object.Shape.Polygon(
+                                    objectData.polygon.map { Point(it.x, -it.y) }
+                                )
 
-                        objectData.polyline != null ->
-                            TiledMap.Object.Shape.Polyline(
-                                objectData.polyline.map { Point(it.x, -it.y) }
-                            )
+                            objectData.polyline != null ->
+                                TiledMap.Object.Shape.Polyline(
+                                    objectData.polyline.map { Point(it.x, -it.y) }
+                                )
 
-                        objectData.text != null ->
-                            TiledMap.Object.Shape.Text(
-                                fontFamily = objectData.text.fontfamily,
-                                pixelSize = objectData.text.pixelsize,
-                                wordWrap = objectData.text.wrap,
-                                color = Color.fromHex(objectData.text.color),
-                                bold = objectData.text.bold,
-                                italic = objectData.text.italic,
-                                underline = objectData.text.underline,
-                                strikeout = objectData.text.strikeout,
-                                kerning = objectData.text.kerning,
-                                hAlign =
-                                when (objectData.text.halign) {
-                                    "left" -> HAlign.LEFT
-                                    "center" -> HAlign.CENTER
-                                    "right" -> HAlign.RIGHT
-                                    else -> HAlign.LEFT
-                                },
-                                vAlign =
-                                when (objectData.text.valign) {
-                                    "top" -> VAlign.TOP
-                                    "center" -> VAlign.CENTER
-                                    "bottom" -> VAlign.BOTTOM
-                                    else -> VAlign.TOP
-                                }
-                            )
+                            objectData.text != null ->
+                                TiledMap.Object.Shape.Text(
+                                    fontFamily = objectData.text.fontfamily,
+                                    pixelSize = objectData.text.pixelsize,
+                                    wordWrap = objectData.text.wrap,
+                                    color = Color.fromHex(objectData.text.color),
+                                    bold = objectData.text.bold,
+                                    italic = objectData.text.italic,
+                                    underline = objectData.text.underline,
+                                    strikeout = objectData.text.strikeout,
+                                    kerning = objectData.text.kerning,
+                                    hAlign =
+                                        when (objectData.text.halign) {
+                                            "left" -> HAlign.LEFT
+                                            "center" -> HAlign.CENTER
+                                            "right" -> HAlign.RIGHT
+                                            else -> HAlign.LEFT
+                                        },
+                                    vAlign =
+                                        when (objectData.text.valign) {
+                                            "top" -> VAlign.TOP
+                                            "center" -> VAlign.CENTER
+                                            "bottom" -> VAlign.BOTTOM
+                                            else -> VAlign.TOP
+                                        }
+                                )
 
-                        else ->
-                            TiledMap.Object.Shape.Rectangle(
-                                objectData.width,
-                                objectData.height
-                            )
-                    },
+                            else ->
+                                TiledMap.Object.Shape.Rectangle(
+                                    objectData.width,
+                                    objectData.height
+                                )
+                        },
                     properties = objectData.properties.toTiledMapProperty()
                 )
             },

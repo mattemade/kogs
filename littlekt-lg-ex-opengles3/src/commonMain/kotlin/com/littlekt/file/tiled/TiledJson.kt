@@ -45,7 +45,7 @@ internal data class TiledProperty(val name: String, val type: String, val value:
 
 @Serializable
 internal data class TiledLayerData(
-    val id: Int,
+    val id: Int = -1,
     val draworder: String? = null,
     val data: TiledTileLayerDataValue = TiledTileLayerDataValue(),
     val encoding: String = "",
@@ -135,14 +135,14 @@ internal data class TiledObjectData(
 internal data class TiledTextData(
     val text: String,
     val wrap: Boolean,
-    val bold: Boolean,
-    val italic: Boolean,
-    val underline: Boolean,
-    val strikeout: Boolean,
-    val kerning: Boolean,
-    val color: String,
-    val halign: String,
-    val valign: String,
+    val bold: Boolean = false,
+    val italic: Boolean = false,
+    val underline: Boolean = false,
+    val strikeout: Boolean = false,
+    val kerning: Boolean = false,
+    val color: String = "#000000",
+    val halign: String? = null,
+    val valign: String? = null,
     val pixelsize: Int,
     val fontfamily: String
 )
@@ -187,6 +187,7 @@ internal data class TiledTerrainData(
 internal data class TiledTileData(
     val animation: List<TiledTileFrame> = emptyList(),
     val id: Int,
+    val image: String? = null,
     val imageheight: Int = 0,
     val imagewidth: Int = 0,
     val objectgroup: TiledLayerData? = null,

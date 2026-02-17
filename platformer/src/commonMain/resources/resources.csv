@@ -1,0 +1,26 @@
+Sprites!A1:AA1000
+4
+Sprite ID|Texture file|texture url|texture|Animation frames|Frame time, ms|Anchor X|Anchor Y
+Left item||https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/texture/left.png|left.png
+Middle item||https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/texture/middle.png|middle.png
+Right item||https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/texture/right.png|right.png
+Sounds!A1:AB1000
+2
+Sound ID|Sound file|Probability|Min playback rate, %|Max playback rate, %|Min volume, %|Max volume, %|Notes
+Click|click_1.wav||50|150|50|150|Played when screen is clicked
+Music!A1:Z1000
+2
+Music ID|Music file|Notes
+Intro|default_music.mp3|Will be played one time when the game starts
+Levels!A1:Z1000
+10
+preview url|world
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-tileset.png|test-tileset.png
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level3.tmj|test-level3.tmj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level1.tmj|test-level1.tmj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-image.png|test-image.png
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-world.world|test-world.world
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-tileset.tsj|test-tileset.tsj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-world.tiled-project|test-world.tiled-project
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-decoration.tsj|test-decoration.tsj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level2.tmj|test-level2.tmj

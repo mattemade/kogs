@@ -48,6 +48,8 @@ fun FloatArray.fill(block: (Int) -> Float) {
     }
 }
 
+fun lerp(a: Float, b: Float, t: Float): Float = a + (b - a) * t
+
 
 val NO_ROTATION = Vec2f(100f, 0f)
 
