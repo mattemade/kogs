@@ -36,7 +36,7 @@ class PlatformerGame(
 ) : ContextListener(context),
     Releasing by Self() {
 
-    var focused = false
+    var focused = true
         set(value) {
             if (!field && value) {
                 systemRelease(systemCreate())

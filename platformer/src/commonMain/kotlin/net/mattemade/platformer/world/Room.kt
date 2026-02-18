@@ -2,12 +2,11 @@ package net.mattemade.platformer.world
 
 import com.github.quillraven.fleks.configureWorld
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledMap
-import com.littlekt.graphics.g2d.tilemap.tiled.TiledMap.Object.Shape
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledObjectLayer
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledTilesLayer
 import com.littlekt.math.Rect
-import korlibs.io.lang.assert
 import net.mattemade.platformer.PlatformerGameContext
+import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PhysicsComponent
 import net.mattemade.platformer.component.PositionComponent
@@ -17,7 +16,11 @@ import net.mattemade.platformer.system.PhysicsSystem
 import net.mattemade.platformer.system.RenderingSystem
 import net.mattemade.utils.releasing.Releasing
 import net.mattemade.utils.releasing.Self
+import net.mattemade.utils.tiled.BoundsListener
+import net.mattemade.utils.tiled.findBounds
+import org.jbox2d.collision.shapes.ChainShape
 import org.jbox2d.collision.shapes.PolygonShape
+import org.jbox2d.common.Vec2
 import org.jbox2d.dynamics.BodyDef
 import org.jbox2d.dynamics.BodyType
 import org.jbox2d.dynamics.FixtureDef
@@ -59,10 +62,12 @@ class Room(val gameContext: PlatformerGameContext, private val map: TiledMap): R
             it += SpriteComponent(gameContext.assets.textureFiles.whitePixel, Rect(0f, 0f, initialPlayerBounds.width * unitSize, initialPlayerBounds.height * unitSize))
             it += PositionComponent().also { it.position.set(initialPlayerBounds.x * unitSize, initialPlayerBounds.y * unitSize) }
             it += MoveComponent()
+            it += JumpComponent()
             it += PhysicsComponent(
                 body = physics.createBody(BodyDef().apply {
                     type = BodyType.DYNAMIC
                     position.set(initialPlayerBounds.x * unitSize, initialPlayerBounds.y * unitSize)
+                    gravityScale = 4f
                 }).apply {
                     createFixture(FixtureDef().apply {
                         friction = 0f
@@ -94,22 +99,26 @@ class Room(val gameContext: PlatformerGameContext, private val map: TiledMap): R
             }
         }
 
-        for (x in 0..<map.width) {
-            for (y in 0..<map.height) {
-                if (solidMap[x][y]) {
-                    physics.createBody(BodyDef().apply {
-                        type = BodyType.STATIC
-                        position.set(x.toFloat(), y.toFloat() - 0.5f)
-                    }).apply {
-                        createFixture(FixtureDef().apply {
-                            shape = PolygonShape().apply {
-                                setAsBox(0.5f,  0.5f)
-                            }
-                        })
-                    }
+        solidMap.findBounds(object: BoundsListener {
+            val accumulatedVertices = mutableListOf<Vec2>()
+
+            override fun startPath() = accumulatedVertices.clear()
+
+
+            override fun addPoint(x: Float, y: Float) {
+                accumulatedVertices += Vec2(x-0.5f, y-1f)
+            }
+
+            override fun endPath() {
+                physics.createBody(BodyDef()).apply {
+                    createFixture(FixtureDef().apply {
+                        shape = ChainShape().apply {
+                            createLoop(accumulatedVertices.toTypedArray(), accumulatedVertices.size)
+                        }
+                    })
                 }
             }
-        }
+        })
     }
 
     fun render(dt: Float) {
