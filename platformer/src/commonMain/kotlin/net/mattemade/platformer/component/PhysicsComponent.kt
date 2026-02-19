@@ -10,7 +10,7 @@ import org.jbox2d.dynamics.Body
 class PhysicsComponent(
     var body: Body,
     val previousPosition: MutableVec2f = MutableVec2f(body.position.x, body.position.y),
-): Component<PhysicsComponent> {
+) : Component<PhysicsComponent> {
 
     override fun type(): ComponentType<PhysicsComponent> = PhysicsComponent
 
@@ -19,5 +19,5 @@ class PhysicsComponent(
         body.destroyBody()
     }
 
-    companion object: ComponentType<PhysicsComponent>()
+    companion object : ComponentType<PhysicsComponent>()
 }

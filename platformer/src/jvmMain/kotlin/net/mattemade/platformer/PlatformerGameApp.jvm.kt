@@ -15,6 +15,7 @@ fun main() {
         width = 1920
         height = 1080
         title = PlatformerGame.TITLE
+        //vSync = false
     }.start {
         PlatformerGame(
             it,
@@ -25,6 +26,7 @@ fun main() {
                 println("GET $url")
             },
             getBlocking = { url: String ->
+                println("GET $url")
                 runBlocking {
                     client.get(url).bodyAsText().lines()
                 }

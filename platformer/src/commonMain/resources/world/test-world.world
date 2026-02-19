@@ -2,24 +2,31 @@
     "maps": [
         {
             "fileName": "test-level1.tmj",
-            "height": 6400,
-            "width": 9600,
-            "x": 0,
+            "height": 5760,
+            "width": 20480,
+            "x": -10880,
             "y": 0
         },
         {
             "fileName": "test-level2.tmj",
-            "height": 6400,
-            "width": 9600,
+            "height": 11520,
+            "width": 10240,
             "x": 9600,
-            "y": 0
+            "y": -5760
         },
         {
             "fileName": "test-level3.tmj",
-            "height": 6400,
-            "width": 9600,
+            "height": 5760,
+            "width": 10240,
             "x": 9600,
-            "y": 6400
+            "y": 5760
+        },
+        {
+            "fileName": "test-level4.tmj",
+            "height": 11520,
+            "width": 20480,
+            "x": -10880,
+            "y": -11520
         }
     ],
     "onlyShowAdjacentMaps": false,

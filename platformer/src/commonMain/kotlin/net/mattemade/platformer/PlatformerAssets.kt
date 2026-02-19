@@ -8,15 +8,16 @@ import com.littlekt.file.vfs.readAudioClipEx
 import com.littlekt.file.vfs.readBitmapFont
 import com.littlekt.file.vfs.readTexture
 import com.littlekt.file.vfs.readTiledMap
+import com.littlekt.file.vfs.readTiledWorld
 import com.littlekt.graphics.g2d.TextureAtlas
 import com.littlekt.graphics.g2d.TextureSlice
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledMap
 import com.littlekt.graphics.gl.TexMagFilter
 import com.littlekt.graphics.gl.TexMinFilter
 import net.mattemade.platformer.resources.Music
+import net.mattemade.platformer.resources.PlatformerResourceSheet
 import net.mattemade.platformer.resources.Sound
 import net.mattemade.platformer.resources.Sprite
-import net.mattemade.platformer.resources.PlatformerResourceSheet
 import net.mattemade.utils.asset.AssetPack
 import net.mattemade.utils.atlas.RuntimeTextureAtlasPacker
 import net.mattemade.utils.msdf.MsdfFont
@@ -28,7 +29,8 @@ class PlatformerAssets(
     getFromUrl: (String) -> List<String>?,
     overrideFromSheets: String? = null,
 ) : AssetPack(context) {
-    private val runtimeTextureAtlasPacker = RuntimeTextureAtlasPacker(context, useMiMaps = false, allowFiltering = true).releasing()
+    private val runtimeTextureAtlasPacker =
+        RuntimeTextureAtlasPacker(context, useMiMaps = false, allowFiltering = true).releasing()
 
     val shaders by pack(order = 0) { Shaders(context) }
     val resourceSheet by preparePlain(order = 0) {
@@ -130,13 +132,34 @@ class MusicFiles(context: Context, private val resourceSheet: PlatformerResource
 //    val music by prepare { context.resourcesVfs["music/music.ogg"].readAudioClipEx() }
 }
 
-class LevelFiles(context: Context, private val resourceSheet: PlatformerResourceSheet, private val atlas: TextureAtlas): AssetPack(context) {
+class LevelFiles(
+    context: Context,
+    private val resourceSheet: PlatformerResourceSheet,
+    private val atlas: TextureAtlas
+) : AssetPack(context) {
     val map = ConcurrentMutableMap<String, TiledMap>()
 
     private val preparation = resourceSheet.levelFiles.forEach { file ->
         preparePlain {
             context.resourcesVfs["world/$file"].readTiledMap(atlas = atlas, tilesetBorder = 0).also {
                 map[file] = it
+
+                if (map.size == resourceSheet.levelFiles.size) {
+                    resourceSheet.worlds.forEach { worldFile ->
+                        context.resourcesVfs["world/$worldFile"].readTiledWorld().apply {
+                            maps.forEach { mapDefinition ->
+                                map[mapDefinition.fileName]?.let { level ->
+                                    resourceSheet.levelByName[mapDefinition.fileName]?.worldArea?.set(
+                                        mapDefinition.x.toFloat() / level.tileWidth,
+                                        mapDefinition.y.toFloat() / level.tileHeight,
+                                        mapDefinition.width.toFloat() / level.tileWidth,
+                                        mapDefinition.height.toFloat() / level.tileHeight,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -162,16 +185,18 @@ class Fonts(context: Context, private val textures: TextureFiles) : AssetPack(co
 
 
     private fun loadMsdfFont(name: String, lineHeight: Float, descender: Float): PreparableGameAsset<MsdfFont> =
-        preparePlain { MsdfFont(
-            atlas = context.resourcesVfs["font/$name.png"].readTexture(
-                minFilter = TexMinFilter.LINEAR,
-                magFilter = TexMagFilter.LINEAR,
-                mipmaps = false,
-            ),
-            lineHeight = lineHeight,
-            descender = descender,
-            csvSpecs = context.resourcesVfs["font/$name.csv"].readLines(),
-        ) }
+        preparePlain {
+            MsdfFont(
+                atlas = context.resourcesVfs["font/$name.png"].readTexture(
+                    minFilter = TexMinFilter.LINEAR,
+                    magFilter = TexMagFilter.LINEAR,
+                    mipmaps = false,
+                ),
+                lineHeight = lineHeight,
+                descender = descender,
+                csvSpecs = context.resourcesVfs["font/$name.csv"].readLines(),
+            )
+        }
 
     val fredokaMsdf by loadMsdfFont("fredoka", 1.2f, 0.236f)
     val jbMonoMsdf by loadMsdfFont("jbmono", 1.32f, 0.3f)

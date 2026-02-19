@@ -14,7 +14,7 @@ import net.mattemade.platformer.component.PhysicsComponent
 
 class ControlsSystem(
     private val context: Context = inject(),
-    interval: Interval = Fixed(1 / 100f),
+    interval: Interval = Fixed(1 / 200f),
     ): IteratingSystem(family { all(PhysicsComponent, MoveComponent, JumpComponent)}, interval = interval) {
 
     private val input = context.input

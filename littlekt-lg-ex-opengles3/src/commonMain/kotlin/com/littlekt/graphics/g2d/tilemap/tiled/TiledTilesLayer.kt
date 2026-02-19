@@ -32,6 +32,7 @@ class TiledTilesLayer(
     tileHeight: Int,
     tintColor: Color?,
     opacity: Float,
+    parallaxFactor: Vec2f,
     properties: Map<String, TiledMap.Property>,
     private val staggerIndex: TiledMap.StaggerIndex?,
     private val staggerAxis: TiledMap.StaggerAxis?,
@@ -52,6 +53,7 @@ class TiledTilesLayer(
         tileHeight,
         tintColor,
         opacity,
+        parallaxFactor,
         properties
     ) {
     private val lastFrameTimes by lazy { mutableMapOf<Int, Duration>() }

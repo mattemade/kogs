@@ -1,3 +1,5 @@
 package net.mattemade.platformer.resources
 
-class ResourceLevel(val file: String)
+import com.littlekt.math.Rect
+
+class ResourceLevel(val file: String, val worldArea: Rect)

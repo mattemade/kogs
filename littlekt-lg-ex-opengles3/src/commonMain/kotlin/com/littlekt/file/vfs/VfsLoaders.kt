@@ -12,6 +12,7 @@ import com.littlekt.file.ldtk.LDtkMapLoader
 import com.littlekt.file.tiled.TiledMapData
 import com.littlekt.file.tiled.TiledMapLoader
 import com.littlekt.file.tiled.TiledTilesetData
+import com.littlekt.file.tiled.TiledWorldData
 import com.littlekt.graphics.Pixmap
 import com.littlekt.graphics.Texture
 import com.littlekt.graphics.g2d.TextureAtlas
@@ -303,6 +304,10 @@ suspend fun VfsFile.readTiledMap(
     val mapData = decodeFromString<TiledMapData>()
     val loader = TiledMapLoader(parent, mapData, atlas, tilesetBorder, mipmaps, sharedTileSets)
     return loader.loadMap()
+}
+
+suspend fun VfsFile.readTiledWorld(): TiledWorldData {
+    return decodeFromString<TiledWorldData>()
 }
 
 /** Reads Base64 encoded ByteArray for embedded images. */

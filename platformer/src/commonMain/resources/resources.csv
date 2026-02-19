@@ -13,11 +13,12 @@ Music!A1:Z1000
 Music ID|Music file|Notes
 Intro|default_music.mp3|Will be played one time when the game starts
 Levels!A1:Z1000
-10
+11
 preview url|world
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-tileset.png|test-tileset.png
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level3.tmj|test-level3.tmj
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level1.tmj|test-level1.tmj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level4.tmj|test-level4.tmj
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-image.png|test-image.png
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-world.world|test-world.world
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-tileset.tsj|test-tileset.tsj

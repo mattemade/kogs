@@ -21,6 +21,7 @@ import com.littlekt.graphics.g2d.tilemap.tiled.TiledTileset
 import com.littlekt.graphics.slice
 import com.littlekt.graphics.sliceWithBorder
 import com.littlekt.math.Rect
+import com.littlekt.math.Vec2f
 import com.littlekt.math.geom.Point
 import com.littlekt.math.geom.degrees
 import kotlin.time.Duration.Companion.milliseconds
@@ -92,6 +93,7 @@ internal constructor(
                     staggerIndex = mapData.staggerindex?.toStaggerIndex(),
                     staggerAxis = mapData.staggeraxis?.toStaggerAxis(),
                     orientation = mapData.orientation.toOrientation(),
+                    parallaxFactor = Vec2f(layerData.parallaxx, layerData.parallaxy),
                     tileData =
                         layerData.data.let { data ->
                             if (layerData.encoding == "csv" || layerData.encoding.isEmpty()) {
@@ -127,6 +129,7 @@ internal constructor(
                     tintColor = layerData.tintcolor?.let { Color.fromHex(it) },
                     opacity = layerData.opacity,
                     properties = layerData.properties.toTiledMapProperty(),
+                    parallaxFactor = Vec2f(layerData.parallaxx, layerData.parallaxy),
                     texture =
                         layerData.image?.let {
                             atlas?.get(it.pathInfo.baseName)?.slice
@@ -152,6 +155,7 @@ internal constructor(
                     tileHeight = mapData.tileheight,
                     tintColor = layerData.tintcolor?.let { Color.fromHex(it) },
                     opacity = layerData.opacity,
+                    parallaxFactor = Vec2f(layerData.parallaxx, layerData.parallaxy),
                     properties = layerData.properties.toTiledMapProperty(),
                     layers = layerData.layers.map { instantiateLayer(mapData, it, tiles) }
                 )
@@ -298,6 +302,7 @@ internal constructor(
         tileHeight = mapData.tileheight,
         tintColor = tintcolor?.let { Color.fromHex(it) },
         opacity = opacity,
+        parallaxFactor = Vec2f(parallaxx, parallaxy),
         drawOrder = draworder?.toDrawOrder(),
         objects =
             objects.map { objectData ->
