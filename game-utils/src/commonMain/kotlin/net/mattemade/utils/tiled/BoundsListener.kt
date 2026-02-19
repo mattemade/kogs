@@ -42,6 +42,7 @@ fun Array<BooleanArray>.findBounds(listener: BoundsListener) {
 
     var previousState = false
     for (y in 0 until height) {
+        previousState = false
         for (x in 0 until width) {
             val currentState = get(x)[y]
             if (currentState != previousState) {

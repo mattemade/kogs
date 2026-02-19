@@ -1,11 +1,14 @@
 package net.mattemade.platformer.resources
 
+import com.littlekt.math.Rect
+
 class PlatformerResourceSheet(data: List<String>) {
 
     val sprites = mutableListOf<ResourceSprite>()
     val sounds = mutableListOf<ResourceSound>()
     val music = mutableListOf<ResourceMusic>()
     val levels = mutableListOf<ResourceLevel>()
+    val worlds = mutableListOf<String>()
 
     val tilesets = mutableSetOf<String>()
     val textures: Set<String>
@@ -16,6 +19,7 @@ class PlatformerResourceSheet(data: List<String>) {
     val spriteById = mutableMapOf<String, ResourceSprite>()
     val soundsById = mutableMapOf<String, MutableList<ResourceSound>>()
     val musicById = mutableMapOf<String, ResourceMusic>()
+    val levelByName: Map<String, ResourceLevel>
 
 
     init {
@@ -94,11 +98,11 @@ class PlatformerResourceSheet(data: List<String>) {
                     "Levels" -> {
                         line["world"]?.let { file ->
                             if (file.endsWith(".tmj")) { // tiled map
-                                levels += ResourceLevel(file)
+                                levels += ResourceLevel(file, Rect())
                             } else if (file.endsWith(".tsj")) { // tileset
 
                             } else if (file.endsWith(".world")) { // xml world
-
+                                worlds += file
                             } else if (file.endsWith(".png")) {
                                 tilesets += file
                             }
@@ -114,6 +118,7 @@ class PlatformerResourceSheet(data: List<String>) {
         soundFiles = sounds.map { it.file }.toSet()
         musicFiles = music.map { it.file }.toSet()
         levelFiles = levels.map { it.file }.toSet()
+        levelByName = levels.associateBy { it.file }
     }
 
     companion object {

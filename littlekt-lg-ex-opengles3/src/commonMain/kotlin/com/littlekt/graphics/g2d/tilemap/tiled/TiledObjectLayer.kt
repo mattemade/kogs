@@ -3,7 +3,9 @@ package com.littlekt.graphics.g2d.tilemap.tiled
 import com.littlekt.graphics.g2d.Batch
 import com.littlekt.graphics.Color
 import com.littlekt.graphics.g2d.tilemap.tiled.internal.TileData
+import com.littlekt.math.MutableVec2f
 import com.littlekt.math.Rect
+import com.littlekt.math.Vec2f
 
 /**
  * @author Colton Daily
@@ -22,6 +24,7 @@ class TiledObjectLayer(
     tileHeight: Int,
     tintColor: Color?,
     opacity: Float,
+    parallaxFactor: Vec2f,
     properties: Map<String, TiledMap.Property>,
     val drawOrder: TiledMap.Object.DrawOrder?,
     val objects: List<TiledMap.Object>,
@@ -39,6 +42,7 @@ class TiledObjectLayer(
     tileHeight,
     tintColor,
     opacity,
+    parallaxFactor,
     properties
 ) {
 
@@ -48,6 +52,8 @@ class TiledObjectLayer(
     val objectsByName by lazy { objects.associateBy { it.name } }
     val objectsByType by lazy { objects.groupBy { it.type } }
 
+    private val tempVec2f = MutableVec2f()
+
     override fun render(batch: Batch, viewBounds: Rect, x: Float, y: Float, scale: Float, displayObjects: Boolean) {
         if (!displayObjects || !visible) return
 
@@ -56,15 +62,16 @@ class TiledObjectLayer(
 
             obj.gid?.let { gid ->
                 val tileData = gid.toInt().bitsToTileData(flipData)
+                tempVec2f.set(0f, obj.bounds.height).rotate(obj.rotation)
                 tiles[tileData.id]?.let {
                     batch.draw(
                         slice = it.slice,
-                        x = obj.x + offsetX + x + it.offsetX,
-                        y = obj.y + offsetY + y + it.offsetY,
+                        x = (obj.x + offsetX + x + it.offsetX - tempVec2f.x) * scale,
+                        y = (obj.y + offsetY + y + it.offsetY - tempVec2f.y) * scale,
                         originX = 0f,
                         originY = 0f,
-                        width = obj.bounds.width,
-                        height = obj.bounds.height,
+                        width = obj.bounds.width * scale,
+                        height = obj.bounds.height * scale,
                         scaleX = 1f,
                         scaleY = 1f,
                         rotation = obj.rotation,

@@ -11,6 +11,9 @@ import com.littlekt.input.InputProcessor
 import com.littlekt.input.Key
 import com.littlekt.input.Pointer
 import com.littlekt.util.seconds
+import korlibs.time.Time
+import korlibs.time.TimeSpan
+import korlibs.time.blockingSleep
 import net.mattemade.fmod.systemCreate
 import net.mattemade.fmod.systemRelease
 import net.mattemade.platformer.scene.PlatformingScene
@@ -21,6 +24,8 @@ import net.mattemade.utils.releasing.Releasing
 import net.mattemade.utils.releasing.Self
 import net.mattemade.utils.render.DirectRender
 import net.mattemade.utils.render.PixelRender
+import net.mattemade.utils.util.FpsCounter
+import org.jbox2d.internal.System_nanoTime
 import kotlin.time.Duration
 
 class PlatformerGame(
@@ -57,6 +62,7 @@ class PlatformerGame(
             targetWidth = WORLD_WIDTH,
             targetHeight = WORLD_HEIGHT,
             preRenderCall = ::update,
+            blending = true,
             renderCall = { duration: Duration, camera: Camera, batch: Batch, renderer: ShapeRenderer -> },
             shapeRendererUpdate = { ShapeRenderer(it, gameContext.assets.textureFiles.whitePixel) })
     private val directRender =
@@ -67,6 +73,7 @@ class PlatformerGame(
             ::finalUpdate,
             ::finalRender,
             shapeRendererUpdate = { ShapeRenderer(it, gameContext.assets.textureFiles.whitePixel) })
+    private val fpsCounter = FpsCounter()
 
 
     fun blur() {
@@ -130,8 +137,9 @@ class PlatformerGame(
         }
 
         onRender { dt ->
-            gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
-            gl.clearColor(Color.CLEAR)
+            //gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
+            //gl.clearColor(Color.BLACK)
+            //fpsCounter.update(dt.seconds)
 
             if (!audioReady) {
                 audioReady = audio.isReady()
@@ -149,6 +157,8 @@ class PlatformerGame(
                 pixelRender.render(dt)
                 directRender.render(dt)
             }
+
+            //blockingSleep(TimeSpan(100.0))
         }
 
         onDispose(::release)

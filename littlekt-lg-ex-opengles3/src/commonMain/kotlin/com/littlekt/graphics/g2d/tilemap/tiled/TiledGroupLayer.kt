@@ -3,6 +3,7 @@ package com.littlekt.graphics.g2d.tilemap.tiled
 import com.littlekt.graphics.g2d.Batch
 import com.littlekt.graphics.Color
 import com.littlekt.math.Rect
+import com.littlekt.math.Vec2f
 
 /**
  * @author Colton Daily
@@ -21,10 +22,11 @@ class TiledGroupLayer(
     tileHeight: Int,
     tintColor: Color?,
     opacity: Float,
+    parallaxFactor: Vec2f,
     properties: Map<String, TiledMap.Property>,
     val layers: List<TiledLayer>,
 ) : TiledLayer(
-    type, name, id, visible, width, height, offsetX, offsetY, tileWidth, tileHeight, tintColor, opacity, properties
+    type, name, id, visible, width, height, offsetX, offsetY, tileWidth, tileHeight, tintColor, opacity, parallaxFactor, properties
 ) {
 
     override fun render(batch: Batch, viewBounds: Rect, x: Float, y: Float, scale: Float, displayObjects: Boolean) {

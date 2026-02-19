@@ -7,6 +7,7 @@ import com.littlekt.graphics.g2d.tilemap.TileLayer
 import com.littlekt.graphics.g2d.tilemap.tiled.internal.TileData
 import com.littlekt.graphics.toFloatBits
 import com.littlekt.math.Rect
+import com.littlekt.math.Vec2f
 import com.littlekt.math.geom.Angle
 import com.littlekt.math.geom.degrees
 import com.littlekt.util.calculateViewBounds
@@ -42,6 +43,7 @@ abstract class TiledLayer(
     val tintColor: Color?,
     /** The opacity of the layer. */
     val opacity: Float,
+    val parallaxFactor: Vec2f,
     /**
      * A map of properties. Access by using property name string value.
      *

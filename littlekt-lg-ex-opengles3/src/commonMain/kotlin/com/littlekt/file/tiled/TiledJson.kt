@@ -58,6 +58,8 @@ internal data class TiledLayerData(
     val image: String? = null,
     val offsetx: Float = 0f,
     val offsety: Float = 0f,
+    val parallaxx: Float = 1f,
+    val parallaxy: Float = 1f,
     val type: String,
     val startx: Int = 0,
     val starty: Int = 0,
@@ -219,3 +221,17 @@ internal data class TiledWangColorData(
 
 @Serializable
 internal data class TiledWangTileData(val tileid: Int, val wangid: List<Int>)
+
+@Serializable
+data class TiledWorldData(
+    val maps: List<TiledWorldMapData>,
+)
+
+@Serializable
+data class TiledWorldMapData(
+    val fileName: String,
+    val height: Int,
+    val width: Int,
+    val x: Int,
+    val y: Int,
+)
