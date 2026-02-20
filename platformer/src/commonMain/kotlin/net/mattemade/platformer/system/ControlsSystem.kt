@@ -30,18 +30,15 @@ class ControlsSystem(
         }
 
         entity[JumpComponent].apply {
-            if (input.isKeyJustPressed(Key.SPACE) && canJump) {
-                jumping = true
-                canHoldJumpForTicks = JumpComponent.MAX_JUMP_TICKS
+            if (input.isKeyJustPressed(Key.SPACE) && (canJumpFromGround || canJumpInAir > 0) && !jumping) {
+                executeJump()
             } else if (!input.isKeyPressed(Key.SPACE)) {
                 jumping = false
                 jumpBuffer = 0
-            } else { // jump is still pressed
-                if (canJump) {
+            } else { // jump is still pressed, do not double-jump automatically in this case, but jump when landed within buffered time
+                if (canJumpFromGround) {
                     if (!jumping && jumpBuffer < JumpComponent.BUFFER_TICKS) {
-                        jumping = true
-                        canHoldJumpForTicks = JumpComponent.MAX_JUMP_TICKS
-                        jumpBuffer = 0
+                        executeJump()
                     }
                 } else {
                     jumpBuffer++
@@ -53,5 +50,14 @@ class ControlsSystem(
             speed = 1f
             direction.set(horizontalSpeed, verticalSpeed)
         }
+    }
+
+    private fun JumpComponent.executeJump() {
+        jumping = true
+        if (!canJumpFromGround) {
+            canJumpInAir--
+        }
+        canHoldJumpForTicks = JumpComponent.MAX_JUMP_TICKS
+        jumpBuffer = 0
     }
 }

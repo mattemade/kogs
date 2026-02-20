@@ -27,7 +27,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
         ).releasing()
     }
 
-    var currentRoom: Room = rooms[1]
+    var currentRoom: Room = rooms.first { it.name == "test-level1.tmj" }
 
     override fun update(seconds: Float) {
         currentRoom.render(seconds)

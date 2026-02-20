@@ -64,10 +64,12 @@ class PhysicsSystem(
             // TODO nononono, make a better check with a ground sensor
             if (physicsComponent.body.linearVelocityY == 0f) {
                 coyoteTimeInTicks = JumpComponent.COYOTE_TICKS
+                canJumpFromGround = true
+                canJumpInAir = 2
             } else {
                 coyoteTimeInTicks--
+                canJumpFromGround = coyoteTimeInTicks > 0
             }
-            canJump = coyoteTimeInTicks > 0
         }
         entity.getOrNull(MomentaryForceComponent)?.let { force ->
             tempVec2.set(force.force.x, force.force.y)
@@ -76,6 +78,12 @@ class PhysicsSystem(
             entity.configure {
                 it -= MomentaryForceComponent
             }
+        }
+
+        if (physicsComponent.body.linearVelocityY > MAX_FALL_VELOCITY) {
+            tempVec2.set(0f, MAX_FALL_VELOCITY - physicsComponent.body.linearVelocityY)
+                .mulLocal(physicsComponent.body.getMass()) // so the applied velocity won't depend on mass
+            physicsComponent.body.applyLinearImpulse(tempVec2, physicsComponent.body.worldCenter, wake = true)
         }
     }
 
@@ -93,6 +101,7 @@ class PhysicsSystem(
     companion object {
         private val tempVec2 = Vec2()
         private const val JUMP_VELOCITY = -12f
+        private const val MAX_FALL_VELOCITY = 30f
         private const val GRAVITY_IN_JUMP = 2f
         private const val GRAVITY_IN_FALL = 10f
     }
