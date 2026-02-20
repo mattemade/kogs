@@ -139,7 +139,7 @@ class PlatformerGame(
         onRender { dt ->
             //gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
             //gl.clearColor(Color.BLACK)
-            //fpsCounter.update(dt.seconds)
+            fpsCounter.update(dt.seconds)
 
             if (!audioReady) {
                 audioReady = audio.isReady()

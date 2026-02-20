@@ -1,12 +1,19 @@
 package net.mattemade.platformer
 
+import com.littlekt.math.ceilToInt
 import com.littlekt.math.floor
+import kotlin.math.roundToInt
 
-const val WORLD_UNIT_WIDTH = 32
-const val WORLD_UNIT_HEIGHT = 18
-const val PIXEL_PER_UNIT = 30
-const val WORLD_WIDTH = WORLD_UNIT_WIDTH * PIXEL_PER_UNIT
-const val WORLD_HEIGHT = WORLD_UNIT_HEIGHT * PIXEL_PER_UNIT
+const val SCREEN_RESOLUTION_WIDTH = 960
+const val SCREEN_RESOLUTION_HEIGHT = 540
+const val TILE_PIXEL_SIZE = 48
+
+
+const val WORLD_UNIT_WIDTH = SCREEN_RESOLUTION_WIDTH.toFloat() / TILE_PIXEL_SIZE
+const val WORLD_UNIT_HEIGHT = SCREEN_RESOLUTION_HEIGHT.toFloat() / TILE_PIXEL_SIZE
+const val PIXEL_PER_UNIT = TILE_PIXEL_SIZE//60
+const val WORLD_WIDTH = SCREEN_RESOLUTION_WIDTH//WORLD_UNIT_WIDTH * PIXEL_PER_UNIT
+const val WORLD_HEIGHT = SCREEN_RESOLUTION_HEIGHT//WORLD_UNIT_HEIGHT * PIXEL_PER_UNIT
 const val WORLD_WIDTH_FLOAT = WORLD_WIDTH.toFloat()
 const val WORLD_HEIGHT_FLOAT = WORLD_HEIGHT.toFloat()
 const val PIXEL_PER_UNIT_FLOAT = PIXEL_PER_UNIT.toFloat()
@@ -16,4 +23,4 @@ const val HALF_WORLD_UNIT_HEIGHT = WORLD_UNIT_HEIGHT * 0.5f
 
 const val UNITS_PER_PIXEL = 1 / PIXEL_PER_UNIT_FLOAT
 
-val Float.px: Float get() = (this / UNITS_PER_PIXEL).floor() * UNITS_PER_PIXEL
+val Float.px: Float get() = (this / UNITS_PER_PIXEL).roundToInt() * UNITS_PER_PIXEL
