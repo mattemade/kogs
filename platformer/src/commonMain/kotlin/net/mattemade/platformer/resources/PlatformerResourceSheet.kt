@@ -103,7 +103,7 @@ class PlatformerResourceSheet(data: List<String>) {
 
                             } else if (file.endsWith(".world")) { // xml world
                                 worlds += file
-                            } else if (file.endsWith(".png")) {
+                            } else if (file.endsWith(".png") || file.endsWith(".jpg")) {
                                 tilesets += file
                             }
                         }
