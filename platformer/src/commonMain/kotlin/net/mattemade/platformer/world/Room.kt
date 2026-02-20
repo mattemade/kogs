@@ -110,11 +110,11 @@ class Room(
     }
 
     init {
-        var solidTileId = 0
+        val solidTileIds = mutableSetOf<Int>()
         map.tileSets.forEach { tileset ->
             tileset.tiles.forEach { tile ->
                 if (tile.objectGroup?.objects?.any { it.name == "solid" } == true) {
-                    solidTileId = tile.id
+                    solidTileIds += tile.id
                     return@forEach
                 }
             }
@@ -124,7 +124,7 @@ class Room(
             if (layer is TiledTilesLayer) {
                 for (x in 0..<map.width) {
                     for (y in 0..<map.height) {
-                        solidMap[x][y] = solidMap[x][y] or (layer.getTileId(x, y) == solidTileId)
+                        solidMap[x][y] = solidMap[x][y] or (solidTileIds.contains(layer.getTileId(x, y)))
                     }
                 }
             }
