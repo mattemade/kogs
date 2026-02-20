@@ -13,16 +13,22 @@ Music!A1:Z1000
 Music ID|Music file|Notes
 Intro|default_music.mp3|Will be played one time when the game starts
 Levels!A1:Z1000
-12
+18
 preview url|world
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level5.tmj|test-level5.tmj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/room_pearl_fg.png|room_pearl_fg.png
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-tileset.png|test-tileset.png
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level3.tmj|test-level3.tmj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/room_pearl.tmj|room_pearl.tmj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/room_pearl_bg.jpg|room_pearl_bg.jpg
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level1.tmj|test-level1.tmj
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level4.tmj|test-level4.tmj
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-image.png|test-image.png
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-world.world|test-world.world
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-tileset.tsj|test-tileset.tsj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/room_pearl_3.png|room_pearl_3.png
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-world.tiled-project|test-world.tiled-project
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-decoration.tsj|test-decoration.tsj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/room_pearl_1.png|room_pearl_1.png
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level2.tmj|test-level2.tmj
-https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level5.tmj|test-level5.tmj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/room_pearl_2.png|room_pearl_2.png

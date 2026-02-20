@@ -34,6 +34,13 @@
             "width": 20480,
             "x": -31360,
             "y": 0
+        },
+        {
+            "fileName": "room_pearl.tmj",
+            "height": 5760,
+            "width": 10240,
+            "x": -21120,
+            "y": -6400
         }
     ],
     "onlyShowAdjacentMaps": false,

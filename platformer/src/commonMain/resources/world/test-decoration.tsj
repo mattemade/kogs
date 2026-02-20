@@ -8,17 +8,47 @@
  "margin":0,
  "name":"test-decoration",
  "spacing":0,
- "tilecount":1,
- "tiledversion":"1.10.2",
- "tileheight":640,
+ "tilecount":6,
+ "tiledversion":"1.11.2",
+ "tileheight":763,
  "tiles":[
         {
          "id":0,
          "image":"test-image.png",
          "imageheight":640,
          "imagewidth":640
+        }, 
+        {
+         "id":1,
+         "image":"room_pearl_fg.png",
+         "imageheight":763,
+         "imagewidth":1278
+        }, 
+        {
+         "id":2,
+         "image":"room_pearl_1.png",
+         "imageheight":243,
+         "imagewidth":372
+        }, 
+        {
+         "id":3,
+         "image":"room_pearl_2.png",
+         "imageheight":542,
+         "imagewidth":938
+        }, 
+        {
+         "id":4,
+         "image":"room_pearl_3.png",
+         "imageheight":621,
+         "imagewidth":947
+        }, 
+        {
+         "id":5,
+         "image":"room_pearl_bg.jpg",
+         "imageheight":763,
+         "imagewidth":1278
         }],
- "tilewidth":640,
+ "tilewidth":1278,
  "type":"tileset",
  "version":"1.10"
 }
