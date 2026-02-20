@@ -7,12 +7,14 @@ import com.littlekt.graphics.g2d.tilemap.tiled.TiledObjectLayer
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledTilesLayer
 import com.littlekt.math.Rect
 import com.littlekt.math.Vec2f
+import com.littlekt.util.datastructure.FloatArrayList
 import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PhysicsComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.SpriteComponent
+import net.mattemade.platformer.px
 import net.mattemade.platformer.system.ControlsSystem
 import net.mattemade.platformer.system.PhysicsSystem
 import net.mattemade.platformer.system.RenderingSystem
@@ -56,6 +58,8 @@ class Room(
         }
     }
 
+    private val testPolygons = mutableListOf<FloatArrayList>()
+
     val ecs = configureWorld {
         injectables {
             add(physics)
@@ -66,7 +70,7 @@ class Room(
         systems {
             add(ControlsSystem())
             add(PhysicsSystem())
-            add(RenderingSystem())
+            add(RenderingSystem(testPolygons = testPolygons))
         }
 
     }.rememberTo {
@@ -77,7 +81,8 @@ class Room(
     private val playerEntity = ecs.entity {
         it += SpriteComponent(
             gameContext.assets.textureFiles.whitePixel,
-            Rect(0f, 0f, initialPlayerBounds.width, initialPlayerBounds.height)
+            // baking offset into the bounds, maybe it should be a separate property?
+            Rect(-0.45f.px, -0.9f.px, initialPlayerBounds.width * 0.91f, initialPlayerBounds.height * 0.91f)
         )
         it += PositionComponent().also {
             it.position.set(initialPlayerBounds.cx, initialPlayerBounds.cy)
@@ -132,7 +137,7 @@ class Room(
 
 
             override fun addPoint(x: Float, y: Float) {
-                accumulatedVertices += Vec2(x - 0.5f, y - 1f)
+                accumulatedVertices += Vec2(x, y)
             }
 
             override fun endPath() {
@@ -143,6 +148,13 @@ class Room(
                         }
                     })
                 }
+
+                /*testPolygons += FloatArrayList(capacity = accumulatedVertices.size * 2).apply {
+                    accumulatedVertices.forEachIndexed { index, vec2 ->
+                        set(index*2, vec2.x)
+                        set(index*2 + 1, vec2.y)
+                    }
+                }*/
             }
         })
     }
@@ -156,8 +168,8 @@ class Room(
         physicsComponent: PhysicsComponent
     ) {
         ecs.apply {
-            //playerEntity.remove()
             playerEntity.configure {
+                // all the components are replaced
                 it += spriteComponent
                 it += positionComponent.also {
                     playerPosition = it.position
@@ -178,7 +190,7 @@ class Room(
         ecs.update(dt)
 
         // TODO: these padding should really be half of body size, but in this case we need to compensate that when switching rooms to not stuck in the wall right after the entrance
-        if (playerPosition.x < ROOM_TELEPORT_HORIZONTAL_PADDING || playerPosition.y < ROOM_TELEPORT_VERTICAL_PADDING || playerPosition.x > worldArea.width - ROOM_TELEPORT_HORIZONTAL_PADDING || playerPosition.y > worldArea.height - ROOM_TELEPORT_VERTICAL_PADDING) {
+        if (playerPosition.x < -ROOM_TELEPORT_HORIZONTAL_PADDING || playerPosition.y < -ROOM_TELEPORT_VERTICAL_PADDING || playerPosition.x > worldArea.width - ROOM_TELEPORT_HORIZONTAL_PADDING || playerPosition.y > worldArea.height - ROOM_TELEPORT_VERTICAL_PADDING) {
             switchRoom(playerEntity)
         }
 
@@ -189,7 +201,7 @@ class Room(
     }
 
     companion object {
-        const val ROOM_TELEPORT_HORIZONTAL_PADDING = -0.1f
-        const val ROOM_TELEPORT_VERTICAL_PADDING = -0.1f
+        const val ROOM_TELEPORT_HORIZONTAL_PADDING = 0f//0.5f
+        const val ROOM_TELEPORT_VERTICAL_PADDING = 0f
     }
 }

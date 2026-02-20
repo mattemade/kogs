@@ -62,12 +62,13 @@ class TiledObjectLayer(
 
             obj.gid?.let { gid ->
                 val tileData = gid.toInt().bitsToTileData(flipData)
+                // Tiled assumes the (0,0) is bottom-left, but we have it top-left, so need to compensate for that when rotating
                 tempVec2f.set(0f, obj.bounds.height).rotate(obj.rotation)
                 tiles[tileData.id]?.let {
                     batch.draw(
                         slice = it.slice,
-                        x = (obj.x + offsetX + x + it.offsetX - tempVec2f.x) * scale,
-                        y = (obj.y + offsetY + y + it.offsetY - tempVec2f.y) * scale,
+                        x = (obj.x + offsetX + it.offsetX - tempVec2f.x) * scale + x,
+                        y = (obj.y + offsetY + it.offsetY - tempVec2f.y) * scale + y,
                         originX = 0f,
                         originY = 0f,
                         width = obj.bounds.width * scale,

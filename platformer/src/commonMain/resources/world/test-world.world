@@ -27,6 +27,13 @@
             "width": 20480,
             "x": -10880,
             "y": -11520
+        },
+        {
+            "fileName": "test-level5.tmj",
+            "height": 1920,
+            "width": 20480,
+            "x": -31360,
+            "y": 0
         }
     ],
     "onlyShowAdjacentMaps": false,

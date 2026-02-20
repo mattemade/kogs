@@ -43,11 +43,15 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
     private fun switchRoom(player: Entity) {
         currentRoom.apply {
             ecs.apply {
+                // TODO: really? maybe all of that should be arguments?
                 val playerPosition = player[PositionComponent].position
+                // teleporting happens when half of the physical body goes out of level bounds,
+                // so the probing coordinate should be compensated for that
                 tempVec2f.set(
-                    worldArea.x + playerPosition.x,
-                    worldArea.y + playerPosition.y,
+                    worldArea.x + playerPosition.x + Room.ROOM_TELEPORT_HORIZONTAL_PADDING,
+                    worldArea.y + playerPosition.y + Room.ROOM_TELEPORT_VERTICAL_PADDING,
                 )
+                // TODO: is there a way to do that better than O(N)? maybe we can prepare a world graph ahead of time
                 rooms.forEach {
                     if (it.worldArea.contains(tempVec2f)) {
                         val worldPositionDiff =
@@ -63,9 +67,8 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                             player[PositionComponent],
                             player[MoveComponent],
                             player[JumpComponent],
-                            player[PhysicsComponent], // just to copy velocity and stuff
+                            player[PhysicsComponent], // just to copy velocity and stuff, SHOULD NOT BE REUSED THERE as it's connected to the Room's B2D World
                         )
-                        //player.remove()
                         currentRoom = it
                         return
                     }
