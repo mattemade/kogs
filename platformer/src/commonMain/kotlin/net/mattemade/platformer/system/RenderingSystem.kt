@@ -36,7 +36,11 @@ class RenderingSystem(
 ) : IteratingSystem(family = family { all(PositionComponent, SpriteComponent) }) {
 
     val triangulator = Triangulator()
-    val testPolygonTrinalges by lazy { testPolygons.map { it.toFloatArray() to triangulator.computeTriangles(it).toShortArray() } }
+    val testPolygonTrinalges by lazy {
+        testPolygons.map {
+            it.toFloatArray() to triangulator.computeTriangles(it).toShortArray()
+        }
+    }
 
     private val viewport = ScalingViewport(
         scaler = Scaler.Stretch(),
@@ -52,13 +56,15 @@ class RenderingSystem(
     private val playerLayerIndex = map.layers.indexOfFirst { it.name == "player-spawn" }
     private val mapLayers = map.layers.size
 
+    private val mapFillsWidth = map.width >= WORLD_UNIT_WIDTH
+    private val mapFillsHeight = map.height >= WORLD_UNIT_HEIGHT
     private val minCameraPosition = Vec2f(
-        if (map.width >= WORLD_UNIT_WIDTH) HALF_WORLD_UNIT_WIDTH else (WORLD_UNIT_WIDTH - map.width) * 0.5f,
-        if (map.height >= WORLD_UNIT_HEIGHT) HALF_WORLD_UNIT_HEIGHT else (WORLD_UNIT_HEIGHT - map.height) * 0.5f,
+        if (mapFillsWidth) HALF_WORLD_UNIT_WIDTH else map.width * 0.5f,
+        if (mapFillsHeight) HALF_WORLD_UNIT_HEIGHT else map.height * 0.5f,
     )
     private val maxCameraPosition = Vec2f(
-        if (map.width >= WORLD_UNIT_WIDTH) map.width - HALF_WORLD_UNIT_WIDTH else minCameraPosition.x,
-        if (map.height >= WORLD_UNIT_HEIGHT) map.height - HALF_WORLD_UNIT_HEIGHT else minCameraPosition.y,
+        if (mapFillsWidth) map.width - HALF_WORLD_UNIT_WIDTH else minCameraPosition.x,
+        if (mapFillsHeight) map.height - HALF_WORLD_UNIT_HEIGHT else minCameraPosition.y,
     )
 
     override fun onTick() {
@@ -67,13 +73,50 @@ class RenderingSystem(
 
         // TODO: there will be other creatues in the family, we should specify to pick the Player
         val playerPosition = family.first()[PositionComponent].position
-        camera.position.set(playerPosition.x.clamp(minCameraPosition.x, maxCameraPosition.x).px, playerPosition.y.clamp(minCameraPosition.y, maxCameraPosition.y).px, 0f)
+        camera.position.set(
+            playerPosition.x.clamp(minCameraPosition.x, maxCameraPosition.x).px,
+            playerPosition.y.clamp(minCameraPosition.y, maxCameraPosition.y).px,
+            0f
+        )
         //camera.position.set(WORLD_UNIT_WIDTH * 0.5f, WORLD_UNIT_HEIGHT * 0.5f, 0f)
         viewport.apply(context)
         batch.begin(camera.viewProjection)
         renderMap(from = 0, to = playerLayerIndex)
         super.onTick() // tick to render entities
-        renderMap(from = playerLayerIndex+1, to = mapLayers)
+        renderMap(from = playerLayerIndex + 1, to = mapLayers)
+
+        if (!mapFillsWidth) {
+            shapeRenderer.filledRectangle(
+                x = minCameraPosition.x - map.width * 0.5f,
+                y = camera.position.y - HALF_WORLD_UNIT_HEIGHT,
+                width = -WORLD_UNIT_WIDTH,
+                height = WORLD_UNIT_HEIGHT,
+                color = sideBarColor,
+            )
+            shapeRenderer.filledRectangle(
+                x = minCameraPosition.x + map.width * 0.5f,
+                y = camera.position.y - HALF_WORLD_UNIT_HEIGHT,
+                width = WORLD_UNIT_WIDTH,
+                height = WORLD_UNIT_HEIGHT,
+                color = sideBarColor,
+            )
+        }
+        if (!mapFillsHeight) {
+            shapeRenderer.filledRectangle(
+                x = camera.position.x - HALF_WORLD_UNIT_WIDTH,
+                y = minCameraPosition.y - map.height * 0.5f,
+                width = WORLD_UNIT_WIDTH,
+                height = -WORLD_UNIT_HEIGHT,
+                color = sideBarColor,
+            )
+            shapeRenderer.filledRectangle(
+                x = camera.position.x - HALF_WORLD_UNIT_WIDTH,
+                y = minCameraPosition.y + map.height * 0.5f,
+                width = WORLD_UNIT_WIDTH,
+                height = WORLD_UNIT_HEIGHT,
+                color = sideBarColor,
+            )
+        }
 
         testPolygonTrinalges.forEach {
             shapeRenderer.filledPolygon(it.first, it.second)
@@ -106,6 +149,10 @@ class RenderingSystem(
             height = bounds.height,
             color = Color.RED.toFloatBits()
         )
+    }
+
+    companion object {
+        private val sideBarColor = Color.BLACK.toFloatBits()
     }
 
 }

@@ -3,17 +3,13 @@ package net.mattemade.platformer
 import com.littlekt.Context
 import com.littlekt.ContextListener
 import com.littlekt.graphics.Camera
-import com.littlekt.graphics.Color
 import com.littlekt.graphics.g2d.Batch
 import com.littlekt.graphics.g2d.shape.ShapeRenderer
-import com.littlekt.graphics.gl.ClearBufferMask
 import com.littlekt.input.InputProcessor
 import com.littlekt.input.Key
 import com.littlekt.input.Pointer
+import com.littlekt.math.MutableVec2i
 import com.littlekt.util.seconds
-import korlibs.time.Time
-import korlibs.time.TimeSpan
-import korlibs.time.blockingSleep
 import net.mattemade.fmod.systemCreate
 import net.mattemade.fmod.systemRelease
 import net.mattemade.platformer.scene.PlatformingScene
@@ -25,7 +21,6 @@ import net.mattemade.utils.releasing.Self
 import net.mattemade.utils.render.DirectRender
 import net.mattemade.utils.render.PixelRender
 import net.mattemade.utils.util.FpsCounter
-import org.jbox2d.internal.System_nanoTime
 import kotlin.time.Duration
 
 class PlatformerGame(
@@ -59,12 +54,13 @@ class PlatformerGame(
     private val pixelRender =
         PixelRender(
             context,
-            targetWidth = WORLD_WIDTH,
-            targetHeight = WORLD_HEIGHT,
+            targetWidth = 1, // it will be resized from parameters
+            targetHeight = 1,
             preRenderCall = ::update,
             blending = true,
             renderCall = { duration: Duration, camera: Camera, batch: Batch, renderer: ShapeRenderer -> },
             shapeRendererUpdate = { ShapeRenderer(it, gameContext.assets.textureFiles.whitePixel) })
+
     private val directRender =
         DirectRender(
             context,
@@ -73,6 +69,9 @@ class PlatformerGame(
             ::finalUpdate,
             ::finalRender,
             shapeRendererUpdate = { ShapeRenderer(it, gameContext.assets.textureFiles.whitePixel) })
+
+    private val screenSize = MutableVec2i(WORLD_WIDTH, WORLD_HEIGHT)
+
     private val fpsCounter = FpsCounter()
 
 
@@ -132,6 +131,8 @@ class PlatformerGame(
             if (width > directRender.viewport.virtualWidth || height > directRender.viewport.virtualHeight) {
 
             }
+            screenSize.x = width
+            screenSize.y = height
             directRender.resize(width, height, WORLD_WIDTH_FLOAT, WORLD_HEIGHT_FLOAT)
             directRender.camera.position.set(WORLD_WIDTH_FLOAT * 0.5f, WORLD_HEIGHT_FLOAT * 0.5f, 0f)
         }
@@ -147,6 +148,11 @@ class PlatformerGame(
             if (!assetsReady) {
                 assetsReady = audioReady && gameContext.assets.isLoaded
                 if (assetsReady) {
+                    // parameters could be refreshed at that point, need to resize the viewport to match them
+                    directRender.resize(screenSize.x, screenSize.y, WORLD_WIDTH_FLOAT, WORLD_HEIGHT_FLOAT)
+                    directRender.camera.position.set(WORLD_WIDTH_FLOAT * 0.5f, WORLD_HEIGHT_FLOAT * 0.5f, 0f)
+                    pixelRender.resize(WORLD_WIDTH, WORLD_HEIGHT)
+
                     directRender.updateShapeRenderer()
                     pixelRender.updateShapeRenderer()
                     scene = PlatformingScene(gameContext)
@@ -178,7 +184,14 @@ class PlatformerGame(
     }
 
     private fun finalRender(duration: Duration, batch: Batch, shapeRenderer: ShapeRenderer) {
-        batch.draw(pixelRender.texture, x = 0f, y = 0f, width = WORLD_WIDTH_FLOAT, height = WORLD_HEIGHT_FLOAT, flipY = true)
+        batch.draw(
+            pixelRender.texture,
+            x = 0f,
+            y = 0f,
+            width = WORLD_WIDTH_FLOAT,
+            height = WORLD_HEIGHT_FLOAT,
+            flipY = true
+        )
     }
 
 

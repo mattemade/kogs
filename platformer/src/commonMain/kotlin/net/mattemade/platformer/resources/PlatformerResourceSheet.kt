@@ -1,25 +1,27 @@
 package net.mattemade.platformer.resources
 
 import com.littlekt.math.Rect
+import net.mattemade.platformer.WORLD_NAME
+import net.mattemade.platformer.parameterOverride
 
 class PlatformerResourceSheet(data: List<String>) {
 
     val sprites = mutableListOf<ResourceSprite>()
     val sounds = mutableListOf<ResourceSound>()
     val music = mutableListOf<ResourceMusic>()
-    val levels = mutableListOf<ResourceLevel>()
+    //val levels = mutableListOf<ResourceLevel>()
     val worlds = mutableListOf<String>()
 
     val tilesets = mutableSetOf<String>()
     val textures: Set<String>
     val soundFiles: Set<String>
     val musicFiles: Set<String>
-    val levelFiles: Set<String>
+    //val levelFiles: Set<String>
 
     val spriteById = mutableMapOf<String, ResourceSprite>()
     val soundsById = mutableMapOf<String, MutableList<ResourceSound>>()
     val musicById = mutableMapOf<String, ResourceMusic>()
-    val levelByName: Map<String, ResourceLevel>
+    val levelByName = mutableMapOf<String, ResourceLevel>()
 
 
     init {
@@ -98,27 +100,36 @@ class PlatformerResourceSheet(data: List<String>) {
                     "Levels" -> {
                         line["world"]?.let { file ->
                             if (file.endsWith(".tmj")) { // tiled map
-                                levels += ResourceLevel(file, Rect())
+                                //levels += ResourceLevel(file, Rect())
                             } else if (file.endsWith(".tsj")) { // tileset
 
                             } else if (file.endsWith(".world")) { // xml world
-                                worlds += file
+                                //worlds += file
                             } else if (file.endsWith(".png") || file.endsWith(".jpg")) {
                                 tilesets += file
+                            }
+                        }
+                    }
+
+                    "Parameters" -> {
+                        line["Key (DO NOT CHANGE)"]?.let { key ->
+                            line["Value"]?.let { value ->
+                                parameterOverride[key] = value
                             }
                         }
                     }
                 }
                 row++
             }
-
         }
+
+        worlds.add(WORLD_NAME)
 
         textures = sprites.map { it.file }.toSet()
         soundFiles = sounds.map { it.file }.toSet()
         musicFiles = music.map { it.file }.toSet()
-        levelFiles = levels.map { it.file }.toSet()
-        levelByName = levels.associateBy { it.file }
+        //levelFiles = levels.map { it.file }.toSet()
+        //levelByName = levels.associateBy { it.file }
     }
 
     companion object {
@@ -128,6 +139,7 @@ class PlatformerResourceSheet(data: List<String>) {
                 "Sounds",
                 "Music",
                 "Levels",
+                "Parameters",
             )
 
         fun ranges(encode: (String) -> String) =

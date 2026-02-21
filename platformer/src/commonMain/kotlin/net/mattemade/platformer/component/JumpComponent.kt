@@ -5,6 +5,7 @@ import com.github.quillraven.fleks.ComponentType
 
 class JumpComponent(
     var jumping: Boolean = false,
+    var wasJumping: Boolean = false,
     var canJumpFromGround: Boolean = false,
     var canJumpInAir: Int = 2,
     var canHoldJumpForTicks: Int = MAX_JUMP_TICKS,

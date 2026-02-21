@@ -8,6 +8,7 @@ import com.littlekt.graphics.g2d.tilemap.tiled.TiledTilesLayer
 import com.littlekt.math.Rect
 import com.littlekt.math.Vec2f
 import com.littlekt.util.datastructure.FloatArrayList
+import net.mattemade.platformer.GRAVITY_IN_FALL
 import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
@@ -39,14 +40,14 @@ class Room(
 ) : Releasing by Self() {
 
     private val unitSize = 1f / map.tileWidth
-    private val initialPlayerBounds = (map.layer("player-spawn") as TiledObjectLayer).objects.first().bounds.let {
+    private val initialPlayerBounds = (map.layer("player-spawn") as? TiledObjectLayer)?.objects?.firstOrNull()?.bounds?.let {
         Rect(
-            x = it.x * unitSize,
-            y = (it.y - it.height) * unitSize,
-            width = it.width * unitSize,
-            height = it.height * unitSize,
+            x = it.cx * unitSize - 0.5f,
+            y = it.cy * unitSize - 1f,
+            width = 1f,
+            height = 2f,
         )
-    }
+    } ?: Rect()
 
     private val solidMap = Array(map.width) { BooleanArray(map.height) }
 
@@ -94,7 +95,7 @@ class Room(
             body = physics.createBody(BodyDef().apply {
                 type = BodyType.DYNAMIC
                 position.set(initialPlayerBounds.cx, initialPlayerBounds.cy)
-                gravityScale = 12f
+                gravityScale = GRAVITY_IN_FALL
             }).apply {
                 createFixture(FixtureDef().apply {
                     friction = 0f

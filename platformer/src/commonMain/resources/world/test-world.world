@@ -41,6 +41,13 @@
             "width": 10240,
             "x": -21120,
             "y": -6400
+        },
+        {
+            "fileName": "room_32.tmj",
+            "height": 704,
+            "width": 1024,
+            "x": -22144,
+            "y": -1632
         }
     ],
     "onlyShowAdjacentMaps": false,

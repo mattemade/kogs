@@ -13,22 +13,56 @@ Music!A1:Z1000
 Music ID|Music file|Notes
 Intro|default_music.mp3|Will be played one time when the game starts
 Levels!A1:Z1000
-18
+38
 preview url|world
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level5.tmj|test-level5.tmj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/text-32px-Tileset.png|text-32px-Tileset.png
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-32px.tiled-project|test-32px.tiled-project
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/room_pearl_fg.png|room_pearl_fg.png
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-tileset.png|test-tileset.png
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/room_32.tmj|room_32.tmj
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level3.tmj|test-level3.tmj
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/room_pearl.tmj|room_pearl.tmj
-https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/room_pearl_bg.jpg|room_pearl_bg.jpg
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-32px.tiled-session|test-32px.tiled-session
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-32px-level7-nook.tmj|test-32px-level7-nook.tmj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-32px-level3-western-shaft.tmj|test-32px-level3-western-shaft.tmj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-32px-level4-eastern%20shaft.tmj|test-32px-level4-eastern shaft.tmj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-animation.png|test-animation.png
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-animation.tsj|test-animation.tsj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/text-32px-Tileset-background.png|text-32px-Tileset-background.png
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/rainforest_grass_tileset.tsj|rainforest_grass_tileset.tsj
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level1.tmj|test-level1.tmj
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level4.tmj|test-level4.tmj
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-image.png|test-image.png
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-32px-level2-eastern-corridor.tmj|test-32px-level2-eastern-corridor.tmj
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-world.world|test-world.world
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-tileset.tsj|test-tileset.tsj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/rainforest_grass_tileset.png|rainforest_grass_tileset.png
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/room_pearl_3.png|room_pearl_3.png
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-world.tiled-project|test-world.tiled-project
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-32px-world.world|test-32px-world.world
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/mahou_idle_test.png|mahou_idle_test.png
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-decoration.tsj|test-decoration.tsj
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/room_pearl_1.png|room_pearl_1.png
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level2.tmj|test-level2.tmj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/text-32px-Tileset.tsj|text-32px-Tileset.tsj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/room_pearl_bg.png|room_pearl_bg.png
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-32px-level1.tmj|test-32px-level1.tmj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-32px-level6-big-room.tmj|test-32px-level6-big-room.tmj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/text-32px-Tileset-background.tsj|text-32px-Tileset-background.tsj
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/room_pearl_2.png|room_pearl_2.png
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/mahou_idle_test.tsj|mahou_idle_test.tsj
+Parameters!A1:Z1002
+12
+Key (DO NOT CHANGE)|Value|||Backup value|SotN
+World file|test-32px-world.world|||test-world.world|test-world.world
+First level|test-32px-level1.tmj|room_32.tmj||test-level1.tmj|test-level1.tmj
+Screen width|640|||960|256
+Screen height|480|||540|240
+Tile size|32|||48|16
+Walk speed|7|||8|7
+Jump speed|14|||12|12
+Max fall speed|30|||30|30
+Jump gravity scale|6|||2|4
+Jumpfall gravity scale|6|||10|4
+Normal gravity scale|8|||10|8

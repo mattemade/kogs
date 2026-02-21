@@ -8,6 +8,7 @@ import com.github.quillraven.fleks.World.Companion.family
 import com.github.quillraven.fleks.World.Companion.inject
 import com.littlekt.Context
 import com.littlekt.input.Key
+import net.mattemade.platformer.WALK_VELOCITY
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PhysicsComponent
@@ -22,11 +23,13 @@ class ControlsSystem(
     override fun onTickEntity(entity: Entity) {
         var horizontalSpeed = 0f
         var verticalSpeed = 0f
-        if (input.isKeyPressed(Key.ARROW_RIGHT)) {
-            horizontalSpeed += 8f
+        var multiplier = if (input.isKeyPressed(Key.SHIFT_LEFT)) 3f else 1f
+
+        if (input.isKeyPressed(Key.ARROW_RIGHT) || input.isKeyPressed(Key.D)) {
+            horizontalSpeed += WALK_VELOCITY * multiplier
         }
-        if (input.isKeyPressed(Key.ARROW_LEFT)) {
-            horizontalSpeed -= 8f
+        if (input.isKeyPressed(Key.ARROW_LEFT) || input.isKeyPressed(Key.A)) {
+            horizontalSpeed -= WALK_VELOCITY * multiplier
         }
 
         entity[JumpComponent].apply {

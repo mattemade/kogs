@@ -6,6 +6,11 @@ import com.github.quillraven.fleks.Interval
 import com.github.quillraven.fleks.IteratingSystem
 import com.github.quillraven.fleks.World.Companion.family
 import com.github.quillraven.fleks.World.Companion.inject
+import net.mattemade.platformer.GRAVITY_IN_FALL
+import net.mattemade.platformer.GRAVITY_IN_JUMP
+import net.mattemade.platformer.GRAVITY_IN_JUMPFALL
+import net.mattemade.platformer.JUMP_VELOCITY
+import net.mattemade.platformer.MAX_FALL_VELOCITY
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
 import net.mattemade.platformer.component.MoveComponent
@@ -51,25 +56,27 @@ class PhysicsSystem(
 
 
             if (jumping) {
+                wasJumping = true
                 if (canHoldJumpForTicks-- > 0) {
-                    tempVec2.set(0f, JUMP_VELOCITY - physicsComponent.body.linearVelocityY)
+                    tempVec2.set(0f, -JUMP_VELOCITY - physicsComponent.body.linearVelocityY)
                         .mulLocal(physicsComponent.body.getMass()) // so the applied velocity won't depend on mass
                     physicsComponent.body.applyLinearImpulse(tempVec2, physicsComponent.body.worldCenter, wake = true)
                 } else {
                     jumping = false
                 }
             }
-            physicsComponent.body.gravityScale = if (jumping) GRAVITY_IN_JUMP else GRAVITY_IN_FALL
 
             // TODO nononono, make a better check with a ground sensor
             if (physicsComponent.body.linearVelocityY == 0f) {
                 coyoteTimeInTicks = JumpComponent.COYOTE_TICKS
                 canJumpFromGround = true
                 canJumpInAir = 2
+                wasJumping = false
             } else {
                 coyoteTimeInTicks--
                 canJumpFromGround = coyoteTimeInTicks > 0
             }
+            physicsComponent.body.gravityScale = if (jumping) GRAVITY_IN_JUMP else if (wasJumping) GRAVITY_IN_JUMPFALL else GRAVITY_IN_FALL
         }
         entity.getOrNull(MomentaryForceComponent)?.let { force ->
             tempVec2.set(force.force.x, force.force.y)
@@ -100,10 +107,6 @@ class PhysicsSystem(
 
     companion object {
         private val tempVec2 = Vec2()
-        private const val JUMP_VELOCITY = -12f
-        private const val MAX_FALL_VELOCITY = 30f
-        private const val GRAVITY_IN_JUMP = 2f
-        private const val GRAVITY_IN_FALL = 10f
     }
 
 }
