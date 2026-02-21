@@ -4,6 +4,7 @@ import com.github.quillraven.fleks.Entity
 import com.littlekt.graphics.g2d.Batch
 import com.littlekt.graphics.g2d.shape.ShapeRenderer
 import com.littlekt.math.MutableVec2f
+import net.mattemade.platformer.FIRST_LEVEL_NAME
 import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
@@ -17,7 +18,7 @@ import org.jbox2d.common.Vec2
 
 class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasing by Self() {
 
-    private val rooms = gameContext.assets.resourceSheet.levels.map {
+    private val rooms = gameContext.assets.resourceSheet.levelByName.map { (key, it) ->
         Room(
             map = gameContext.assets.levels.map[it.file]!!,
             gameContext = gameContext,
@@ -27,7 +28,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
         ).releasing()
     }
 
-    var currentRoom: Room = rooms.first { it.name == "test-level1.tmj" }
+    var currentRoom: Room = rooms.first { it.name == FIRST_LEVEL_NAME }
 
     override fun update(seconds: Float) {
         currentRoom.render(seconds)

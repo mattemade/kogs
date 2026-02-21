@@ -27,6 +27,6 @@ class PlatformerGameContext(
     }
 
     companion object {
-        private val LOG_TAG = "gtl"
+        private val LOG_TAG = "mgmt"
     }
 }

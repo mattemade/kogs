@@ -14,8 +14,10 @@ import com.littlekt.graphics.g2d.TextureSlice
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledMap
 import com.littlekt.graphics.gl.TexMagFilter
 import com.littlekt.graphics.gl.TexMinFilter
+import com.littlekt.math.Rect
 import net.mattemade.platformer.resources.Music
 import net.mattemade.platformer.resources.PlatformerResourceSheet
+import net.mattemade.platformer.resources.ResourceLevel
 import net.mattemade.platformer.resources.Sound
 import net.mattemade.platformer.resources.Sprite
 import net.mattemade.utils.asset.AssetPack
@@ -139,72 +141,95 @@ class LevelFiles(
 ) : AssetPack(context) {
     val map = ConcurrentMutableMap<String, TiledMap>()
 
-    private val preparation = resourceSheet.levelFiles.forEach { file ->
-        preparePlain {
-            context.resourcesVfs["world/$file"].readTiledMap(atlas = atlas, tilesetBorder = 0).also {
-                map[file] = it
+    private val assembly = preparePlain {
+        resourceSheet.worlds.forEach { worldFile ->
+            context.resourcesVfs["world/$worldFile"].readTiledWorld().apply {
+                maps.forEach { mapDefinition ->
+                    context.resourcesVfs["world/${mapDefinition.fileName}"].readTiledMap(
+                        atlas = atlas,
+                        tilesetBorder = 0
+                    ).also { level ->
+                        map[mapDefinition.fileName] = level
+                        resourceSheet.levelByName[mapDefinition.fileName] = ResourceLevel(
+                            mapDefinition.fileName, Rect(
+                                mapDefinition.x.toFloat() / level.tileWidth,
+                                mapDefinition.y.toFloat() / level.tileHeight,
+                                mapDefinition.width.toFloat() / level.tileWidth,
+                                mapDefinition.height.toFloat() / level.tileHeight,
+                            )
+                        )
+                    }
+                }
+            }
+        }
+    }
 
-                if (map.size == resourceSheet.levelFiles.size) {
-                    resourceSheet.worlds.forEach { worldFile ->
-                        context.resourcesVfs["world/$worldFile"].readTiledWorld().apply {
-                            maps.forEach { mapDefinition ->
-                                map[mapDefinition.fileName]?.let { level ->
-                                    resourceSheet.levelByName[mapDefinition.fileName]?.worldArea?.set(
-                                        mapDefinition.x.toFloat() / level.tileWidth,
-                                        mapDefinition.y.toFloat() / level.tileHeight,
-                                        mapDefinition.width.toFloat() / level.tileWidth,
-                                        mapDefinition.height.toFloat() / level.tileHeight,
-                                    )
+        /*private val preparation = resourceSheet.levelFiles.forEach { file ->
+            preparePlain {
+                context.resourcesVfs["world/$file"].readTiledMap(atlas = atlas, tilesetBorder = 0).also {
+                    map[file] = it
+
+                    if (map.size == resourceSheet.levelFiles.size) {
+                        resourceSheet.worlds.forEach { worldFile ->
+                            context.resourcesVfs["world/$worldFile"].readTiledWorld().apply {
+                                maps.forEach { mapDefinition ->
+                                    map[mapDefinition.fileName]?.let { level ->
+                                        resourceSheet.levelByName[mapDefinition.fileName]?.worldArea?.set(
+                                            mapDefinition.x.toFloat() / level.tileWidth,
+                                            mapDefinition.y.toFloat() / level.tileHeight,
+                                            mapDefinition.width.toFloat() / level.tileWidth,
+                                            mapDefinition.height.toFloat() / level.tileHeight,
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
+        }*/
+    }
+
+
+    class Fonts(context: Context, private val textures: TextureFiles) : AssetPack(context) {
+
+        val bungee256 by preparePlain {
+            context.resourcesVfs["font/bungee_256_uppercase.fnt"].readBitmapFont(
+                preloadedTextures = listOf(
+                    textures.bungee256
+                )
+            )
         }
-    }
-}
-
-
-class Fonts(context: Context, private val textures: TextureFiles) : AssetPack(context) {
-
-    val bungee256 by preparePlain {
-        context.resourcesVfs["font/bungee_256_uppercase.fnt"].readBitmapFont(
-            preloadedTextures = listOf(
-                textures.bungee256
-            )
-        )
-    }
-    val fredokaMedium128 by preparePlain {
-        context.resourcesVfs["font/fredoka_medium_128.fnt"].readBitmapFont(
-            preloadedTextures = listOf(
-                textures.fredokaMedium128
-            )
-        )
-    }
-
-
-    private fun loadMsdfFont(name: String, lineHeight: Float, descender: Float): PreparableGameAsset<MsdfFont> =
-        preparePlain {
-            MsdfFont(
-                atlas = context.resourcesVfs["font/$name.png"].readTexture(
-                    minFilter = TexMinFilter.LINEAR,
-                    magFilter = TexMagFilter.LINEAR,
-                    mipmaps = false,
-                ),
-                lineHeight = lineHeight,
-                descender = descender,
-                csvSpecs = context.resourcesVfs["font/$name.csv"].readLines(),
+        val fredokaMedium128 by preparePlain {
+            context.resourcesVfs["font/fredoka_medium_128.fnt"].readBitmapFont(
+                preloadedTextures = listOf(
+                    textures.fredokaMedium128
+                )
             )
         }
 
-    val fredokaMsdf by loadMsdfFont("fredoka", 1.2f, 0.236f)
-    val jbMonoMsdf by loadMsdfFont("jbmono", 1.32f, 0.3f)
-}
 
-class Shaders(context: Context) : AssetPack(context) {
-    val msdfShader by preparePlain {
-        MsdfFontShader.prepare(context)
-        MsdfFontShader.program
+        private fun loadMsdfFont(name: String, lineHeight: Float, descender: Float): PreparableGameAsset<MsdfFont> =
+            preparePlain {
+                MsdfFont(
+                    atlas = context.resourcesVfs["font/$name.png"].readTexture(
+                        minFilter = TexMinFilter.LINEAR,
+                        magFilter = TexMagFilter.LINEAR,
+                        mipmaps = false,
+                    ),
+                    lineHeight = lineHeight,
+                    descender = descender,
+                    csvSpecs = context.resourcesVfs["font/$name.csv"].readLines(),
+                )
+            }
+
+        val fredokaMsdf by loadMsdfFont("fredoka", 1.2f, 0.236f)
+        val jbMonoMsdf by loadMsdfFont("jbmono", 1.32f, 0.3f)
     }
-}
+
+    class Shaders(context: Context) : AssetPack(context) {
+        val msdfShader by preparePlain {
+            MsdfFontShader.prepare(context)
+            MsdfFontShader.program
+        }
+    }

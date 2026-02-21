@@ -2,10 +2,16 @@ package com.littlekt.graphics.g2d.tilemap.tiled
 
 import com.littlekt.graphics.g2d.Batch
 import com.littlekt.graphics.Color
+import com.littlekt.graphics.g2d.TextureSlice
 import com.littlekt.graphics.g2d.tilemap.tiled.internal.TileData
 import com.littlekt.math.MutableVec2f
 import com.littlekt.math.Rect
 import com.littlekt.math.Vec2f
+import com.littlekt.util.internal.now
+import kotlin.collections.set
+import kotlin.getValue
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * @author Colton Daily
@@ -66,7 +72,7 @@ class TiledObjectLayer(
                 tempVec2f.set(0f, obj.bounds.height).rotate(obj.rotation)
                 tiles[tileData.id]?.let {
                     batch.draw(
-                        slice = it.slice,
+                        slice = it.updateFramesAndGetSlice(),
                         x = (obj.x + offsetX + it.offsetX - tempVec2f.x) * scale + x,
                         y = (obj.y + offsetY + it.offsetY - tempVec2f.y) * scale + y,
                         originX = 0f,
@@ -82,6 +88,30 @@ class TiledObjectLayer(
                     )
                 }
             }
+        }
+    }
+
+    private val lastFrameTimes by lazy { mutableMapOf<Int, Duration>() }
+    private val lastFrameIndex by lazy { mutableMapOf<Int, Int>() }
+    private fun TiledTileset.Tile.updateFramesAndGetSlice(): TextureSlice {
+        return if (frames.isEmpty()) {
+            slice
+        } else {
+            val now = now().milliseconds
+            val lastFrameTime = lastFrameTimes.getOrPut(id) { now }
+            val lastFrameIndex = lastFrameIndex[id] ?: 0
+            val lastFrame = frames[lastFrameIndex]
+
+            val frame =
+                if (now - lastFrameTime >= frames[lastFrameIndex].duration) {
+                    val nextIdx = if (lastFrameIndex + 1 < frames.size) lastFrameIndex + 1 else 0
+                    this@TiledObjectLayer.lastFrameIndex[id] = nextIdx
+                    this@TiledObjectLayer.lastFrameTimes[id] = now
+                    frames[nextIdx]
+                } else {
+                    lastFrame
+                }
+            frame.slice
         }
     }
 
