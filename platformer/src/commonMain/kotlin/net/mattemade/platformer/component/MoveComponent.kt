@@ -7,6 +7,7 @@ import com.littlekt.math.MutableVec2f
 class MoveComponent(
     var speed: Float = 0f,
     val direction: MutableVec2f = MutableVec2f(),
+    var fallThrough: Boolean = false,
 ): Component<MoveComponent> {
     override fun type() = MoveComponent
     companion object: ComponentType<MoveComponent>()
