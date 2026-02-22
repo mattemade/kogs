@@ -7,7 +7,6 @@ import com.littlekt.graphics.g2d.tilemap.tiled.TiledObjectLayer
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledTilesLayer
 import com.littlekt.math.Rect
 import com.littlekt.math.Vec2f
-import com.littlekt.util.datastructure.FloatArrayList
 import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
@@ -23,6 +22,7 @@ import net.mattemade.utils.releasing.Self
 import net.mattemade.utils.tiled.BoundsListener
 import net.mattemade.utils.tiled.findBounds
 import org.jbox2d.common.Vec2
+import kotlin.collections.mutableSetOf
 
 class Room(
     private val gameContext: PlatformerGameContext,
@@ -42,7 +42,9 @@ class Room(
         )
     } ?: Rect()
 
-    private val solidMap = Array(map.width) { BooleanArray(map.height) }
+    private val tileTypeMap = listOf("solid", "platform", "water").associateWith {
+        Array(map.width) { BooleanArray(map.height) }
+    }
 
     private lateinit var physicsSystem: Box2DPhysicsSystem
 
@@ -76,27 +78,30 @@ class Room(
     }
 
     init {
-        val solidTileIds = mutableSetOf<Int>()
+        val typedTileIds = tileTypeMap.keys.associateWith{ mutableSetOf<Int>() }
         map.tileSets.forEach { tileset ->
             tileset.tiles.forEach { tile ->
-                if (tile.objectGroup?.objects?.any { it.name == "solid" } == true) {
-                    solidTileIds += tile.id
-                    return@forEach
+                for (type in typedTileIds.keys) {
+                    if (tile.objectGroup?.objects?.any { it.name == type } == true) {
+                        typedTileIds[type]?.add(tile.id)
+                    }
                 }
             }
         }
 
         map.layers.forEach { layer ->
             if (layer is TiledTilesLayer) {
-                for (x in 0..<map.width) {
-                    for (y in 0..<map.height) {
-                        solidMap[x][y] = solidMap[x][y] or (solidTileIds.contains(layer.getTileId(x, y)))
+                for (x in 0 until map.width) {
+                    for (y in 0 until map.height) {
+                        for ((type, array) in tileTypeMap) {
+                            array[x][y] = array[x][y] or (typedTileIds[type]?.contains(layer.getTileId(x, y)) == true)
+                        }
                     }
                 }
             }
         }
 
-        solidMap.findBounds(object : BoundsListener {
+        tileTypeMap["solid"]?.findBounds(object : BoundsListener {
             val accumulatedVertices = mutableListOf<Vec2>()
 
             override fun startPath() = accumulatedVertices.clear()
@@ -110,6 +115,25 @@ class Room(
                 physicsSystem.createWall(accumulatedVertices.toTypedArray())
             }
         })
+
+        tileTypeMap["platform"]?.let {
+            for (y in 0 until map.height) {
+                var followingPlatformFrom = -1
+                for (x in 0 until map.width) {
+                    if (it[x][y]) {
+                        if (followingPlatformFrom == -1) {
+                            followingPlatformFrom = x
+                        }
+                    } else if (followingPlatformFrom != -1) {
+                        physicsSystem.createPlatform(followingPlatformFrom.toFloat(), x.toFloat(), y.toFloat())
+                        followingPlatformFrom = -1
+                    }
+                }
+                if (followingPlatformFrom != -1) {
+                    physicsSystem.createPlatform(followingPlatformFrom.toFloat(), map.width.toFloat(), y.toFloat())
+                }
+            }
+        }
     }
 
 

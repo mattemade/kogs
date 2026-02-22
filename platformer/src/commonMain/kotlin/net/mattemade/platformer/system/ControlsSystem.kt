@@ -8,6 +8,7 @@ import com.github.quillraven.fleks.World.Companion.family
 import com.github.quillraven.fleks.World.Companion.inject
 import com.littlekt.Context
 import com.littlekt.input.Key
+import net.mattemade.platformer.JUMP_VELOCITY
 import net.mattemade.platformer.WALK_VELOCITY
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
@@ -34,7 +35,12 @@ class ControlsSystem(
 
         entity[JumpComponent].apply {
             if (input.isKeyJustPressed(Key.SPACE) && (canJumpFromGround || canJumpInAir > 0) && !jumping) {
-                executeJump()
+                if (canJumpFromGround && (input.isKeyPressed(Key.ARROW_DOWN) || input.isKeyPressed(Key.S))) {
+                    entity[MoveComponent].fallThrough = true
+                    verticalSpeed = JUMP_VELOCITY
+                } else {
+                    executeJump()
+                }
             } else if (!input.isKeyPressed(Key.SPACE)) {
                 jumping = false
                 jumpBuffer = 0
