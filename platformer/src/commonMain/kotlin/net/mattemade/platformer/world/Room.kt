@@ -8,28 +8,21 @@ import com.littlekt.graphics.g2d.tilemap.tiled.TiledTilesLayer
 import com.littlekt.math.Rect
 import com.littlekt.math.Vec2f
 import com.littlekt.util.datastructure.FloatArrayList
-import net.mattemade.platformer.GRAVITY_IN_FALL
 import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
-import net.mattemade.platformer.component.PhysicsComponent
+import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.px
 import net.mattemade.platformer.system.ControlsSystem
-import net.mattemade.platformer.system.PhysicsSystem
+import net.mattemade.platformer.system.Box2DPhysicsSystem
 import net.mattemade.platformer.system.RenderingSystem
 import net.mattemade.utils.releasing.Releasing
 import net.mattemade.utils.releasing.Self
 import net.mattemade.utils.tiled.BoundsListener
 import net.mattemade.utils.tiled.findBounds
-import org.jbox2d.collision.shapes.ChainShape
-import org.jbox2d.collision.shapes.PolygonShape
 import org.jbox2d.common.Vec2
-import org.jbox2d.dynamics.BodyDef
-import org.jbox2d.dynamics.BodyType
-import org.jbox2d.dynamics.FixtureDef
-import org.jbox2d.dynamics.World as B2dWorld
 
 class Room(
     private val gameContext: PlatformerGameContext,
@@ -51,31 +44,19 @@ class Room(
 
     private val solidMap = Array(map.width) { BooleanArray(map.height) }
 
-    private val physics: B2dWorld = B2dWorld().rememberTo {
-        var body = it.bodyList
-        while (body != null) {
-            it.destroyBody(body)
-            body = body.getNext()
-        }
-    }
-
-    private val testPolygons = mutableListOf<FloatArrayList>()
+    private lateinit var physicsSystem: Box2DPhysicsSystem
 
     val ecs = configureWorld {
         injectables {
-            add(physics)
             add(gameContext)
             add(gameContext.context)
             add(map)
         }
         systems {
             add(ControlsSystem())
-            add(PhysicsSystem())
-            add(RenderingSystem(testPolygons = testPolygons))
+            add(Box2DPhysicsSystem().also { physicsSystem = it }.releasing())
+            add(RenderingSystem())
         }
-
-    }.rememberTo {
-
     }
 
     private lateinit var playerPosition: Vec2f
@@ -91,23 +72,7 @@ class Room(
         }
         it += MoveComponent()
         it += JumpComponent()
-        it += PhysicsComponent(
-            body = physics.createBody(BodyDef().apply {
-                type = BodyType.DYNAMIC
-                position.set(initialPlayerBounds.cx, initialPlayerBounds.cy)
-                gravityScale = GRAVITY_IN_FALL
-            }).apply {
-                createFixture(FixtureDef().apply {
-                    friction = 0f
-                    shape = PolygonShape().apply {
-                        setAsBox(
-                            initialPlayerBounds.width * 0.5f * 0.9f,
-                            initialPlayerBounds.height * 0.5f * 0.9f
-                        )
-                    }
-                })
-            },
-        )
+        physicsSystem.createPlayerBody(this, it, initialPlayerBounds)
     }
 
     init {
@@ -142,20 +107,7 @@ class Room(
             }
 
             override fun endPath() {
-                physics.createBody(BodyDef()).apply {
-                    createFixture(FixtureDef().apply {
-                        shape = ChainShape().apply {
-                            createLoop(accumulatedVertices.toTypedArray(), accumulatedVertices.size)
-                        }
-                    })
-                }
-
-                /*testPolygons += FloatArrayList(capacity = accumulatedVertices.size * 2).apply {
-                    accumulatedVertices.forEachIndexed { index, vec2 ->
-                        set(index*2, vec2.x)
-                        set(index*2 + 1, vec2.y)
-                    }
-                }*/
+                physicsSystem.createWall(accumulatedVertices.toTypedArray())
             }
         })
     }
@@ -166,7 +118,7 @@ class Room(
         positionComponent: PositionComponent,
         moveComponent: MoveComponent,
         jumpComponent: JumpComponent,
-        physicsComponent: PhysicsComponent
+        physicsComponent: Box2DPhysicsComponent
     ) {
         ecs.apply {
             playerEntity.configure {
@@ -178,31 +130,16 @@ class Room(
                 it += moveComponent
                 it += jumpComponent
             }
-            playerEntity[PhysicsComponent].apply {
-                previousPosition.set(playerPosition)
-                body.setTransformDegrees(Vec2(playerPosition.x, playerPosition.y), 0f)
-                body.linearVelocityX = physicsComponent.body.linearVelocityX
-                body.linearVelocityY = physicsComponent.body.linearVelocityY
-            }
+            physicsSystem.teleport(playerEntity, playerPosition, physicsComponent)
         }
     }
 
     fun render(dt: Float) {
         ecs.update(dt)
 
-        // TODO: these padding should really be half of body size, but in this case we need to compensate that when switching rooms to not stuck in the wall right after the entrance
-        if (playerPosition.x < -ROOM_TELEPORT_HORIZONTAL_PADDING || playerPosition.y < -ROOM_TELEPORT_VERTICAL_PADDING || playerPosition.x > worldArea.width - ROOM_TELEPORT_HORIZONTAL_PADDING || playerPosition.y > worldArea.height - ROOM_TELEPORT_VERTICAL_PADDING) {
+        if (playerPosition.x < 0f || playerPosition.y < 0f || playerPosition.x > worldArea.width || playerPosition.y > worldArea.height) {
             switchRoom(playerEntity)
         }
 
-    }
-
-    fun reset() {
-
-    }
-
-    companion object {
-        const val ROOM_TELEPORT_HORIZONTAL_PADDING = 0f//0.5f
-        const val ROOM_TELEPORT_VERTICAL_PADDING = 0f
     }
 }

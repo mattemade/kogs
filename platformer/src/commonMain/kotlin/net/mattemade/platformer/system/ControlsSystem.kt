@@ -11,12 +11,12 @@ import com.littlekt.input.Key
 import net.mattemade.platformer.WALK_VELOCITY
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
-import net.mattemade.platformer.component.PhysicsComponent
+import net.mattemade.platformer.component.Box2DPhysicsComponent
 
 class ControlsSystem(
     private val context: Context = inject(),
     interval: Interval = Fixed(1 / 200f),
-    ): IteratingSystem(family { all(PhysicsComponent, MoveComponent, JumpComponent)}, interval = interval) {
+    ): IteratingSystem(family { all(Box2DPhysicsComponent, MoveComponent, JumpComponent)}, interval = interval) {
 
     private val input = context.input
 

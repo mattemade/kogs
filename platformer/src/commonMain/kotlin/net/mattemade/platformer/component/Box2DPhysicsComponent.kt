@@ -7,17 +7,17 @@ import com.github.quillraven.fleks.World
 import com.littlekt.math.MutableVec2f
 import org.jbox2d.dynamics.Body
 
-class PhysicsComponent(
+class Box2DPhysicsComponent(
     var body: Body,
     val previousPosition: MutableVec2f = MutableVec2f(body.position.x, body.position.y),
-) : Component<PhysicsComponent> {
+) : Component<Box2DPhysicsComponent> {
 
-    override fun type(): ComponentType<PhysicsComponent> = PhysicsComponent
+    override fun type(): ComponentType<Box2DPhysicsComponent> = Box2DPhysicsComponent
 
     override fun World.onRemove(entity: Entity) {
         body.userData = null
         body.destroyBody()
     }
 
-    companion object : ComponentType<PhysicsComponent>()
+    companion object : ComponentType<Box2DPhysicsComponent>()
 }

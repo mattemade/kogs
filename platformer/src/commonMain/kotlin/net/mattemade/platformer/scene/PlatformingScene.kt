@@ -8,7 +8,7 @@ import net.mattemade.platformer.FIRST_LEVEL_NAME
 import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
-import net.mattemade.platformer.component.PhysicsComponent
+import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.world.Room
@@ -46,11 +46,9 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
             ecs.apply {
                 // TODO: really? maybe all of that should be arguments?
                 val playerPosition = player[PositionComponent].position
-                // teleporting happens when half of the physical body goes out of level bounds,
-                // so the probing coordinate should be compensated for that
                 tempVec2f.set(
-                    worldArea.x + playerPosition.x + Room.ROOM_TELEPORT_HORIZONTAL_PADDING,
-                    worldArea.y + playerPosition.y + Room.ROOM_TELEPORT_VERTICAL_PADDING,
+                    worldArea.x + playerPosition.x,
+                    worldArea.y + playerPosition.y,
                 )
                 // TODO: is there a way to do that better than O(N)? maybe we can prepare a world graph ahead of time
                 rooms.forEach {
@@ -58,6 +56,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                         val worldPositionDiff =
                             Vec2(it.worldArea.x - currentRoom.worldArea.x, it.worldArea.y - currentRoom.worldArea.y)
                         // TODO: how to do that tidy, without exposing too much of Player outside of ECS?
+                        // translate player's position to the new room's local coordinates
                         player[PositionComponent].position.set(
                             playerPosition.x - worldPositionDiff.x,
                             playerPosition.y - worldPositionDiff.y,
@@ -68,7 +67,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                             player[PositionComponent],
                             player[MoveComponent],
                             player[JumpComponent],
-                            player[PhysicsComponent], // just to copy velocity and stuff, SHOULD NOT BE REUSED THERE as it's connected to the Room's B2D World
+                            player[Box2DPhysicsComponent], // just to copy velocity and stuff, SHOULD NOT BE REUSED THERE as it's connected to the Room's B2D World
                         )
                         currentRoom = it
                         return

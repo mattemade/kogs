@@ -32,22 +32,14 @@ class RenderingSystem(
     private val context: Context = inject(),
     private val gameContext: PlatformerGameContext = inject(),
     val map: TiledMap = inject(),
-    val testPolygons: List<FloatArrayList>,
 ) : IteratingSystem(family = family { all(PositionComponent, SpriteComponent) }) {
-
-    val triangulator = Triangulator()
-    val testPolygonTrinalges by lazy {
-        testPolygons.map {
-            it.toFloatArray() to triangulator.computeTriangles(it).toShortArray()
-        }
-    }
 
     private val viewport = ScalingViewport(
         scaler = Scaler.Stretch(),
         width = WORLD_WIDTH,
         height = WORLD_HEIGHT,
-        virtualWidth = WORLD_UNIT_WIDTH.toFloat(),
-        virtualHeight = WORLD_UNIT_HEIGHT.toFloat()
+        virtualWidth = WORLD_UNIT_WIDTH,
+        virtualHeight = WORLD_UNIT_HEIGHT
     )
     private val camera = viewport.camera
     private val batch = SpriteBatch(context)
@@ -84,43 +76,7 @@ class RenderingSystem(
         renderMap(from = 0, to = playerLayerIndex)
         super.onTick() // tick to render entities
         renderMap(from = playerLayerIndex + 1, to = mapLayers)
-
-        if (!mapFillsWidth) {
-            shapeRenderer.filledRectangle(
-                x = minCameraPosition.x - map.width * 0.5f,
-                y = camera.position.y - HALF_WORLD_UNIT_HEIGHT,
-                width = -WORLD_UNIT_WIDTH,
-                height = WORLD_UNIT_HEIGHT,
-                color = sideBarColor,
-            )
-            shapeRenderer.filledRectangle(
-                x = minCameraPosition.x + map.width * 0.5f,
-                y = camera.position.y - HALF_WORLD_UNIT_HEIGHT,
-                width = WORLD_UNIT_WIDTH,
-                height = WORLD_UNIT_HEIGHT,
-                color = sideBarColor,
-            )
-        }
-        if (!mapFillsHeight) {
-            shapeRenderer.filledRectangle(
-                x = camera.position.x - HALF_WORLD_UNIT_WIDTH,
-                y = minCameraPosition.y - map.height * 0.5f,
-                width = WORLD_UNIT_WIDTH,
-                height = -WORLD_UNIT_HEIGHT,
-                color = sideBarColor,
-            )
-            shapeRenderer.filledRectangle(
-                x = camera.position.x - HALF_WORLD_UNIT_WIDTH,
-                y = minCameraPosition.y + map.height * 0.5f,
-                width = WORLD_UNIT_WIDTH,
-                height = WORLD_UNIT_HEIGHT,
-                color = sideBarColor,
-            )
-        }
-
-        testPolygonTrinalges.forEach {
-            shapeRenderer.filledPolygon(it.first, it.second)
-        }
+        renderSideBars() // to cover any sprite that goes out-of-bounds
 
         batch.end()
     }
@@ -136,6 +92,41 @@ class RenderingSystem(
         val xOffset = (1f - layer.parallaxFactor.x) * (camera.position.x - minCameraPosition.x)
         val yOffset = (1f - layer.parallaxFactor.y) * (camera.position.y - minCameraPosition.y)
         layer.render(batch, camera = camera, x = xOffset.px, y = yOffset.px, scale = mapScale, displayObjects = true)
+    }
+
+    private fun renderSideBars() {
+        if (!mapFillsWidth) { // fill black to left and right of the map
+            shapeRenderer.filledRectangle(
+                x = minCameraPosition.x - map.width * 0.5f,
+                y = camera.position.y - HALF_WORLD_UNIT_HEIGHT,
+                width = -WORLD_UNIT_WIDTH,
+                height = WORLD_UNIT_HEIGHT,
+                color = sideBarColor,
+            )
+            shapeRenderer.filledRectangle(
+                x = minCameraPosition.x + map.width * 0.5f,
+                y = camera.position.y - HALF_WORLD_UNIT_HEIGHT,
+                width = WORLD_UNIT_WIDTH,
+                height = WORLD_UNIT_HEIGHT,
+                color = sideBarColor,
+            )
+        }
+        if (!mapFillsHeight) { // fill black above and below of the map
+            shapeRenderer.filledRectangle(
+                x = camera.position.x - HALF_WORLD_UNIT_WIDTH,
+                y = minCameraPosition.y - map.height * 0.5f,
+                width = WORLD_UNIT_WIDTH,
+                height = -WORLD_UNIT_HEIGHT,
+                color = sideBarColor,
+            )
+            shapeRenderer.filledRectangle(
+                x = camera.position.x - HALF_WORLD_UNIT_WIDTH,
+                y = minCameraPosition.y + map.height * 0.5f,
+                width = WORLD_UNIT_WIDTH,
+                height = WORLD_UNIT_HEIGHT,
+                color = sideBarColor,
+            )
+        }
     }
 
     override fun onTickEntity(entity: Entity) {
