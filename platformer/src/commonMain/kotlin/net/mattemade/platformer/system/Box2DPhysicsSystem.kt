@@ -1,11 +1,13 @@
 package net.mattemade.platformer.system
 
 import com.github.quillraven.fleks.Entity
+import com.github.quillraven.fleks.EntityCreateContext
 import com.github.quillraven.fleks.Fixed
 import com.github.quillraven.fleks.Interval
 import com.github.quillraven.fleks.IteratingSystem
 import com.github.quillraven.fleks.World.Companion.family
-import com.github.quillraven.fleks.World.Companion.inject
+import com.littlekt.math.Rect
+import com.littlekt.math.Vec2f
 import net.mattemade.platformer.GRAVITY_IN_FALL
 import net.mattemade.platformer.GRAVITY_IN_JUMP
 import net.mattemade.platformer.GRAVITY_IN_JUMPFALL
@@ -14,16 +16,31 @@ import net.mattemade.platformer.MAX_FALL_VELOCITY
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
 import net.mattemade.platformer.component.MoveComponent
-import net.mattemade.platformer.component.PhysicsComponent
+import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.utils.math.lerp
+import net.mattemade.utils.releasing.Releasing
+import net.mattemade.utils.releasing.Self
+import org.jbox2d.collision.shapes.ChainShape
+import org.jbox2d.collision.shapes.PolygonShape
 import org.jbox2d.common.Vec2
+import org.jbox2d.dynamics.BodyDef
+import org.jbox2d.dynamics.BodyType
+import org.jbox2d.dynamics.FixtureDef
 import org.jbox2d.dynamics.World as B2dWorld
 
-class PhysicsSystem(
-    private val physics: B2dWorld = inject(),
+class Box2DPhysicsSystem(
+    //private val physics: B2dWorld = inject(),
     interval: Interval = Fixed(1 / 100f)
-) : IteratingSystem(family { all(PhysicsComponent, PositionComponent) }, interval = interval) {
+) : IteratingSystem(family { all(Box2DPhysicsComponent, PositionComponent) }, interval = interval), Releasing by Self() {
+
+    private val physics: B2dWorld = B2dWorld().rememberTo {
+        var body = it.bodyList
+        while (body != null) {
+            it.destroyBody(body)
+            body = body.getNext()
+        }
+    }
 
     override fun onUpdate() {
         if (physics.autoClearForces) {
@@ -39,7 +56,7 @@ class PhysicsSystem(
     }
 
     override fun onTickEntity(entity: Entity) {
-        val physicsComponent = entity[PhysicsComponent].apply {
+        val physicsComponent = entity[Box2DPhysicsComponent].apply {
             previousPosition.set(
                 body.position.x, body.position.y,
             )
@@ -97,12 +114,53 @@ class PhysicsSystem(
     override fun onAlphaEntity(entity: Entity, alpha: Float) {
         // interpolate the simulated position to better fit the render time
         val positionComponent = entity[PositionComponent]
-        val physicsComponent = entity[PhysicsComponent]
+        val physicsComponent = entity[Box2DPhysicsComponent]
 
         positionComponent.position.set(
             lerp(physicsComponent.previousPosition.x, physicsComponent.body.position.x, alpha),
             lerp(physicsComponent.previousPosition.y, physicsComponent.body.position.y, alpha),
         )
+    }
+
+    fun createPlayerBody(entityCreateContext: EntityCreateContext, entity: Entity, initialPlayerBounds: Rect) {
+        with (entityCreateContext) {
+            entity += Box2DPhysicsComponent(
+                body = physics.createBody(BodyDef().apply {
+                    type = BodyType.DYNAMIC
+                    position.set(initialPlayerBounds.cx, initialPlayerBounds.cy)
+                    gravityScale = GRAVITY_IN_FALL
+                }).apply {
+                    createFixture(FixtureDef().apply {
+                        friction = 0f
+                        shape = PolygonShape().apply {
+                            setAsBox(
+                                initialPlayerBounds.width * 0.5f * 0.9f,
+                                initialPlayerBounds.height * 0.5f * 0.9f
+                            )
+                        }
+                    })
+                },
+            )
+        }
+    }
+
+    fun createWall(vertices: Array<Vec2>) {
+        physics.createBody(BodyDef()).apply {
+            createFixture(FixtureDef().apply {
+                shape = ChainShape().apply {
+                    createLoop(vertices, vertices.size)
+                }
+            })
+        }
+    }
+
+    fun teleport(entity: Entity, moveToPosition: Vec2f, physicsComponent: Box2DPhysicsComponent) {
+        entity[Box2DPhysicsComponent].apply {
+            previousPosition.set(moveToPosition)
+            body.setTransformDegrees(Vec2(moveToPosition.x, moveToPosition.y), 0f)
+            body.linearVelocityX = physicsComponent.body.linearVelocityX
+            body.linearVelocityY = physicsComponent.body.linearVelocityY
+        }
     }
 
     companion object {
