@@ -9,6 +9,7 @@ import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.Box2DPhysicsComponent
+import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.world.Room
@@ -67,6 +68,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                             player[PositionComponent],
                             player[MoveComponent],
                             player[JumpComponent],
+                            player[ContextComponent],
                             player[Box2DPhysicsComponent], // just to copy velocity and stuff, SHOULD NOT BE REUSED THERE as it's connected to the Room's B2D World
                         )
                         currentRoom = it

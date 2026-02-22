@@ -10,6 +10,8 @@ import com.littlekt.input.Key
 import com.littlekt.input.Pointer
 import com.littlekt.math.MutableVec2i
 import com.littlekt.util.seconds
+import korlibs.time.TimeSpan
+import korlibs.time.blockingSleep
 import net.mattemade.fmod.systemCreate
 import net.mattemade.fmod.systemRelease
 import net.mattemade.platformer.scene.PlatformingScene
@@ -103,6 +105,7 @@ class PlatformerGame(
         }
 
     override suspend fun Context.start() {
+        gameContext.log("start")
         input.addInputProcessor(object : InputProcessor {
             override fun keyDown(key: Key): Boolean {
                 if (!focused) {
@@ -140,7 +143,7 @@ class PlatformerGame(
         onRender { dt ->
             //gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
             //gl.clearColor(Color.BLACK)
-            fpsCounter.update(dt.seconds)
+            //fpsCounter.update(dt.seconds)
 
             if (!audioReady) {
                 audioReady = audio.isReady()
@@ -164,7 +167,7 @@ class PlatformerGame(
                 directRender.render(dt)
             }
 
-            //blockingSleep(TimeSpan(100.0))
+            //blockingSleep(TimeSpan(2.0))
         }
 
         onDispose(::release)

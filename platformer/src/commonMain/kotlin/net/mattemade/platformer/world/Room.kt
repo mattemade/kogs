@@ -11,6 +11,7 @@ import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.Box2DPhysicsComponent
+import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.px
@@ -74,6 +75,7 @@ class Room(
         }
         it += MoveComponent()
         it += JumpComponent()
+        it += ContextComponent()
         physicsSystem.createPlayerBody(this, it, initialPlayerBounds)
     }
 
@@ -142,6 +144,7 @@ class Room(
         positionComponent: PositionComponent,
         moveComponent: MoveComponent,
         jumpComponent: JumpComponent,
+        contextComponent: ContextComponent,
         physicsComponent: Box2DPhysicsComponent
     ) {
         ecs.apply {
@@ -153,6 +156,7 @@ class Room(
                 }
                 it += moveComponent
                 it += jumpComponent
+                it += contextComponent
             }
             physicsSystem.teleport(playerEntity, playerPosition, physicsComponent)
         }
