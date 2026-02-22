@@ -1,5 +1,6 @@
 package net.mattemade.platformer
 
+import com.littlekt.math.floorToInt
 import kotlin.math.roundToInt
 
 val parameterOverride = mutableMapOf<String, String>()
@@ -24,7 +25,7 @@ val HALF_WORLD_UNIT_HEIGHT get() = WORLD_UNIT_HEIGHT * 0.5f
 
 val UNITS_PER_PIXEL get() = 1 / PIXEL_PER_UNIT_FLOAT
 
-val Float.px: Float get() = (this / UNITS_PER_PIXEL).roundToInt() * UNITS_PER_PIXEL
+val Float.px: Float get() = (this / UNITS_PER_PIXEL).floorToInt() * UNITS_PER_PIXEL
 
 val WALK_VELOCITY get() = parameterOverride["Walk speed"]?.toFloat() ?: 8f
 val JUMP_VELOCITY get() = parameterOverride["Jump speed"]?.toFloat() ?: 12f

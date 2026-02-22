@@ -6,11 +6,15 @@ import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.World
 import com.littlekt.math.MutableVec2f
 import org.jbox2d.dynamics.Body
+import org.jbox2d.dynamics.Fixture
 
 class Box2DPhysicsComponent(
     var body: Body,
     val previousPosition: MutableVec2f = MutableVec2f(body.position.x, body.position.y),
 ) : Component<Box2DPhysicsComponent> {
+
+    lateinit var bodyFixture: Fixture
+    lateinit var feetFixture: Fixture
 
     override fun type(): ComponentType<Box2DPhysicsComponent> = Box2DPhysicsComponent
 

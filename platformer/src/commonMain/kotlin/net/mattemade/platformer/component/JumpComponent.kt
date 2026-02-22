@@ -7,7 +7,7 @@ class JumpComponent(
     var jumping: Boolean = false,
     var wasJumping: Boolean = false,
     var canJumpFromGround: Boolean = false,
-    var canJumpInAir: Int = 2,
+    var canJumpInAir: Int = 1,
     var canHoldJumpForTicks: Int = MAX_JUMP_TICKS,
     var coyoteTimeInTicks: Int = COYOTE_TICKS,
     var jumpBuffer: Int = 0,
@@ -17,5 +17,6 @@ class JumpComponent(
         const val MAX_JUMP_TICKS = 23
         const val COYOTE_TICKS = 10
         const val BUFFER_TICKS = 10
+        const val MAX_AIR_JUMPS = 1
     }
 }

@@ -27,6 +27,7 @@ import net.mattemade.platformer.WORLD_WIDTH
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.px
+import net.mattemade.utils.msdf.MsdfFontRenderer
 
 class RenderingSystem(
     private val context: Context = inject(),
@@ -58,6 +59,8 @@ class RenderingSystem(
         if (mapFillsWidth) map.width - HALF_WORLD_UNIT_WIDTH else minCameraPosition.x,
         if (mapFillsHeight) map.height - HALF_WORLD_UNIT_HEIGHT else minCameraPosition.y,
     )
+    private val fontRenderer = MsdfFontRenderer(gameContext.assets.font.fredokaMsdf)
+    private val showTutorial = map.layers.any { it.name == "tutorial" }
 
     override fun onTick() {
         context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
@@ -77,6 +80,24 @@ class RenderingSystem(
         super.onTick() // tick to render entities
         renderMap(from = playerLayerIndex + 1, to = mapLayers)
         renderSideBars() // to cover any sprite that goes out-of-bounds
+
+        if (showTutorial) {
+            fontRenderer.drawAllTextAtOnce(batch) {
+                draw("""
+                    left/right/A/D - walk
+                    
+                    Space - jump / double jump
+                    
+                    down/S + Space - drop from platform
+                    
+                    Shift + walk (including in air) -
+                            dash while holding Shift
+                    
+                    Fall by wall to slide
+                    """.trimIndent(), 1f, 1f, 1f, batch)
+            }
+        }
+
 
         batch.end()
     }
