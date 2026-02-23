@@ -1,6 +1,7 @@
 package net.mattemade.platformer
 
 import com.littlekt.Context
+import com.littlekt.math.Rect
 import net.mattemade.utils.Scheduler
 import kotlin.random.Random
 
@@ -15,6 +16,7 @@ class PlatformerGameContext(
     val assets = PlatformerAssets(context, this, getFromUrl, overrideResourcesFrom)
     val scheduler = Scheduler()
     var canvasZoom: Float = 1f
+    val worldSize = Rect()
 
     private var tag =
         context.vfs.loadString("tag") ?: Random.nextInt().toString().also {

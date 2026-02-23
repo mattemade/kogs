@@ -2,6 +2,7 @@ package net.mattemade.platformer.world
 
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.configureWorld
+import com.littlekt.graphics.Texture
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledMap
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledObjectLayer
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledTilesLayer
@@ -14,10 +15,13 @@ import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.SpriteComponent
+import net.mattemade.platformer.component.UiComponent
 import net.mattemade.platformer.px
 import net.mattemade.platformer.system.ControlsSystem
 import net.mattemade.platformer.system.Box2DPhysicsSystem
 import net.mattemade.platformer.system.RenderingSystem
+import net.mattemade.platformer.system.UiControlsSystem
+import net.mattemade.platformer.system.UiRenderingSystem
 import net.mattemade.utils.releasing.Releasing
 import net.mattemade.utils.releasing.Self
 import net.mattemade.utils.tiled.BoundsListener
@@ -43,7 +47,8 @@ class Room(
         )
     } ?: Rect()
 
-    private val tileTypeMap = listOf("solid", "platform", "water").associateWith {
+    var mapTexture: Texture? = null
+    val tileTypeMap = listOf("solid", "platform", "water").associateWith {
         Array(map.width) { BooleanArray(map.height) }
     }
 
@@ -57,8 +62,14 @@ class Room(
         }
         systems {
             add(ControlsSystem())
+            add(UiControlsSystem())
             add(Box2DPhysicsSystem().also { physicsSystem = it }.releasing())
             add(RenderingSystem())
+            add(UiRenderingSystem(worldArea = worldArea, mapTexture = { mapTexture }))
+        }
+    }.apply {
+        entity {
+            it += UiComponent()
         }
     }
 
