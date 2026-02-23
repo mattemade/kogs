@@ -11,9 +11,11 @@ import com.littlekt.graphics.g2d.shape.ShapeRenderer
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledMap
 import com.littlekt.graphics.gl.ClearBufferMask
 import com.littlekt.graphics.toFloatBits
+import com.littlekt.math.MutableVec2f
 import com.littlekt.math.Vec2f
 import com.littlekt.math.clamp
 import com.littlekt.math.geom.Triangulator
+import com.littlekt.math.geom.radians
 import com.littlekt.util.Scaler
 import com.littlekt.util.datastructure.FloatArrayList
 import com.littlekt.util.viewport.ScalingViewport
@@ -84,13 +86,13 @@ class RenderingSystem(
         if (showTutorial) {
             fontRenderer.drawAllTextAtOnce(batch) {
                 draw("""
-                    left/right/A/D - walk
+                    arrows/WASD - walk/swim
                     
                     Space - jump / double jump
                     
                     down/S + Space - drop from platform
                     
-                    Shift + walk (including in air) -
+                    Shift + move (land/air/water) -
                             dash while holding Shift
                     
                     Fall by wall to slide
@@ -152,19 +154,28 @@ class RenderingSystem(
 
     override fun onTickEntity(entity: Entity) {
         val bounds = entity[SpriteComponent].bounds
-        val position = entity[PositionComponent].position
+        val (position, rotation) = entity[PositionComponent]
 
+        val angle = rotation.radians
+        tempVec2f.set(bounds.x, bounds.y).rotate(angle)
         shapeRenderer.filledRectangle(
             x = (position.x + bounds.x).px,
             y = (position.y + bounds.y).px,
             width = bounds.width,
             height = bounds.height,
-            color = Color.RED.toFloatBits()
+            color = bottomColor,
+            color2 = bottomColor,
+            color3 = topColor,
+            color4 = topColor,
+            rotation = angle
         )
     }
 
     companion object {
+        private val tempVec2f = MutableVec2f()
         private val sideBarColor = Color.BLACK.toFloatBits()
+        private val topColor = Color.RED.toFloatBits()
+        private val bottomColor = Color.WHITE.toFloatBits()
     }
 
 }

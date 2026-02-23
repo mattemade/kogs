@@ -136,6 +136,25 @@ class Room(
                 }
             }
         }
+
+        tileTypeMap["water"]?.let {
+            for (x in 0 until map.width) {
+                var followingWaterFrom = -1
+                for (y in 0 until map.height) {
+                    if (it[x][y]) {
+                        if (followingWaterFrom == -1) {
+                            followingWaterFrom = y
+                        }
+                    } else if (followingWaterFrom != -1) {
+                        physicsSystem.createWater(followingWaterFrom.toFloat(), y.toFloat(), x.toFloat())
+                        followingWaterFrom = -1
+                    }
+                }
+                if (followingWaterFrom != -1) {
+                    physicsSystem.createWater(followingWaterFrom.toFloat(), map.height.toFloat(), x.toFloat())
+                }
+            }
+        }
     }
 
 
@@ -159,6 +178,7 @@ class Room(
                 it += contextComponent
             }
             physicsSystem.teleport(playerEntity, playerPosition, physicsComponent)
+            contextComponent.swimming = false // next room should switch body parameters for swimming if needed
         }
     }
 
