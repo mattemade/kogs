@@ -8,6 +8,9 @@ import com.github.quillraven.fleks.World.Companion.family
 import com.github.quillraven.fleks.World.Companion.inject
 import com.littlekt.Context
 import com.littlekt.input.Key
+import com.littlekt.math.MutableVec2f
+import net.mattemade.platformer.SWIM_ACCELERATION
+import net.mattemade.platformer.SWIM_VELOCITY
 import net.mattemade.platformer.WALK_VELOCITY
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
@@ -24,9 +27,22 @@ class ControlsSystem(
     private var jumpPressed = false
 
     override fun onTickEntity(entity: Entity) {
+
+        val context = entity[ContextComponent]
+
+        if (context.swimming) {
+            waterBasedControls(context, entity)
+        } else {
+            landBasedControls(context, entity)
+        }
+    }
+
+    private fun landBasedControls(
+        context: ContextComponent,
+        entity: Entity
+    ) {
         var horizontalSpeed = 0f
         var verticalSpeed = 0f
-        val context = entity[ContextComponent]
         val dash = input.isKeyPressed(Key.SHIFT_LEFT) && !context.touchingWalls
 
         if (input.isKeyPressed(Key.ARROW_RIGHT) || input.isKeyPressed(Key.D)) {
@@ -78,6 +94,47 @@ class ControlsSystem(
         }
     }
 
+    private fun waterBasedControls(
+        context: ContextComponent,
+        entity: Entity
+    ) {
+        var horizontalSpeed = 0f
+        var verticalSpeed = 0f
+        val dash = input.isKeyPressed(Key.SHIFT_LEFT)
+
+        if (input.isKeyPressed(Key.ARROW_RIGHT) || input.isKeyPressed(Key.D)) {
+            horizontalSpeed += SWIM_ACCELERATION
+        }
+        if (input.isKeyPressed(Key.ARROW_LEFT) || input.isKeyPressed(Key.A)) {
+            horizontalSpeed -= SWIM_ACCELERATION
+        }
+        if (input.isKeyPressed(Key.ARROW_UP) || input.isKeyPressed(Key.W) || input.isKeyPressed(Key.SPACE)) {
+            verticalSpeed -= SWIM_ACCELERATION
+        }
+        if (input.isKeyPressed(Key.ARROW_DOWN) || input.isKeyPressed(Key.S)) {
+            verticalSpeed += SWIM_ACCELERATION
+        }
+
+        entity[MoveComponent].apply {
+            speed = 1f
+            moveDirection.set(horizontalSpeed, verticalSpeed)
+            if (moveDirection.length() > SWIM_ACCELERATION) {
+                moveDirection.setLength(SWIM_ACCELERATION)
+            }
+            if (dash) {
+                if (dashDirection.x != 0f || dashDirection.y != 0f) {
+                    dashDirection.set(dashDirection.x, dashDirection.y)
+                } else {
+                    val body = entity[Box2DPhysicsComponent].body
+                    tempVec2f.set(body.linearVelocityX, body.linearVelocityY).norm().setLength(SWIM_VELOCITY * 3f)
+                    dashDirection.set(tempVec2f.x, tempVec2f.y)
+                }
+            } else {
+                dashDirection.set(0f, 0f)
+            }
+        }
+    }
+
     private fun JumpComponent.executeJump(wallJump: Boolean = false) {
         jumping = true
         if (!canJumpFromGround && !wallJump) {
@@ -85,5 +142,9 @@ class ControlsSystem(
         }
         canHoldJumpForTicks = JumpComponent.MAX_JUMP_TICKS
         jumpBuffer = 0
+    }
+
+    private companion object {
+        val tempVec2f = MutableVec2f()
     }
 }

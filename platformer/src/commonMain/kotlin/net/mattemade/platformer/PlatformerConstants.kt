@@ -28,6 +28,8 @@ val UNITS_PER_PIXEL get() = 1 / PIXEL_PER_UNIT_FLOAT
 val Float.px: Float get() = (this / UNITS_PER_PIXEL).floorToInt() * UNITS_PER_PIXEL
 
 val WALK_VELOCITY get() = parameterOverride["Walk speed"]?.toFloat() ?: 8f
+val SWIM_ACCELERATION get() = parameterOverride["Swim acceleration"]?.toFloat() ?: 0.3f
+val SWIM_VELOCITY get() = parameterOverride["Swim speed"]?.toFloat() ?: 4f
 val JUMP_VELOCITY get() = parameterOverride["Jump speed"]?.toFloat() ?: 12f
 val MAX_FALL_VELOCITY get() = parameterOverride["Max fall speed"]?.toFloat() ?: 30f
 val GRAVITY_IN_JUMP get() = parameterOverride["Jump gravity scale"]?.toFloat() ?: 2f

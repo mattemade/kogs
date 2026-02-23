@@ -8,6 +8,7 @@ class ContextComponent(
     var facingRight: Boolean = false,
     var standing: Boolean = false,
     var wallSlide: Boolean = false,
+    var swimming: Boolean = false,
 ): Component<ContextComponent> {
     override fun type() = ContextComponent
     companion object: ComponentType<ContextComponent>()
