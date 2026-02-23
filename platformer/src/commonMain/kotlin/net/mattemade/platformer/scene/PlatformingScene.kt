@@ -1,25 +1,38 @@
 package net.mattemade.platformer.scene
 
 import com.github.quillraven.fleks.Entity
+import com.littlekt.graphics.Color
 import com.littlekt.graphics.g2d.Batch
 import com.littlekt.graphics.g2d.shape.ShapeRenderer
+import com.littlekt.graphics.toFloatBits
 import com.littlekt.math.MutableVec2f
+import com.littlekt.math.Rect
+import com.littlekt.math.floorToInt
+import com.littlekt.util.seconds
 import net.mattemade.platformer.FIRST_LEVEL_NAME
+import net.mattemade.platformer.PIXEL_PER_UNIT_FLOAT
 import net.mattemade.platformer.PlatformerGameContext
-import net.mattemade.platformer.component.JumpComponent
-import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
+import net.mattemade.platformer.component.JumpComponent
+import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.world.Room
 import net.mattemade.utils.releasing.Releasing
 import net.mattemade.utils.releasing.Self
+import net.mattemade.utils.render.PixelRender
 import org.jbox2d.common.Vec2
+import kotlin.math.roundToInt
 
 class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasing by Self() {
 
+    private val fullWorldRect = gameContext.worldSize
     private val rooms = gameContext.assets.resourceSheet.levelByName.map { (key, it) ->
+        fullWorldRect.x = minOf(fullWorldRect.x, it.worldArea.x)
+        fullWorldRect.y = minOf(fullWorldRect.y, it.worldArea.y)
+        fullWorldRect.x2 = maxOf(fullWorldRect.x2, it.worldArea.x2)
+        fullWorldRect.y2 = maxOf(fullWorldRect.y2, it.worldArea.y2)
         Room(
             map = gameContext.assets.levels.map[it.file]!!,
             gameContext = gameContext,
@@ -28,8 +41,44 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
             switchRoom = ::switchRoom,
         ).releasing()
     }
+    val mapTexture = PixelRender(
+        gameContext.context,
+        targetWidth = fullWorldRect.width.roundToInt(),
+        targetHeight = fullWorldRect.height.roundToInt(),
+        virtualWidth = fullWorldRect.width,
+        virtualHeight = fullWorldRect.height,
+        preRenderCall = { dt, camera ->
+            camera.position.set(fullWorldRect.cx, fullWorldRect.cy, 0f)
+        },
+        renderCall = { dt, camera, batch, shapeRenderer ->
+            /*shapeRenderer.filledRectangle(
+                rect = fullWorldRect,
+                //color = Color.BLACK.toFloatBits()
+            )*/
+            rooms.forEach { room ->
+                room.tileTypeMap["solid"]?.forEachIndexed { x, row ->
+                    row.forEachIndexed { y, value ->
+                        if (value) {
+                            shapeRenderer.filledRectangle(
+                                x = room.worldArea.x + x.toFloat(),
+                                y = room.worldArea.y + y.toFloat(),
+                                width = 1f,
+                                height = 1f,
+                                color = mapColor,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    ).run {
+        render(0f.seconds)
+        texture.also { mapTexture ->
+            rooms.forEach { it.mapTexture = mapTexture }
+        }
+    }
 
-    var currentRoom: Room = rooms.first { it.name == FIRST_LEVEL_NAME }
+    private var currentRoom: Room = rooms.first { it.name == FIRST_LEVEL_NAME }
 
     override fun update(seconds: Float) {
         currentRoom.render(seconds)
@@ -82,5 +131,6 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
 
     companion object {
         private val tempVec2f = MutableVec2f()
+        private val mapColor = Color.WHITE.toMutableColor().apply { a = 1f }.toFloatBits()
     }
 }

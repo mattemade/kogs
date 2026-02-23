@@ -14,10 +14,8 @@ import com.littlekt.graphics.toFloatBits
 import com.littlekt.math.MutableVec2f
 import com.littlekt.math.Vec2f
 import com.littlekt.math.clamp
-import com.littlekt.math.geom.Triangulator
 import com.littlekt.math.geom.radians
 import com.littlekt.util.Scaler
-import com.littlekt.util.datastructure.FloatArrayList
 import com.littlekt.util.viewport.ScalingViewport
 import net.mattemade.platformer.HALF_WORLD_UNIT_HEIGHT
 import net.mattemade.platformer.HALF_WORLD_UNIT_WIDTH
@@ -78,25 +76,27 @@ class RenderingSystem(
         //camera.position.set(WORLD_UNIT_WIDTH * 0.5f, WORLD_UNIT_HEIGHT * 0.5f, 0f)
         viewport.apply(context)
         batch.begin(camera.viewProjection)
-        renderMap(from = 0, to = playerLayerIndex)
+        renderLevel(from = 0, to = playerLayerIndex)
         super.onTick() // tick to render entities
-        renderMap(from = playerLayerIndex + 1, to = mapLayers)
+        renderLevel(from = playerLayerIndex + 1, to = mapLayers)
         renderSideBars() // to cover any sprite that goes out-of-bounds
 
         if (showTutorial) {
             fontRenderer.drawAllTextAtOnce(batch) {
-                draw("""
+                draw(
+                    """
                     arrows/WASD - walk/swim
-                    
                     Space - jump / double jump
-                    
                     down/S + Space - drop from platform
                     
                     Shift + move (land/air/water) -
                             dash while holding Shift
                     
                     Fall by wall to slide
-                    """.trimIndent(), 1f, 1f, 1f, batch)
+                    
+                    hold Tab to see the map
+                    """.trimIndent(), 1f, 1f, 1f, batch
+                )
             }
         }
 
@@ -104,13 +104,13 @@ class RenderingSystem(
         batch.end()
     }
 
-    private fun renderMap(from: Int, to: Int) {
+    private fun renderLevel(from: Int, to: Int) {
         for (i in from until to) {
-            renderLayer(i)
+            renderLevelLayer(i)
         }
     }
 
-    private fun renderLayer(i: Int) {
+    private fun renderLevelLayer(i: Int) {
         val layer = map.layers[i]
         val xOffset = (1f - layer.parallaxFactor.x) * (camera.position.x - minCameraPosition.x)
         val yOffset = (1f - layer.parallaxFactor.y) * (camera.position.y - minCameraPosition.y)

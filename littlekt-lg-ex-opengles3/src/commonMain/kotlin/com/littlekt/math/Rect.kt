@@ -10,8 +10,16 @@ import kotlin.math.sqrt
  * @date 11/30/2021
  */
 open class Rect(var x: Float = 0f, var y: Float = 0f, var width: Float = 0f, var height: Float = 0f) {
-    val x2 get() = x + width
-    val y2 get() = y + height
+    var x2: Float
+        get() = x + width
+        set(value) {
+            width = value - x
+        }
+    var y2: Float
+        get() = y + height
+        set(value) {
+            height = value - y
+        }
     val cx get() = x + width * 0.5f
     val cy get() = y + height * 0.5f
     val isEmpty get() = width <= 0 || height <= 0
