@@ -15,6 +15,7 @@ import com.littlekt.input.LwjglInput
 import com.littlekt.log.Logger
 import com.littlekt.util.fastForEach
 import com.littlekt.util.internal.now
+import java.nio.IntBuffer
 import kotlinx.coroutines.runBlocking
 import org.lwjgl.glfw.Callbacks
 import org.lwjgl.glfw.GLFW
@@ -23,7 +24,6 @@ import org.lwjgl.glfw.GLFWImage
 import org.lwjgl.opengles.GLES30
 import org.lwjgl.system.MemoryStack
 import org.lwjgl.system.MemoryUtil
-import java.nio.IntBuffer
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import org.lwjgl.opengles.GLES as LWJGL
@@ -83,11 +83,17 @@ class LwjglContext(override val configuration: JvmConfiguration) : Context() {
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, configuration.resizeable.glfw) // the window will be resizable
         GLFW.glfwWindowHint(GLFW.GLFW_MAXIMIZED, configuration.maximized.glfw)
 
-        val isMac = System.getProperty("os.name").lowercase().contains("mac")
+        val isMac = System.getProperty("os.name").lowercase()
+            .contains("mac") || org.lwjgl.system.Platform.get() == org.lwjgl.system.Platform.MACOSX
 
         GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3)
         GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 0)
         GLFW.glfwWindowHint(GLFW.GLFW_CLIENT_API, GLFW.GLFW_OPENGL_ES_API)
+
+        if (isMac) {
+            // Force EGL context instead of native to use ANGLE
+            GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_CREATION_API, GLFW.GLFW_EGL_CONTEXT_API)
+        }
 
         // Create the window
         windowHandle = GLFW.glfwCreateWindow(

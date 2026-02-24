@@ -106,6 +106,7 @@ class PlatformerGame(
 
     override suspend fun Context.start() {
         gameContext.log("start")
+        input.catchKeys.add(Key.TAB)
         input.addInputProcessor(object : InputProcessor {
             override fun keyDown(key: Key): Boolean {
                 if (!focused) {
