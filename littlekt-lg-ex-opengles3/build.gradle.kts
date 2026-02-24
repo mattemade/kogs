@@ -72,6 +72,7 @@ kotlin {
                 implementation(libs.lwjgl.opengles)
                 implementation(libs.lwjgl.openal)
                 implementation(libs.lwjgl.stb)
+                implementation(libs.gdx.lwjgl3.angle)
 
                 listOf(
                     "natives-windows",

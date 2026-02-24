@@ -1,5 +1,6 @@
 package com.littlekt
 
+import com.badlogic.gdx.backends.lwjgl3.angle.ANGLELoader
 import com.littlekt.async.KtScope
 import com.littlekt.async.MainDispatcher
 import com.littlekt.async.mainThread
@@ -71,6 +72,9 @@ class LwjglContext(override val configuration: JvmConfiguration) : Context() {
 
     @Suppress("EXPERIMENTAL_IS_NOT_ENABLED")
     override fun start(build: (app: Context) -> ContextListener) = runBlocking {
+        // Preload EGL library to have ANGLE support
+        ANGLELoader.load()
+
         // Setup an error callback. The default implementation
         // will print the error message in System.err.
         GLFWErrorCallback.createPrint(System.err).set()
@@ -90,10 +94,8 @@ class LwjglContext(override val configuration: JvmConfiguration) : Context() {
         GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 0)
         GLFW.glfwWindowHint(GLFW.GLFW_CLIENT_API, GLFW.GLFW_OPENGL_ES_API)
 
-        if (isMac) {
-            // Force EGL context instead of native to use ANGLE
-            GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_CREATION_API, GLFW.GLFW_EGL_CONTEXT_API)
-        }
+        // Force EGL context instead of native to use ANGLE
+        GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_CREATION_API, GLFW.GLFW_EGL_CONTEXT_API)
 
         // Create the window
         windowHandle = GLFW.glfwCreateWindow(
