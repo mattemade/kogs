@@ -31,6 +31,7 @@ import kotlin.reflect.KProperty
  */
 open class AssetProvider(val context: Context) {
     private val assetsToPrepare = arrayListOf<PreparableGameAsset<*>>()
+    private val selfPreparingAssets = arrayListOf<SelfPreparingGameAsset<*>>()
     private var totalAssetsLoading = atomic(0)
     private var totalAssets = atomic(0)
     private var totalAssetsFinished = atomic(0)
@@ -66,6 +67,10 @@ open class AssetProvider(val context: Context) {
      * Updates to check if all assets have been loaded, and if so, prepare them.
      */
     fun update() {
+        selfPreparingAssets.removeAll {
+            it.update()
+            it.isPrepared
+        }
         if (totalAssetsLoading.value > 0) return
         if (!prepared && jobs.isEmpty()) {
             assetsToPrepare.fastForEach {
@@ -75,14 +80,19 @@ open class AssetProvider(val context: Context) {
                     job?.let {
                         jobs.remove(it)
                     }
-                    if (jobs.isEmpty()) {
-                        prepared = true
-                        onFullyLoaded?.invoke()
-                    }
+                    checkIfPrepared()
                 }
                 jobs += job
             }
             assetsToPrepare.clear()
+        }
+        checkIfPrepared()
+    }
+
+    private fun checkIfPrepared() {
+        if (jobs.isEmpty() && selfPreparingAssets.isEmpty()) {
+            prepared = true
+            onFullyLoaded?.invoke()
         }
     }
 
@@ -210,6 +220,12 @@ open class AssetProvider(val context: Context) {
         return PreparableGameAsset(action).also { assetsToPrepare += it }
     }
 
+    @OptIn(ExperimentalContracts::class)
+    fun <T : Any> selfPrepare(action: () -> T, prepared: (T) -> Boolean): SelfPreparingGameAsset<T> {
+        contract { callsInPlace(action, InvocationKind.EXACTLY_ONCE) }
+        return SelfPreparingGameAsset(action, prepared).also { selfPreparingAssets += it }
+    }
+
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> get(clazz: KClass<T>, vfsFile: VfsFile) = assets[clazz]?.get(vfsFile)?.content as T
 
@@ -294,6 +310,26 @@ class PreparableGameAsset<T>(val action: suspend () -> T) {
     suspend fun prepare() {
         result = action.invoke()
         isPrepared = true
+    }
+}
+
+class SelfPreparingGameAsset<T>(private val action: () -> T, private val prepared: (T) -> Boolean) {
+    var isPrepared = false
+    private var result: T? = null
+
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
+        if (isPrepared) {
+            return result!!
+        } else {
+            throw IllegalStateException("Asset not prepared yet!")
+        }
+    }
+
+    fun update() {
+        if (result == null) {
+            result = action.invoke()
+        }
+        isPrepared = prepared.invoke(result!!)
     }
 }
 

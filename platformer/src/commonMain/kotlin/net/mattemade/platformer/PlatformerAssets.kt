@@ -15,6 +15,8 @@ import com.littlekt.graphics.g2d.tilemap.tiled.TiledMap
 import com.littlekt.graphics.gl.TexMagFilter
 import com.littlekt.graphics.gl.TexMinFilter
 import com.littlekt.math.Rect
+import net.mattemade.fmod.FMOD
+import net.mattemade.fmod.FMOD_Studio_System_Create
 import net.mattemade.platformer.resources.Music
 import net.mattemade.platformer.resources.PlatformerResourceSheet
 import net.mattemade.platformer.resources.ResourceLevel
@@ -35,6 +37,7 @@ class PlatformerAssets(
         RuntimeTextureAtlasPacker(context, useMiMaps = false, allowFiltering = true).releasing()
 
     val shaders by pack(order = 0) { Shaders(context) }
+    //val fmod by pack(order = 0) { Fmod(context) }
     val resourceSheet by preparePlain(order = 0) {
         PlatformerResourceSheet(
             if (overrideFromSheets != null) {
@@ -164,72 +167,102 @@ class LevelFiles(
         }
     }
 
-        /*private val preparation = resourceSheet.levelFiles.forEach { file ->
-            preparePlain {
-                context.resourcesVfs["world/$file"].readTiledMap(atlas = atlas, tilesetBorder = 0).also {
-                    map[file] = it
+    /*private val preparation = resourceSheet.levelFiles.forEach { file ->
+        preparePlain {
+            context.resourcesVfs["world/$file"].readTiledMap(atlas = atlas, tilesetBorder = 0).also {
+                map[file] = it
 
-                    if (map.size == resourceSheet.levelFiles.size) {
-                        resourceSheet.worlds.forEach { worldFile ->
-                            context.resourcesVfs["world/$worldFile"].readTiledWorld().apply {
-                                maps.forEach { mapDefinition ->
-                                    map[mapDefinition.fileName]?.let { level ->
-                                        resourceSheet.levelByName[mapDefinition.fileName]?.worldArea?.set(
-                                            mapDefinition.x.toFloat() / level.tileWidth,
-                                            mapDefinition.y.toFloat() / level.tileHeight,
-                                            mapDefinition.width.toFloat() / level.tileWidth,
-                                            mapDefinition.height.toFloat() / level.tileHeight,
-                                        )
-                                    }
+                if (map.size == resourceSheet.levelFiles.size) {
+                    resourceSheet.worlds.forEach { worldFile ->
+                        context.resourcesVfs["world/$worldFile"].readTiledWorld().apply {
+                            maps.forEach { mapDefinition ->
+                                map[mapDefinition.fileName]?.let { level ->
+                                    resourceSheet.levelByName[mapDefinition.fileName]?.worldArea?.set(
+                                        mapDefinition.x.toFloat() / level.tileWidth,
+                                        mapDefinition.y.toFloat() / level.tileHeight,
+                                        mapDefinition.width.toFloat() / level.tileWidth,
+                                        mapDefinition.height.toFloat() / level.tileHeight,
+                                    )
                                 }
                             }
                         }
                     }
                 }
             }
-        }*/
+        }
+    }*/
+}
+
+
+class Fonts(context: Context, private val textures: TextureFiles) : AssetPack(context) {
+
+    val bungee256 by preparePlain {
+        context.resourcesVfs["font/bungee_256_uppercase.fnt"].readBitmapFont(
+            preloadedTextures = listOf(
+                textures.bungee256
+            )
+        )
+    }
+    val fredokaMedium128 by preparePlain {
+        context.resourcesVfs["font/fredoka_medium_128.fnt"].readBitmapFont(
+            preloadedTextures = listOf(
+                textures.fredokaMedium128
+            )
+        )
     }
 
 
-    class Fonts(context: Context, private val textures: TextureFiles) : AssetPack(context) {
-
-        val bungee256 by preparePlain {
-            context.resourcesVfs["font/bungee_256_uppercase.fnt"].readBitmapFont(
-                preloadedTextures = listOf(
-                    textures.bungee256
-                )
+    private fun loadMsdfFont(name: String, lineHeight: Float, descender: Float): PreparableGameAsset<MsdfFont> =
+        preparePlain {
+            MsdfFont(
+                atlas = context.resourcesVfs["font/$name.png"].readTexture(
+                    minFilter = TexMinFilter.LINEAR,
+                    magFilter = TexMagFilter.LINEAR,
+                    mipmaps = false,
+                ),
+                lineHeight = lineHeight,
+                descender = descender,
+                csvSpecs = context.resourcesVfs["font/$name.csv"].readLines(),
             )
         }
-        val fredokaMedium128 by preparePlain {
-            context.resourcesVfs["font/fredoka_medium_128.fnt"].readBitmapFont(
-                preloadedTextures = listOf(
-                    textures.fredokaMedium128
-                )
-            )
-        }
 
+    val fredokaMsdf by loadMsdfFont("fredoka", 1.2f, 0.236f)
+    val jbMonoMsdf by loadMsdfFont("jbmono", 1.32f, 0.3f)
+}
 
-        private fun loadMsdfFont(name: String, lineHeight: Float, descender: Float): PreparableGameAsset<MsdfFont> =
-            preparePlain {
-                MsdfFont(
-                    atlas = context.resourcesVfs["font/$name.png"].readTexture(
-                        minFilter = TexMinFilter.LINEAR,
-                        magFilter = TexMagFilter.LINEAR,
-                        mipmaps = false,
-                    ),
-                    lineHeight = lineHeight,
-                    descender = descender,
-                    csvSpecs = context.resourcesVfs["font/$name.csv"].readLines(),
-                )
-            }
-
-        val fredokaMsdf by loadMsdfFont("fredoka", 1.2f, 0.236f)
-        val jbMonoMsdf by loadMsdfFont("jbmono", 1.32f, 0.3f)
+class Shaders(context: Context) : AssetPack(context) {
+    val msdfShader by preparePlain {
+        MsdfFontShader.prepare(context)
+        MsdfFontShader.program
     }
+}
 
-    class Shaders(context: Context) : AssetPack(context) {
-        val msdfShader by preparePlain {
-            MsdfFontShader.prepare(context)
-            MsdfFontShader.program
-        }
+class Fmod(context: Context) : AssetPack(context) {
+    val studioSystem by preparePlain(order = 0) {
+        val result = FMOD_Studio_System_Create()
+        val core = result.coreSystem
+        //val driver = core.getDriverInfo(0)
+        //core.setSoftwareFormat(driver.systemRate, FMOD.SPEAKERMODE_DEFAULT, 0)
+        result.initialize(
+            maxChannels = 1024,
+            studioInitFlags = FMOD.STUDIO_INIT_NORMAL,
+            initFlags = FMOD.INIT_NORMAL,
+            extraDriverData = null
+        )
+        result
     }
+    /*val bank by selfPreparePlain(order = 1, action = {
+        studioSystem.loadBankFile("fmod/Master.bank", FMOD.STUDIO_LOAD_BANK_NONBLOCKING)
+    }) {
+        it.loadingState == FMOD.STUDIO_LOADING_STATE_LOADED
+    }
+    val sampleData by selfPreparePlain(order = 2, action = {
+        bank.loadSampleData()
+    }) {
+        bank.sampleLoadingState == FMOD.STUDIO_LOADING_STATE_LOADED
+    }
+    val eventDescription by preparePlain(order = 3) {
+        studioSystem.getEvent("event:/drum")
+    }*/
+
+}

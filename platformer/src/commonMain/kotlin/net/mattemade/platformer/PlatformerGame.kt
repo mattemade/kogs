@@ -10,10 +10,6 @@ import com.littlekt.input.Key
 import com.littlekt.input.Pointer
 import com.littlekt.math.MutableVec2i
 import com.littlekt.util.seconds
-import korlibs.time.TimeSpan
-import korlibs.time.blockingSleep
-import net.mattemade.fmod.systemCreate
-import net.mattemade.fmod.systemRelease
 import net.mattemade.platformer.scene.PlatformingScene
 import net.mattemade.platformer.scene.Scene
 import net.mattemade.utils.network.SocketConnection
@@ -41,16 +37,16 @@ class PlatformerGame(
     var focused = true
         set(value) {
             if (!field && value) {
-                systemRelease(systemCreate())
-
-                context.audio.resume()
+                // TODO: do something for FMOD?
+               // context.audio.resume()
             } else if (field && !value) {
-                context.audio.suspend()
+               // context.audio.suspend()
             }
             field = value
         }
     private var audioReady: Boolean = false
     private var assetsReady: Boolean = false
+    private var fmodAssetsReady: Boolean = true//false
     private val gameContext =
         PlatformerGameContext(context, log, encodeUrlComponent, getBlocking, overrideResourcesFrom)
     private val pixelRender =
@@ -163,7 +159,14 @@ class PlatformerGame(
                 }
             }
 
-            if (focused && assetsReady) {
+            if (assetsReady) {
+                //gameContext.assets.fmod.studioSystem.update()
+                if (!fmodAssetsReady) {
+                    fmodAssetsReady = gameContext.fmodAssets.isLoaded
+                }
+            }
+
+            if (focused && assetsReady && fmodAssetsReady) {
                 pixelRender.render(dt)
                 directRender.render(dt)
             }

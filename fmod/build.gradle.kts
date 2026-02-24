@@ -11,15 +11,9 @@ kotlin {
         browser {}
     }
 
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs() {
-        binaries.library()
-        browser {}
-    }
-
     sourceSets {
-        val commonMain by getting {
-        }
+        val commonMain by getting {}
+        val jsMain by getting {}
         val jvmMain by getting {
             dependencies {
                 implementation(libs.lwjgl.core)

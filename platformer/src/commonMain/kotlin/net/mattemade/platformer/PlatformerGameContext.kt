@@ -14,6 +14,7 @@ class PlatformerGameContext(
 ) {
 
     val assets = PlatformerAssets(context, this, getFromUrl, overrideResourcesFrom)
+    val fmodAssets by lazy { FmodAssets(context, this) }
     val scheduler = Scheduler()
     var canvasZoom: Float = 1f
     val worldSize = Rect()
