@@ -9,6 +9,7 @@ import com.github.quillraven.fleks.World.Companion.inject
 import com.littlekt.Context
 import com.littlekt.input.Key
 import com.littlekt.math.MutableVec2f
+import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.SWIM_ACCELERATION
 import net.mattemade.platformer.SWIM_VELOCITY
 import net.mattemade.platformer.WALK_VELOCITY
@@ -20,6 +21,7 @@ import kotlin.math.sign
 
 class ControlsSystem(
     private val context: Context = inject(),
+    private val gameContext: PlatformerGameContext = inject(),
     interval: Interval = Fixed(1 / 200f),
     ): IteratingSystem(family { all(Box2DPhysicsComponent, MoveComponent, JumpComponent)}, interval = interval) {
 
@@ -136,6 +138,7 @@ class ControlsSystem(
     }
 
     private fun JumpComponent.executeJump(wallJump: Boolean = false) {
+        //gameContext.fmodAssets.eventDescription.createInstance().start()
         jumping = true
         if (!canJumpFromGround && !wallJump) {
             canJumpInAir--

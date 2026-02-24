@@ -4,6 +4,7 @@ import com.littlekt.AssetProvider
 import com.littlekt.Context
 import com.littlekt.PreparableGameAsset
 import com.littlekt.Releasable
+import com.littlekt.SelfPreparingGameAsset
 import korlibs.datastructure.FastIntMap
 import korlibs.datastructure.fastValueForEach
 import korlibs.datastructure.get
@@ -71,6 +72,9 @@ open class AssetPack(protected val context: Context, private val defaultAnimatio
 
     fun <T : Releasable> prepare(order: Int = 0, action: suspend () -> T): PreparableGameAsset<T> =
         createProvider(order).prepare { action().releasing() }
+
+    fun <T : Any> selfPreparePlain(order: Int = 0, action: () -> T, prepared: (T) -> Boolean): SelfPreparingGameAsset<T> =
+        createProvider(order).selfPrepare({ action() }, { prepared(it) } )
 
     protected fun String.prepareAnimationPlayer(
         runtimeTextureAtlasPacker: RuntimeTextureAtlasPacker,
