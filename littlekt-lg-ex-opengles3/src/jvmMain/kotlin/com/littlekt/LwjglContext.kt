@@ -237,6 +237,7 @@ class LwjglContext(override val configuration: JvmConfiguration) : Context() {
         stats.update(dt)
         renderCalls.fastForEach { render -> render(dt) }
         postRenderCalls.fastForEach { postRender -> postRender(dt) }
+        quickUpdateCalls.fastForEach { quickUpdate -> quickUpdate() }
 
         GLFW.glfwSwapBuffers(windowHandle)
         input.reset()

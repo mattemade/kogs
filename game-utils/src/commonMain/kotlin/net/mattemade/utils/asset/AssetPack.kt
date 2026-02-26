@@ -23,8 +23,8 @@ open class AssetPack(protected val context: Context, private val defaultAnimatio
     private val orderedProviders = FastIntMap<MutableList<AssetProvider>>()
 
     // create a new provider each time, so each asset could be loaded independently
-    private fun createProvider(order: Int = 0): AssetProvider =
-        AssetProvider(context).also {
+    private fun createProvider(order: Int = 0, tag: String? = null): AssetProvider =
+        AssetProvider(context, tag).also {
             orderedProviders.getOrPut(order) { mutableListOf() } += it
             maxOrder = maxOf(maxOrder, order)
         }
@@ -67,14 +67,14 @@ open class AssetPack(protected val context: Context, private val defaultAnimatio
                 result
             }
 
-    fun <T : Any> preparePlain(order: Int = 0, action: suspend () -> T): PreparableGameAsset<T> =
-        createProvider(order).prepare { action() }
+    fun <T : Any> preparePlain(tag: String? = null, order: Int = 0, action: suspend () -> T): PreparableGameAsset<T> =
+        createProvider(order, tag).prepare { action() }
 
-    fun <T : Releasable> prepare(order: Int = 0, action: suspend () -> T): PreparableGameAsset<T> =
-        createProvider(order).prepare { action().releasing() }
+    fun <T : Releasable> prepare(order: Int = 0, tag: String? = null, action: suspend () -> T): PreparableGameAsset<T> =
+        createProvider(order, tag).prepare { action().releasing() }
 
-    fun <T : Any> selfPreparePlain(order: Int = 0, action: () -> T, prepared: (T) -> Boolean): SelfPreparingGameAsset<T> =
-        createProvider(order).selfPrepare({ action() }, { prepared(it) } )
+    fun <T : Any> selfPreparePlain(order: Int = 0, tag: String? = null, action: () -> T, prepared: (T) -> Boolean): SelfPreparingGameAsset<T> =
+        createProvider(order, tag).selfPrepare({ action() }, { prepared(it) } )
 
     protected fun String.prepareAnimationPlayer(
         runtimeTextureAtlasPacker: RuntimeTextureAtlasPacker,

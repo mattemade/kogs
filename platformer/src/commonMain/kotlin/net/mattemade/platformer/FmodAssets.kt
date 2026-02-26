@@ -6,13 +6,13 @@ import net.mattemade.utils.asset.AssetPack
 
 class FmodAssets(
     context: Context,
+    fmodFolderPrefix: String,
     private val gameContext: PlatformerGameContext,
 ) : AssetPack(context) {
-/*
     val studioSystem = gameContext.assets.fmod.studioSystem
     val bank by selfPreparePlain(order = 0, action = {
         println("bank started")
-        studioSystem.loadBankFile("src/commonMain/resources/fmod/Master.bank", FMOD.STUDIO_LOAD_BANK_NONBLOCKING)
+        studioSystem.loadBankFile("${fmodFolderPrefix}fmod/Master.bank", FMOD.STUDIO_LOAD_BANK_NONBLOCKING)
     }) {
         val loadingState = it.loadingState
         println("bank checking: $loadingState")
@@ -20,7 +20,7 @@ class FmodAssets(
     }
     val bankStrings by selfPreparePlain(order = 0, action = {
         println("strings bank started")
-        studioSystem.loadBankFile("src/commonMain/resources/fmod/Master.strings.bank", FMOD.STUDIO_LOAD_BANK_NONBLOCKING)
+        studioSystem.loadBankFile("${fmodFolderPrefix}fmod/Master.strings.bank", FMOD.STUDIO_LOAD_BANK_NONBLOCKING)
     }) {
         val loadingState = it.loadingState
         println("strings bank checking: $loadingState")
@@ -36,5 +36,8 @@ class FmodAssets(
     }
     val eventDescription by preparePlain(order = 2) {
         studioSystem.getEvent("event:/drum")
-    }*/
+    }
+    val musicEventDescription by preparePlain(order = 2) {
+        studioSystem.getEvent("event:/Music/test")
+    }
 }

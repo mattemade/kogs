@@ -11,10 +11,12 @@ class PlatformerGameContext(
     val encodeUrlComponent: (String) -> String,
     val getFromUrl: (String) -> List<String>?,
     val overrideResourcesFrom: String?,
+    val fmodFolderPrefix: String,
+    val fmodLiveUpdate: Boolean,
 ) {
 
-    val assets = PlatformerAssets(context, this, getFromUrl, overrideResourcesFrom)
-    val fmodAssets by lazy { FmodAssets(context, this) }
+    val assets = PlatformerAssets(context, this, getFromUrl, fmodFolderPrefix, fmodLiveUpdate, overrideResourcesFrom)
+    val fmodAssets by lazy { FmodAssets(context, fmodFolderPrefix, this) }
     val scheduler = Scheduler()
     var canvasZoom: Float = 1f
     val worldSize = Rect()

@@ -29,7 +29,7 @@ import kotlin.reflect.KProperty
 /**
  * Provides helper functions to load and prepare assets without having to use `null` or `lateinit`.
  */
-open class AssetProvider(val context: Context) {
+open class AssetProvider(val context: Context, val tag: String? = null) {
     private val assetsToPrepare = arrayListOf<PreparableGameAsset<*>>()
     private val selfPreparingAssets = arrayListOf<SelfPreparingGameAsset<*>>()
     private var totalAssetsLoading = atomic(0)

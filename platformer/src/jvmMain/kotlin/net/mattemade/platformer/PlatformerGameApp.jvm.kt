@@ -35,6 +35,9 @@ fun main() {
                 println("POST $url $body")
             },
             connect = ::createDummySocket,
+//            fmodFolderPrefix = "",
+            fmodFolderPrefix = "src/commonMain/resources/",
+            fmodLiveUpdate = true,
             //overrideResourcesFrom = "1FpyVhINl7oAzrfB_t-r-wL9SKcYUfyZjVM-FYrejAuY"
         ).also { it.focus() }
     }

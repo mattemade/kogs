@@ -16,7 +16,10 @@ import com.littlekt.graphics.gl.TexMagFilter
 import com.littlekt.graphics.gl.TexMinFilter
 import com.littlekt.math.Rect
 import net.mattemade.fmod.FMOD
+import net.mattemade.fmod.FMOD_FS_createPreloadedFile
+import net.mattemade.fmod.FMOD_Module_Create
 import net.mattemade.fmod.FMOD_Studio_System_Create
+import net.mattemade.fmod.FmodStudioSystem
 import net.mattemade.platformer.resources.Music
 import net.mattemade.platformer.resources.PlatformerResourceSheet
 import net.mattemade.platformer.resources.ResourceLevel
@@ -31,13 +34,17 @@ class PlatformerAssets(
     context: Context,
     private val gameContext: PlatformerGameContext,
     getFromUrl: (String) -> List<String>?,
+    fmodFolderPrefix: String,
+    fmodLiveUpdate: Boolean,
     overrideFromSheets: String? = null,
 ) : AssetPack(context) {
     private val runtimeTextureAtlasPacker =
         RuntimeTextureAtlasPacker(context, useMiMaps = false, allowFiltering = true).releasing()
 
     val shaders by pack(order = 0) { Shaders(context) }
-    //val fmod by pack(order = 0) { Fmod(context) }
+    val fmod by pack(order = 0) {
+        Fmod(context, fmodFolderPrefix, fmodLiveUpdate)
+    }
     val resourceSheet by preparePlain(order = 0) {
         PlatformerResourceSheet(
             if (overrideFromSheets != null) {
@@ -237,32 +244,31 @@ class Shaders(context: Context) : AssetPack(context) {
     }
 }
 
-class Fmod(context: Context) : AssetPack(context) {
-    val studioSystem by preparePlain(order = 0) {
-        val result = FMOD_Studio_System_Create()
-        val core = result.coreSystem
-        //val driver = core.getDriverInfo(0)
-        //core.setSoftwareFormat(driver.systemRate, FMOD.SPEAKERMODE_DEFAULT, 0)
-        result.initialize(
-            maxChannels = 1024,
-            studioInitFlags = FMOD.STUDIO_INIT_NORMAL,
-            initFlags = FMOD.INIT_NORMAL,
-            extraDriverData = null
-        )
-        result
-    }
-    /*val bank by selfPreparePlain(order = 1, action = {
-        studioSystem.loadBankFile("fmod/Master.bank", FMOD.STUDIO_LOAD_BANK_NONBLOCKING)
-    }) {
-        it.loadingState == FMOD.STUDIO_LOADING_STATE_LOADED
-    }
-    val sampleData by selfPreparePlain(order = 2, action = {
-        bank.loadSampleData()
-    }) {
-        bank.sampleLoadingState == FMOD.STUDIO_LOADING_STATE_LOADED
-    }
-    val eventDescription by preparePlain(order = 3) {
-        studioSystem.getEvent("event:/drum")
-    }*/
+class Fmod(context: Context, fmodFolderPrefix: String, fmodLiveUpdate: Boolean) : AssetPack(context) {
 
+    lateinit var studioSystem: FmodStudioSystem
+    private var studioSystemReady = false
+    private val module by selfPreparePlain(order = 0, tag= "module", {
+        FMOD_Module_Create({
+            FMOD_FS_createPreloadedFile("${fmodFolderPrefix}fmod/Master.bank")
+            FMOD_FS_createPreloadedFile("${fmodFolderPrefix}fmod/Master.strings.bank")
+        }) {
+            studioSystem = FMOD_Studio_System_Create()
+            val core = studioSystem.coreSystem
+            // 128 is much better!
+            //core.setDSPBufferSize(512, 2)
+            val driver = core.getDriverInfo(0)
+            core.setSoftwareFormat(driver.systemRate, FMOD.SPEAKERMODE_DEFAULT, 0)
+            studioSystem.initialize(
+                maxChannels = 1024,
+                studioInitFlags = if (fmodLiveUpdate) FMOD.STUDIO_INIT_LIVEUPDATE else FMOD.STUDIO_INIT_NORMAL,
+                initFlags = FMOD.INIT_NORMAL,
+                extraDriverData = null
+            )
+
+            studioSystemReady = true
+        }
+    }) {
+        studioSystemReady
+    }
 }
