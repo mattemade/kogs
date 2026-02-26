@@ -118,12 +118,15 @@ actual class FmodEventDescription(private val actualEventDescription: dynamic) {
         actualEventDescription.loadSampleData()
     }
 
-    actual fun getParameterDescriptionByName(name: String): FmodParameterDescription
-    = FmodParameterDescription(getResult { actualEventDescription.getParameterDescriptionByName(name, it) })
+    actual fun getParameterDescriptionByName(name: String): FmodParameterDescription {
+        val outval = js("{}")
+        actualEventDescription.getParameterDescriptionByName(name, outval)
+        return FmodParameterDescription(outval.id)
+    }
 }
 
 actual class FmodParameterDescription(private val actualParameterDescription: dynamic) {
-    actual val id: FmodParameterId = actualParameterDescription.id
+    actual val id: FmodParameterId = FmodParameterId(actualParameterDescription.id)
 }
 
 actual class FmodEventInstance(private val actualEventInstance: dynamic) {
@@ -151,7 +154,7 @@ actual class FmodEventInstance(private val actualEventInstance: dynamic) {
         value: Float,
         ignoreSeekSpeed: Int
     ) {
-        actualEventInstance.setParameterByID(id, value, ignoreSeekSpeed)
+        actualEventInstance.setParameterByID(id.actualId, value, ignoreSeekSpeed)
     }
 }
 
@@ -177,5 +180,5 @@ actual class FmodCpu {
         get() = actualCpu.update
 }
 
-actual class FmodParameterId
+actual class FmodParameterId(val actualId: dynamic)
 actual class FmodCallback actual constructor(val externalCallback: FmodCallbackExternal)
