@@ -21,3 +21,6 @@ wave-function-collapse/.httpCache
 wave-function-collapse/.storage
 fmod/src/*/resources
 **.tiled-session
+**/fmodMain/.cache
+**/fmodMain/.unsaved
+**/fmodMain/.user

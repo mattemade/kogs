@@ -31,6 +31,8 @@ class PlatformerGame(
     private val postRequest: (url: String, body: String, callback: (List<String>?) -> Unit) -> Unit,
     private val connect: (url: String, callback: (SocketMessage) -> Unit) -> SocketConnection,
     private val overrideResourcesFrom: String? = null,
+    private val fmodFolderPrefix: String,
+    private val fmodLiveUpdate: Boolean,
 ) : ContextListener(context),
     Releasing by Self() {
 
@@ -46,9 +48,9 @@ class PlatformerGame(
         }
     private var audioReady: Boolean = false
     private var assetsReady: Boolean = false
-    private var fmodAssetsReady: Boolean = true//false
+    private var fmodAssetsReady: Boolean = false
     private val gameContext =
-        PlatformerGameContext(context, log, encodeUrlComponent, getBlocking, overrideResourcesFrom)
+        PlatformerGameContext(context, log, encodeUrlComponent, getBlocking, overrideResourcesFrom, fmodFolderPrefix, fmodLiveUpdate,)
     private val pixelRender =
         PixelRender(
             context,
@@ -137,6 +139,18 @@ class PlatformerGame(
             directRender.camera.position.set(WORLD_WIDTH_FLOAT * 0.5f, WORLD_HEIGHT_FLOAT * 0.5f, 0f)
         }
 
+        onQuickUpdate {
+            if (assetsReady) {
+                gameContext.assets.fmod.studioSystem.update()
+                if (!fmodAssetsReady) {
+                    fmodAssetsReady = gameContext.fmodAssets.isLoaded
+                    if (fmodAssetsReady) {
+                        gameContext.fmodAssets.musicEventDescription.createInstance().start()
+                    }
+                }
+            }
+        }
+
         onRender { dt ->
             //gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
             //gl.clearColor(Color.BLACK)
@@ -156,13 +170,6 @@ class PlatformerGame(
                     directRender.updateShapeRenderer()
                     pixelRender.updateShapeRenderer()
                     scene = PlatformingScene(gameContext)
-                }
-            }
-
-            if (assetsReady) {
-                //gameContext.assets.fmod.studioSystem.update()
-                if (!fmodAssetsReady) {
-                    fmodAssetsReady = gameContext.fmodAssets.isLoaded
                 }
             }
 
@@ -207,6 +214,6 @@ class PlatformerGame(
     }
 
     companion object {
-        const val TITLE = "littlekt-lg-ex game template"
+        const val TITLE = "Magical Girl Metroidvania"
     }
 }

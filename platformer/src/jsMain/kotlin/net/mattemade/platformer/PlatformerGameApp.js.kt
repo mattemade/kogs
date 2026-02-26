@@ -22,6 +22,7 @@ external fun decodeURIComponent(encodedURI: String): String
 private lateinit var game: PlatformerGame
 fun main() {
     var sheetId: String? = null
+    var liveUpdate: Boolean = false
     window.location.href.takeIf { it.contains('?') }
         ?.substringAfter('?')
         ?.split("&")
@@ -32,6 +33,7 @@ fun main() {
             val value = split.getOrNull(1)?.let { decodeURIComponent(it) }
             when (key) {
                 "sheet" -> sheetId = value
+                "fmodLive" -> liveUpdate = value?.toBoolean() == true
             }
         }
 
@@ -54,6 +56,8 @@ fun main() {
             postRequest = ::postRequest,
             connect = ::createSocketConnection,
             overrideResourcesFrom = sheetId,
+            fmodFolderPrefix = "",
+            fmodLiveUpdate = liveUpdate,
         )
         window.addEventListener("blur", { game.blur() })
         window.addEventListener("focus", { game.focus() })

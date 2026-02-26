@@ -1,6 +1,8 @@
 package net.mattemade.fmod
 
 /** Should be run before initialising FMOD */
+expect fun FMOD_Module_Create(preRun: () -> Unit, callback: () -> Unit)
+/** Should be run before loading FMOD banks */
 expect fun FMOD_FS_createPreloadedFile(filename: String)
 
 expect fun FMOD_Studio_System_Create(): FmodStudioSystem
@@ -105,7 +107,7 @@ expect class FmodEventInstance {
     fun stop(mode: FmodStudioStopType)
     fun release()
     fun setCallback(callback: FmodCallback, callbackMask: FmodCallbackType)
-    fun setParameterByID(id: FmodParameterId, value: Float, something: Boolean)
+    fun setParameterByID(id: FmodParameterId, value: Float, ignoreSeekSpeed: Int)
 }
 
 expect class FmodDriverInfo {

@@ -46,6 +46,7 @@ abstract class Context {
     protected val resizeCalls = mutableListOf<(Int, Int) -> Unit>()
     protected val disposeCalls = mutableListOf<suspend () -> Unit>()
     protected val postRunnableCalls = mutableListOf<() -> Unit>()
+    protected val quickUpdateCalls = mutableListOf<() -> Unit>()
 
     protected var lastFrame: Duration = now().milliseconds
     protected var dt: Duration = Duration.ZERO
@@ -115,6 +116,14 @@ abstract class Context {
         return {
             check(renderCalls.contains(action)) { "the 'onRender' action has already been removed!" }
             renderCalls -= action
+        }
+    }
+
+    open fun onQuickUpdate(action: () -> Unit): RemoveContextCallback {
+        quickUpdateCalls += action
+        return {
+            check(quickUpdateCalls.contains(action)) { "the 'onQuickUpdate' action has already been removed!" }
+            quickUpdateCalls -= action
         }
     }
 

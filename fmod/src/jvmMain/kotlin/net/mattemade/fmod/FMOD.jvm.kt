@@ -1,6 +1,5 @@
 package net.mattemade.fmod
 
-import java.nio.IntBuffer
 import org.lwjgl.BufferUtils
 import org.lwjgl.PointerBuffer
 import org.lwjgl.fmod.FMOD
@@ -16,6 +15,12 @@ private val intBuffer = BufferUtils.createIntBuffer(1)
 
 actual fun FMOD_FS_createPreloadedFile(filename: String) {
     // no-op, only needed for JS target
+}
+
+actual fun FMOD_Module_Create(preRun: () -> Unit, callback: () -> Unit) {
+    // no-op, only needed for JS target
+    preRun()
+    callback()
 }
 
 actual fun FMOD_Studio_System_Create(): FmodStudioSystem {
@@ -75,9 +80,9 @@ actual class FmodStudioSystemCore(val id: Long) {
     actual fun getDriverInfo(
         id: Int
     ): FmodDriverInfo {
-        val systemRate = IntBuffer.allocate(1)
-        val speakerMode = IntBuffer.allocate(1)
-        val speakerModeChannels = IntBuffer.allocate(1)
+        val systemRate = BufferUtils.createIntBuffer(1)
+        val speakerMode = BufferUtils.createIntBuffer(1)
+        val speakerModeChannels = BufferUtils.createIntBuffer(1)
         FMOD.FMOD_System_GetDriverInfo(
             this@FmodStudioSystemCore.id,
             id,
@@ -102,36 +107,37 @@ actual class FmodStudioSystemCore(val id: Long) {
 actual class FmodBank(val id: Long) {
     actual val loadingState: FmodStudioLoadingState
         get() = FMODStudio.FMOD_Studio_Bank_GetLoadingState(id, intBuffer.clear()).run {
-            if (this != net.mattemade.fmod.FMOD.OK) {
-                println("FMOD ERROR: ${FMOD.FMOD_ErrorString(this)}")
-            }
+            checkError()
             intBuffer.get()
         }
     actual val sampleLoadingState: FmodStudioLoadingState
-        get() = FMODStudio.FMOD_Studio_Bank_GetSampleLoadingState(id, intBuffer.clear()).run { intBuffer.get() }
+        get() = FMODStudio.FMOD_Studio_Bank_GetSampleLoadingState(id, intBuffer.clear()).run {
+            checkError()
+            intBuffer.get()
+        }
 
     actual fun loadSampleData() {
-        FMODStudio.FMOD_Studio_Bank_LoadSampleData(id)
+        FMODStudio.FMOD_Studio_Bank_LoadSampleData(id).checkError()
     }
 
     actual fun unloadSampleData() {
-        FMODStudio.FMOD_Studio_Bank_UnloadSampleData(id)
+        FMODStudio.FMOD_Studio_Bank_UnloadSampleData(id).checkError()
     }
 }
 
 actual class FmodEventDescription(val id: Long) {
     actual fun createInstance(): FmodEventInstance {
-        FMODStudio.FMOD_Studio_EventDescription_CreateInstance(id, outvalBuffer.clear())
+        FMODStudio.FMOD_Studio_EventDescription_CreateInstance(id, outvalBuffer.clear()).checkError()
         return FmodEventInstance(outvalBuffer.get())
     }
 
     actual fun loadSampleData() {
-        FMODStudio.FMOD_Studio_EventDescription_LoadSampleData(id)
+        FMODStudio.FMOD_Studio_EventDescription_LoadSampleData(id).checkError()
     }
 
     actual fun getParameterDescriptionByName(name: String): FmodParameterDescription {
         val result = FmodParameterDescription()
-        FMODStudio.FMOD_Studio_EventDescription_GetParameterDescriptionByName(id, name, result.description)
+        FMODStudio.FMOD_Studio_EventDescription_GetParameterDescriptionByName(id, name, result.description).checkError()
         return result
     }
 }
@@ -147,29 +153,30 @@ actual class FmodParameterDescription {
 
 actual class FmodEventInstance(val id: Long) {
     actual fun start() {
-        FMODStudio.FMOD_Studio_EventInstance_Start(id)
+        FMODStudio.FMOD_Studio_EventInstance_Start(id).checkError()
     }
 
     actual fun stop(mode: FmodStudioStopType) {
-        FMODStudio.FMOD_Studio_EventInstance_Stop(id, mode)
+        FMODStudio.FMOD_Studio_EventInstance_Stop(id, mode).checkError()
     }
 
     actual fun release() {
-        FMODStudio.FMOD_Studio_EventInstance_Release(id)
+        FMODStudio.FMOD_Studio_EventInstance_Release(id).checkError()
     }
 
     actual fun setCallback(
         callback: FmodCallback,
         callbackMask: FmodCallbackType
     ) {
-        FMODStudio.FMOD_Studio_EventInstance_SetCallback(id, callback.realCallback, callbackMask)
+        FMODStudio.FMOD_Studio_EventInstance_SetCallback(id, callback.realCallback, callbackMask).checkError()
     }
 
     actual fun setParameterByID(
         id: FmodParameterId,
         value: Float,
-        something: Boolean
+        ignoreSeekSpeed: Int
     ) {
+        FMODStudio.FMOD_Studio_EventInstance_SetParameterByID(this.id, id.id, value, ignoreSeekSpeed)
     }
 }
 
@@ -198,5 +205,11 @@ actual class FmodParameterId(val id: FMOD_STUDIO_PARAMETER_ID)
 actual class FmodCallback actual constructor(externalCallback: FmodCallbackExternal) {
     internal val realCallback = FMOD_STUDIO_EVENT_CALLBACK.create { type, event, parameters ->
         externalCallback.invoke(type, event, parameters)
+    }
+}
+
+private inline fun Int.checkError() {
+    if (this != net.mattemade.fmod.FMOD.OK) {
+        println("FMOD ERROR: ${FMOD.FMOD_ErrorString(this)}")
     }
 }

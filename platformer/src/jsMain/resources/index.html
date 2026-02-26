@@ -15,6 +15,16 @@
       border-radius: 5px;
     }
   </style>
+  <script>
+    var fmodStudioPreloadScript = document.createElement('script');
+    if (typeof WebAssembly === "object" && typeof SharedArrayBuffer === "function") {
+      fmodStudioPreloadScript.src = "fmodstudioP.js";
+    } else {
+      fmodStudioPreloadScript.src = "fmodstudio.js";
+    }
+    // block HTML parsing until FMOD is loaded to ensure the main script gets it
+    document.write(fmodStudioPreloadScript.outerHTML);
+  </script>
 </head>
 <body>
   <div id="content">

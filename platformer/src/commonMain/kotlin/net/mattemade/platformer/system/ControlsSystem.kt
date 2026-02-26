@@ -9,6 +9,12 @@ import com.github.quillraven.fleks.World.Companion.inject
 import com.littlekt.Context
 import com.littlekt.input.Key
 import com.littlekt.math.MutableVec2f
+import net.mattemade.fmod.FMOD
+import net.mattemade.fmod.FMOD.STUDIO_EVENT_CALLBACK_SOUND_STOPPED
+import net.mattemade.fmod.FmodCallback
+import net.mattemade.fmod.FmodCallbackExternal
+import net.mattemade.fmod.FmodCallbackType
+import net.mattemade.fmod.FmodResult
 import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.SWIM_ACCELERATION
 import net.mattemade.platformer.SWIM_VELOCITY
@@ -18,6 +24,7 @@ import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
 import kotlin.math.sign
+import kotlin.random.Random
 
 class ControlsSystem(
     private val context: Context = inject(),
@@ -56,7 +63,7 @@ class ControlsSystem(
 
 
         entity[JumpComponent].apply {
-            val jumpCurrentlyPressed = input.isKeyPressed(Key.SPACE)
+            val jumpCurrentlyPressed = input.isKeyPressed(Key.SPACE) || input.isTouching
             val jumpJustPressed = jumpCurrentlyPressed && !jumpPressed
             jumpPressed = jumpCurrentlyPressed
             if (jumpJustPressed && (canJumpFromGround || canJumpInAir > 0 || context.touchingWalls) && !jumping) {
@@ -137,8 +144,16 @@ class ControlsSystem(
         }
     }
 
+    private val testParametedId by lazy { gameContext.fmodAssets.eventDescription.getParameterDescriptionByName("bassy").id }
     private fun JumpComponent.executeJump(wallJump: Boolean = false) {
-        //gameContext.fmodAssets.eventDescription.createInstance().start()
+        val instance = gameContext.fmodAssets.eventDescription.createInstance()
+        instance.setCallback(FmodCallback { type, event, parameters ->
+            println("jump sound stopped")
+            FMOD.OK
+        }, callbackMask = STUDIO_EVENT_CALLBACK_SOUND_STOPPED)
+        instance.start()
+        instance.setParameterByID(testParametedId, Random.nextInt(3).toFloat(), 1)
+
         jumping = true
         if (!canJumpFromGround && !wallJump) {
             canJumpInAir--
