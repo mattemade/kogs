@@ -47,18 +47,18 @@ kotlin {
                         )
                     }
                 }
-                if (Os.isFamily(Os.FAMILY_MAC)) {
-                    register<JavaExec>("jvmRun") {
-                        jvmArgs("-XstartOnFirstThread")
-                        mainClass.set(mainClassName)
-                        kotlin {
-                            val mainCompile = targets["jvm"].compilations["main"]
-                            dependsOn(mainCompile.compileAllTaskName)
-                            classpath(
-                                { mainCompile.output.allOutputs.files },
-                                (configurations["jvmRuntimeClasspath"])
-                            )
-                        }
+                register<JavaExec>("jvmRun") {
+                    if (Os.isFamily(Os.FAMILY_MAC)) {
+                        //jvmArgs("-XstartOnFirstThread")
+                    }
+                    mainClass.set(mainClassName)
+                    kotlin {
+                        val mainCompile = targets["jvm"].compilations["main"]
+                        dependsOn(mainCompile.compileAllTaskName)
+                        classpath(
+                            { mainCompile.output.allOutputs.files },
+                            (configurations["jvmRuntimeClasspath"])
+                        )
                     }
                 }
             }

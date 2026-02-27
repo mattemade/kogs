@@ -139,18 +139,6 @@ class PlatformerGame(
             directRender.camera.position.set(WORLD_WIDTH_FLOAT * 0.5f, WORLD_HEIGHT_FLOAT * 0.5f, 0f)
         }
 
-        onQuickUpdate {
-            if (assetsReady) {
-                gameContext.assets.fmod.studioSystem.update()
-                if (!fmodAssetsReady) {
-                    fmodAssetsReady = gameContext.fmodAssets.isLoaded
-                    if (fmodAssetsReady) {
-                        gameContext.fmodAssets.musicEventDescription.createInstance().start()
-                    }
-                }
-            }
-        }
-
         onRender { dt ->
             //gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
             //gl.clearColor(Color.BLACK)
@@ -170,6 +158,16 @@ class PlatformerGame(
                     directRender.updateShapeRenderer()
                     pixelRender.updateShapeRenderer()
                     scene = PlatformingScene(gameContext)
+                }
+            }
+
+            if (assetsReady) {
+                gameContext.assets.fmod.studioSystem.update()
+                if (!fmodAssetsReady) {
+                    fmodAssetsReady = gameContext.fmodAssets.isLoaded
+                    if (fmodAssetsReady) {
+                        gameContext.fmodAssets.musicEventDescription.createInstance().start()
+                    }
                 }
             }
 

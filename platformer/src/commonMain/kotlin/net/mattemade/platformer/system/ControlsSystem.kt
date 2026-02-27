@@ -151,8 +151,10 @@ class ControlsSystem(
             println("jump sound stopped")
             FMOD.OK
         }, callbackMask = STUDIO_EVENT_CALLBACK_SOUND_STOPPED)
+        val value = Random.nextInt(3).toFloat()
+        println("start jump sound with bassy of $value")
+        instance.setParameterByID(testParametedId, value, 1)
         instance.start()
-        instance.setParameterByID(testParametedId, Random.nextInt(3).toFloat(), 1)
 
         jumping = true
         if (!canJumpFromGround && !wallJump) {

@@ -256,7 +256,7 @@ class Fmod(context: Context, fmodFolderPrefix: String, fmodLiveUpdate: Boolean) 
             studioSystem = FMOD_Studio_System_Create()
             val core = studioSystem.coreSystem
             // 128 is much better!
-            //core.setDSPBufferSize(512, 2)
+            core.setDSPBufferSize(1024, 2)
             val driver = core.getDriverInfo(0)
             core.setSoftwareFormat(driver.systemRate, FMOD.SPEAKERMODE_DEFAULT, 0)
             studioSystem.initialize(
