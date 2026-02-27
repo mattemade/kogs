@@ -116,7 +116,7 @@ abstract class GlslGenerator : GlslProvider {
                         || glVersion.major >= 3 && glVersion.platform.isMobile -> "300 es"
 
                 glVersion.atleast(3, 3) -> "330"
-                glVersion.atleast(3, 2) -> "150"
+                //glVersion.atleast(3, 2) -> "150"
                 glVersion.atleast(3, 0) -> "300 es"
                 glVersion.major >= 3 && !glVersion.platform.isWebGl -> "130"
                 else -> throw IllegalStateException("${context.graphics.glVersion} isn't not considered at least GL 3.0+")
@@ -280,7 +280,7 @@ abstract class GlslGenerator : GlslProvider {
                         || glVersion.major >= 3 && glVersion.platform.isMobile -> "300 es"
 
                 glVersion.atleast(3, 3) -> "330"
-                glVersion.atleast(3, 2) -> "150"
+                //glVersion.atleast(3, 2) -> "150"
                 glVersion.atleast(3, 0) -> "300 es"
                 glVersion.major >= 3 && !glVersion.platform.isWebGl -> "130"
                 else -> throw IllegalStateException("${context.graphics.glVersion} isn't not considered at least GL 3.0+")

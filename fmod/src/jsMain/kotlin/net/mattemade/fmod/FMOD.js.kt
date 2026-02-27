@@ -120,13 +120,14 @@ actual class FmodEventDescription(private val actualEventDescription: dynamic) {
 
     actual fun getParameterDescriptionByName(name: String): FmodParameterDescription {
         val outval = js("{}")
-        actualEventDescription.getParameterDescriptionByName(name, outval)
+        val result = actualEventDescription.getParameterDescriptionByName(name, outval)
+        println("${name} is ${outval} with ${outval.id} by ${result}")
         return FmodParameterDescription(outval.id)
     }
 }
 
-actual class FmodParameterDescription(private val actualParameterDescription: dynamic) {
-    actual val id: FmodParameterId = FmodParameterId(actualParameterDescription.id)
+actual class FmodParameterDescription(private val actualParameterDescriptionId: dynamic) {
+    actual val id: FmodParameterId = FmodParameterId(actualParameterDescriptionId)
 }
 
 actual class FmodEventInstance(private val actualEventInstance: dynamic) {
@@ -154,6 +155,8 @@ actual class FmodEventInstance(private val actualEventInstance: dynamic) {
         value: Float,
         ignoreSeekSpeed: Int
     ) {
+        println(id.actualId)
+        println(value)
         actualEventInstance.setParameterByID(id.actualId, value, ignoreSeekSpeed)
     }
 }

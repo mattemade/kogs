@@ -367,6 +367,12 @@ class Box2DPhysicsSystem(
 
     // vertical narrow "stripes"
     fun createWater(fromY: Float, toY: Float, x: Float) {
+        if (toY - fromY < 1.1f) {
+            // if that's a single tile - don't make it swimmable
+            // TODO: but make it splashable!
+            return
+        }
+
         val hy = (toY - fromY) * 0.5f
         physics.createBody(BodyDef()).apply {
             position.set(x + 0.5f, fromY + hy)
