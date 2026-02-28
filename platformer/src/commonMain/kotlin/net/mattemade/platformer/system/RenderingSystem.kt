@@ -24,6 +24,7 @@ import net.mattemade.platformer.WORLD_HEIGHT
 import net.mattemade.platformer.WORLD_UNIT_HEIGHT
 import net.mattemade.platformer.WORLD_UNIT_WIDTH
 import net.mattemade.platformer.WORLD_WIDTH
+import net.mattemade.platformer.component.PlayerComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.platformer.component.SpriteComponent
@@ -67,8 +68,7 @@ class RenderingSystem(
         context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
         context.gl.clearColor(Color.BLACK)
 
-        // TODO: there will be other creatues in the family, we should specify to pick the Player
-        val playerPosition = family.first()[PositionComponent].position
+        val playerPosition = family.first { it.getOrNull(PlayerComponent) != null }[PositionComponent].position
         camera.position.set(
             playerPosition.x.clamp(minCameraPosition.x, maxCameraPosition.x).px,
             playerPosition.y.clamp(minCameraPosition.y, maxCameraPosition.y).px,

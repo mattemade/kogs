@@ -23,6 +23,7 @@ import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
+import net.mattemade.platformer.component.PlayerComponent
 import kotlin.math.sign
 import kotlin.random.Random
 
@@ -30,7 +31,7 @@ class ControlsSystem(
     private val context: Context = inject(),
     private val gameContext: PlatformerGameContext = inject(),
     interval: Interval = Fixed(1 / 200f),
-    ): IteratingSystem(family { all(Box2DPhysicsComponent, MoveComponent, JumpComponent)}, interval = interval) {
+    ): IteratingSystem(family { all(Box2DPhysicsComponent, MoveComponent, JumpComponent, PlayerComponent)}, interval = interval) {
 
     private val input = context.input
     private var jumpPressed = false

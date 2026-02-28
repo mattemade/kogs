@@ -15,6 +15,7 @@ import net.mattemade.platformer.component.FloatUpComponent
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
 import net.mattemade.platformer.component.MoveComponent
+import net.mattemade.platformer.component.PlayerComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.platformer.component.SpriteComponent
@@ -98,6 +99,7 @@ class Room(
         it += FloatUpComponent()
         it += MomentaryForceComponent()
         it += ContextComponent()
+        it += PlayerComponent()
         physicsSystem.createPlayerBody(this, it, initialPlayerBounds)
     }
 
@@ -177,6 +179,46 @@ class Room(
                 }
             }
         }
+
+        map.layers.forEach {
+            if (it is TiledObjectLayer) {
+                it.objects.forEach { spawn ->
+                    when (spawn.name) {
+                        "crab" -> {
+                            ecs.entity {
+                                it += SpriteComponent(
+                                    gameContext.assets.textureFiles.whitePixel,
+                                    // baking offset into the bounds, maybe it should be a separate property?
+                                    Rect(
+                                        spawn.bounds.width * unitSize * -0.48f,
+                                        spawn.bounds.height * unitSize * -0.48f,
+                                        spawn.bounds.width * unitSize,
+                                        spawn.bounds.height * unitSize
+                                    )
+                                )
+                                it += PositionComponent().also {
+                                    it.position.set(spawn.bounds.cx * unitSize, spawn.bounds.cy * unitSize)
+                                }
+                                it += RotationComponent(maxRotationVelocity = 0.1f)
+                                it += MoveComponent()
+                                it += JumpComponent()
+                                it += FloatUpComponent()
+                                it += MomentaryForceComponent()
+                                it += ContextComponent()
+                                physicsSystem.createCrabBody(
+                                    this,
+                                    it,
+                                    spawn.bounds.cx * unitSize,
+                                    spawn.bounds.cy * unitSize,
+                                    spawn.bounds.width * unitSize,
+                                    spawn.bounds.height * unitSize
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun placeSwimmableWaterBlock(fromY: Int, toY: Int, x: Int) {
@@ -188,8 +230,8 @@ class Room(
             }
         }
         physicsSystem.createWater(
-            if (fromY == 0 || tileTypeMap["solid"]?.getOrNull(x)?.getOrNull(fromY-1) == true) {
-                -1.1f // to ensure water goes well above the screen, to make the person dive up
+            if (fromY == 0 || tileTypeMap["solid"]?.getOrNull(x)?.getOrNull(fromY - 1) == true) {
+                fromY - 1.1f // to ensure water goes well above the screen, to make the person dive up
             } else {
                 fromY.toFloat()
             }, toY.toFloat(), x.toFloat()

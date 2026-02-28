@@ -13,7 +13,7 @@ Music!A1:Z1000
 Music ID|Music file|Notes
 Intro|default_music.mp3|Will be played one time when the game starts
 Levels!A1:Z1000
-39
+40
 preview url|world
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/test-level5.tmj|test-level5.tmj
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/text-32px-Tileset.png|text-32px-Tileset.png
@@ -53,6 +53,7 @@ https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/tex
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/room_pearl_2.png|room_pearl_2.png
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/mahou_idle_test.tsj|mahou_idle_test.tsj
 https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/mahou_idle_test.tsj|test-32px-level7-underwater.tmj
+https://demo.mattemade.net/files/in-progress/magical-girl-metroidvania/world/mahou_idle_test.tsj|test-32px-level7-long-underwater.tmj
 Parameters!A1:Z1002
 12
 Key (DO NOT CHANGE)|Value|||Backup value|SotN
