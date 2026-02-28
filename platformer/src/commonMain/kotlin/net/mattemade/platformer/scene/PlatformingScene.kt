@@ -14,6 +14,7 @@ import net.mattemade.platformer.PIXEL_PER_UNIT_FLOAT
 import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
+import net.mattemade.platformer.component.FloatUpComponent
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PositionComponent
@@ -119,6 +120,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                             player[RotationComponent],
                             player[MoveComponent],
                             player[JumpComponent],
+                            player[FloatUpComponent],
                             player[ContextComponent],
                             player[Box2DPhysicsComponent], // just to copy velocity and stuff, SHOULD NOT BE REUSED THERE as it's connected to the Room's B2D World
                         )
