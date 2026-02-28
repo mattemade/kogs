@@ -18,6 +18,7 @@ import net.mattemade.platformer.MAX_FALL_VELOCITY
 import net.mattemade.platformer.WALK_VELOCITY
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
+import net.mattemade.platformer.component.FloatUpComponent
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
 import net.mattemade.platformer.component.MoveComponent
@@ -81,32 +82,45 @@ class Box2DPhysicsSystem(
             entity[ContextComponent].apply {
                 standing = body.getContactList().let { it.isTouching<Feet, Wall>() || it.isTouching<Feet, Platform>() }
                 touchingWalls = body.getContactList().isTouching<Hands, Wall>()
-                swimming = body.getContactList().isTouching<Torso, Water>().also {
-                    if (!swimming && it) { // started swimming
-                        physicsComponent.landBodyFixture.filterData.maskBits = 0
-                        physicsComponent.waterBodyFixture.filterData.maskBits = PLAYER_BODY_COLLISIONS
-                        entity[JumpComponent].apply {
-                            jumping = false
-                            wasJumping = false
-                            jumpBuffer = 0
-                            coyoteTimeInTicks = JumpComponent.COYOTE_TICKS
-                            canHoldJumpForTicks = JumpComponent.MAX_JUMP_TICKS
-                        }
-                    } else if (swimming && !it) { // finished swimming
-                        physicsComponent.waterBodyFixture.filterData.maskBits = 0
-                        physicsComponent.landBodyFixture.filterData.maskBits = PLAYER_BODY_COLLISIONS
-                        body.setTransformRadians(body.position, 0f)
-                        entity[RotationComponent].targetRotation = 0f
+
+                var currentlySwimming = false
+                var currentlyDiving = false
+                body.getContactList().touchAll<Torso, Water> { torso, water ->
+                    currentlySwimming = true
+                    currentlyDiving = currentlyDiving || torso.bodyPosition.y > water.top + 1f
+                }
+
+                if (!swimming && currentlySwimming) { // started swimming
+                    physicsComponent.landBodyFixture.filterData.maskBits = 0
+                    physicsComponent.waterBodyFixture.filterData.maskBits = PLAYER_BODY_COLLISIONS
+                    entity[JumpComponent].apply {
+                        jumping = false
+                        wasJumping = false
+                        jumpBuffer = 0
+                        coyoteTimeInTicks = JumpComponent.COYOTE_TICKS
+                        canHoldJumpForTicks = JumpComponent.MAX_JUMP_TICKS
+                    }
+                } else if (swimming && !currentlySwimming) { // finished swimming
+                    physicsComponent.waterBodyFixture.filterData.maskBits = 0
+                    physicsComponent.landBodyFixture.filterData.maskBits = PLAYER_BODY_COLLISIONS
+                    body.setTransformRadians(body.position, 0f)
+                    entity[RotationComponent].targetRotation = 0f
+                    entity.getOrNull(MoveComponent)?.let {
+                        val direction = it.moveDirection
                         // maybe jump a bit from the water if we are moving mostly up?
-                        if (physicsComponent.body.linearVelocityY < 0f
-                            && abs(physicsComponent.body.linearVelocityY) >= abs(physicsComponent.body.linearVelocityX)
-                        ) {
-                            // TODO: but maybe not do that if we are going to jump up? oh well, let's not overcomplicate
+                        if (direction.y < 0f && abs(direction.y) >= abs(direction.x)) {
                             entity.getOrNull(MomentaryForceComponent)?.let {
                                 it.forces += Vec2f(0f, -15f)
                             }
                         }
                     }
+                }
+                swimming = currentlySwimming
+
+                if (currentlyDiving) {
+                    entity.getOrNull(FloatUpComponent)?.floatUpAcceleration = -0.001f
+                } else {
+                    entity.getOrNull(FloatUpComponent)?.floatUpAcceleration = 0f
                 }
             }
         }
@@ -163,6 +177,9 @@ class Box2DPhysicsSystem(
             }
         }
 
+        entity.getOrNull(FloatUpComponent)?.let { (speed, _) ->
+            physicsComponent.body.applyImpulse(0f, speed)
+        }
     }
 
     private fun landBasedMovement(
@@ -338,7 +355,7 @@ class Box2DPhysicsSystem(
                         maskBits = PLAYER_LIMB_COLLISIONS
                     }
                     shape = CircleShape(radius = initialPlayerBounds.width * 0.3f)
-                    userData = Torso
+                    userData = Torso(body.position)
                 })!!
             }
         }
@@ -401,12 +418,20 @@ class Box2DPhysicsSystem(
         }
     }
 
-    fun teleport(entity: Entity, moveToPosition: Vec2f, physicsComponent: Box2DPhysicsComponent) {
+    fun teleport(entity: Entity, moveToPosition: Vec2f, physicsComponentFromPreviousRoom: Box2DPhysicsComponent) {
         entity[Box2DPhysicsComponent].apply {
             previousPosition.set(moveToPosition)
             body.setTransformDegrees(Vec2(moveToPosition.x, moveToPosition.y), 0f)
-            body.linearVelocityX = physicsComponent.body.linearVelocityX
-            body.linearVelocityY = physicsComponent.body.linearVelocityY
+            body.linearVelocityX = physicsComponentFromPreviousRoom.body.linearVelocityX
+            body.linearVelocityY = physicsComponentFromPreviousRoom.body.linearVelocityY
+
+            if (entity[ContextComponent].swimming) { // was swimming when teleported
+                landBodyFixture.filterData.maskBits = 0
+                waterBodyFixture.filterData.maskBits = PLAYER_BODY_COLLISIONS
+            } else { // walked in
+                waterBodyFixture.filterData.maskBits = 0
+                landBodyFixture.filterData.maskBits = PLAYER_BODY_COLLISIONS
+            }
         }
     }
 
@@ -438,7 +463,7 @@ class Box2DPhysicsSystem(
     private class Water(val top: Float = 0f)
     private object Wall
     private class Feet(val entity: Entity)
-    private object Torso
+    private class Torso(val bodyPosition: Vec2)
     private class Hands(val entity: Entity)
 
     companion object {
@@ -465,7 +490,9 @@ class Box2DPhysicsSystem(
                 getFixtureA()?.userData
             )
 
-        private inline fun <reified T, reified K> ContactEdge?.isTouching(): Boolean {
+        private inline fun <reified T, reified K> ContactEdge?.isTouching(): Boolean = this.touch<T, K>() != null
+
+        private inline fun <reified T, reified K> ContactEdge?.touch(): Contact? {
             var edge = this
             while (edge != null) {
                 edge.contact?.let {
@@ -474,12 +501,28 @@ class Box2DPhysicsSystem(
                                         || (it.getFixtureB()?.userData is T && it.getFixtureA()?.userData is K)
                                 )
                     ) {
-                        return true
+                        return it
                     }
                 }
                 edge = edge.next
             }
-            return false
+            return null
+        }
+
+        private inline fun <reified T, reified K> ContactEdge?.touchAll(crossinline action: (T, K) -> Unit) {
+            var edge = this
+            while (edge != null) {
+                edge.contact?.let {
+                    if (it.isTouching) {
+                        (it.getFixtureA()?.userData as? T ?: it.getFixtureB()?.userData as? T)?.let { left ->
+                            (it.getFixtureA()?.userData as? K ?: it.getFixtureB()?.userData as? K)?.let { right ->
+                                action(left, right)
+                            }
+                        }
+                    }
+                }
+                edge = edge.next
+            }
         }
 
     }

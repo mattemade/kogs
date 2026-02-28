@@ -9,18 +9,20 @@ import com.littlekt.graphics.g2d.tilemap.tiled.TiledTilesLayer
 import com.littlekt.math.Rect
 import com.littlekt.math.Vec2f
 import net.mattemade.platformer.PlatformerGameContext
-import net.mattemade.platformer.component.JumpComponent
-import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
+import net.mattemade.platformer.component.FloatUpComponent
+import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
+import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.component.UiComponent
 import net.mattemade.platformer.px
-import net.mattemade.platformer.system.ControlsSystem
 import net.mattemade.platformer.system.Box2DPhysicsSystem
+import net.mattemade.platformer.system.ControlsSystem
+import net.mattemade.platformer.system.FloatingSystem
 import net.mattemade.platformer.system.RenderingSystem
 import net.mattemade.platformer.system.RotationSystem
 import net.mattemade.platformer.system.UiControlsSystem
@@ -30,7 +32,6 @@ import net.mattemade.utils.releasing.Self
 import net.mattemade.utils.tiled.BoundsListener
 import net.mattemade.utils.tiled.findBounds
 import org.jbox2d.common.Vec2
-import kotlin.collections.mutableSetOf
 
 class Room(
     private val gameContext: PlatformerGameContext,
@@ -41,14 +42,15 @@ class Room(
 ) : Releasing by Self() {
 
     private val unitSize = 1f / map.tileWidth
-    private val initialPlayerBounds = (map.layer("player-spawn") as? TiledObjectLayer)?.objects?.firstOrNull()?.bounds?.let {
-        Rect(
-            x = it.cx * unitSize - 0.5f,
-            y = it.cy * unitSize - 1f,
-            width = 1f,
-            height = 2f,
-        )
-    } ?: Rect()
+    private val initialPlayerBounds =
+        (map.layer("player-spawn") as? TiledObjectLayer)?.objects?.firstOrNull()?.bounds?.let {
+            Rect(
+                x = it.cx * unitSize - 0.5f,
+                y = it.cy * unitSize - 1f,
+                width = 1f,
+                height = 2f,
+            )
+        } ?: Rect()
 
     var mapTexture: Texture? = null
     val tileTypeMap = listOf("solid", "platform", "water").associateWith {
@@ -67,6 +69,7 @@ class Room(
             add(ControlsSystem())
             add(UiControlsSystem())
             add(Box2DPhysicsSystem().also { physicsSystem = it }.releasing())
+            add(FloatingSystem())
             add(RotationSystem())
             add(RenderingSystem())
             add(UiRenderingSystem(worldArea = worldArea, mapTexture = { mapTexture }))
@@ -91,13 +94,14 @@ class Room(
         it += RotationComponent(maxRotationVelocity = 0.1f)
         it += MoveComponent()
         it += JumpComponent()
+        it += FloatUpComponent()
         it += MomentaryForceComponent()
         it += ContextComponent()
         physicsSystem.createPlayerBody(this, it, initialPlayerBounds)
     }
 
     init {
-        val typedTileIds = tileTypeMap.keys.associateWith{ mutableSetOf<Int>() }
+        val typedTileIds = tileTypeMap.keys.associateWith { mutableSetOf<Int>() }
         map.tileSets.forEach { tileset ->
             tileset.tiles.forEach { tile ->
                 for (type in typedTileIds.keys) {
@@ -182,7 +186,13 @@ class Room(
                 return
             }
         }
-        physicsSystem.createWater(fromY.toFloat(), toY.toFloat(), x.toFloat())
+        physicsSystem.createWater(
+            if (fromY == 0 || tileTypeMap["solid"]?.getOrNull(x)?.getOrNull(fromY-1) == true) {
+                -1.1f // to ensure water goes well above the screen, to make the person dive up
+            } else {
+                fromY.toFloat()
+            }, toY.toFloat(), x.toFloat()
+        )
     }
 
 
@@ -192,6 +202,7 @@ class Room(
         rotationComponent: RotationComponent,
         moveComponent: MoveComponent,
         jumpComponent: JumpComponent,
+        floatUpComponent: FloatUpComponent,
         contextComponent: ContextComponent,
         physicsComponent: Box2DPhysicsComponent
     ) {
@@ -205,6 +216,7 @@ class Room(
                 it += rotationComponent
                 it += moveComponent
                 it += jumpComponent
+                it += floatUpComponent
                 it += contextComponent
             }
             physicsSystem.teleport(playerEntity, playerPosition, physicsComponent)
