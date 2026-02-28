@@ -53,6 +53,7 @@ class Room(
         } ?: Rect()
 
     var mapTexture: Texture? = null
+    var addedToMap: Boolean = false
     val tileTypeMap = listOf("solid", "platform", "water").associateWith {
         Array(map.width) { BooleanArray(map.height) }
     }

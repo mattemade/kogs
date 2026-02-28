@@ -6,11 +6,8 @@ import com.littlekt.graphics.g2d.Batch
 import com.littlekt.graphics.g2d.shape.ShapeRenderer
 import com.littlekt.graphics.toFloatBits
 import com.littlekt.math.MutableVec2f
-import com.littlekt.math.Rect
-import com.littlekt.math.floorToInt
 import com.littlekt.util.seconds
 import net.mattemade.platformer.FIRST_LEVEL_NAME
-import net.mattemade.platformer.PIXEL_PER_UNIT_FLOAT
 import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
@@ -43,7 +40,8 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
             switchRoom = ::switchRoom,
         ).releasing()
     }
-    val mapTexture = PixelRender(
+    private var currentRoom: Room = rooms.first { it.name == FIRST_LEVEL_NAME }
+    private val sharedMapRenderer = PixelRender(
         gameContext.context,
         targetWidth = fullWorldRect.width.roundToInt(),
         targetHeight = fullWorldRect.height.roundToInt(),
@@ -57,13 +55,13 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                 rect = fullWorldRect,
                 //color = Color.BLACK.toFloatBits()
             )*/
-            rooms.forEach { room ->
-                room.tileTypeMap["solid"]?.forEachIndexed { x, row ->
+            if (!currentRoom.addedToMap) {
+                currentRoom.tileTypeMap["solid"]?.forEachIndexed { x, row ->
                     row.forEachIndexed { y, value ->
                         if (value) {
                             shapeRenderer.filledRectangle(
-                                x = room.worldArea.x + x.toFloat(),
-                                y = room.worldArea.y + y.toFloat(),
+                                x = currentRoom.worldArea.x + x.toFloat(),
+                                y = currentRoom.worldArea.y + y.toFloat(),
                                 width = 1f,
                                 height = 1f,
                                 color = mapColor,
@@ -71,16 +69,16 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                         }
                     }
                 }
+                currentRoom.addedToMap = true
             }
         }
-    ).run {
+    ).apply {
         render(0f.seconds)
         texture.also { mapTexture ->
             rooms.forEach { it.mapTexture = mapTexture }
         }
     }
 
-    private var currentRoom: Room = rooms.first { it.name == FIRST_LEVEL_NAME }
 
     override fun update(seconds: Float) {
         currentRoom.render(seconds)
@@ -125,6 +123,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                             player[Box2DPhysicsComponent], // just to copy velocity and stuff, SHOULD NOT BE REUSED THERE as it's connected to the Room's B2D World
                         )
                         currentRoom = it
+                        sharedMapRenderer.render(0f.seconds)
                         return
                     }
                 }
