@@ -20,7 +20,11 @@ class RotationSystem(
             return
         }
 
-        val rotation = minOfAbs(target - current, target + PI2_F - current, target - PI2_F - current).clamp(-limit, limit)
+        val rotation = minOfAbs(
+            target - current,
+            target + PI2_F - current,
+            target - PI2_F - current,
+        ).clamp(-limit, limit)
         entity[RotationComponent].currentRotation = current + rotation
     }
 

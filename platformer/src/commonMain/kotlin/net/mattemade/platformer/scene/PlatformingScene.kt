@@ -51,31 +51,34 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
             camera.position.set(fullWorldRect.cx, fullWorldRect.cy, 0f)
         },
         renderCall = { dt, camera, batch, shapeRenderer ->
-            /*shapeRenderer.filledRectangle(
-                rect = fullWorldRect,
-                //color = Color.BLACK.toFloatBits()
-            )*/
-            if (!currentRoom.addedToMap) {
-                currentRoom.tileTypeMap["solid"]?.forEachIndexed { x, row ->
-                    row.forEachIndexed { y, value ->
-                        if (value) {
-                            shapeRenderer.filledRectangle(
-                                x = currentRoom.worldArea.x + x.toFloat(),
-                                y = currentRoom.worldArea.y + y.toFloat(),
-                                width = 1f,
-                                height = 1f,
-                                color = mapColor,
-                            )
-                        }
-                    }
-                }
-                currentRoom.addedToMap = true
-            }
+            addRoomToMap(currentRoom, shapeRenderer)
+            /*rooms.forEach {
+                addRoomToMap(it, shapeRenderer)
+            }*/
         }
     ).apply {
         render(0f.seconds)
         texture.also { mapTexture ->
             rooms.forEach { it.mapTexture = mapTexture }
+        }
+    }
+
+    private fun addRoomToMap(room: Room, shapeRenderer: ShapeRenderer) {
+        if (!room.addedToMap) {
+            room.tileTypeMap["solid"]?.forEachIndexed { x, row ->
+                row.forEachIndexed { y, value ->
+                    if (value) {
+                        shapeRenderer.filledRectangle(
+                            x = room.worldArea.x + x.toFloat(),
+                            y = room.worldArea.y + y.toFloat(),
+                            width = 1f,
+                            height = 1f,
+                            color = mapColor,
+                        )
+                    }
+                }
+            }
+            room.addedToMap = true
         }
     }
 

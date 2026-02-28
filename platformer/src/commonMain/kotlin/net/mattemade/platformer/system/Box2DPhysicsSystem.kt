@@ -6,7 +6,9 @@ import com.github.quillraven.fleks.Fixed
 import com.github.quillraven.fleks.Interval
 import com.github.quillraven.fleks.IteratingSystem
 import com.github.quillraven.fleks.World.Companion.family
+import com.littlekt.math.HALF_PI_F
 import com.littlekt.math.MutableVec2f
+import com.littlekt.math.PI2_F
 import com.littlekt.math.Rect
 import com.littlekt.math.Vec2f
 import com.soywiz.korma.geom.Angle
@@ -20,6 +22,7 @@ import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.FloatUpComponent
 import net.mattemade.platformer.component.JumpComponent
+import net.mattemade.platformer.component.KnockbackComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PositionComponent
@@ -44,6 +47,7 @@ import org.jbox2d.dynamics.FixtureDef
 import org.jbox2d.dynamics.contacts.Contact
 import org.jbox2d.dynamics.contacts.ContactEdge
 import kotlin.math.abs
+import kotlin.math.sign
 import org.jbox2d.dynamics.World as B2dWorld
 
 class Box2DPhysicsSystem(
@@ -80,7 +84,8 @@ class Box2DPhysicsSystem(
             val physicsComponent = entity[Box2DPhysicsComponent]
             val body = physicsComponent.body
             entity[ContextComponent].apply {
-                standing = body.getContactList().let { it.isTouching<Feet, Wall>() || it.isTouching<Feet, Platform>() }
+                val wasStanding = standing
+                standing = body.getContactList().let { it.isTouching<Feet, Wall>() || it.isTouching<Feet, Platform>() } && body.linearVelocityY == 0f
                 touchingWalls = body.getContactList().isTouching<Hands, Wall>()
 
                 var currentlySwimming = false
@@ -118,9 +123,21 @@ class Box2DPhysicsSystem(
                 swimming = currentlySwimming
 
                 if (currentlyDiving) {
-                    entity.getOrNull(FloatUpComponent)?.floatUpAcceleration = -0.001f
+                    //entity.getOrNull(FloatUpComponent)?.floatUpAcceleration = -0.001f
                 } else {
                     entity.getOrNull(FloatUpComponent)?.floatUpAcceleration = 0f
+                }
+
+                val knockbackEffect = entity.getOrNull(KnockbackComponent)
+                if (knockbackEffect != null) {
+                    knockbackEffect.atLeastForTicks -= 1
+                    knockbackEffect.ticksToWearOff -= 1
+                    knockbackEffect.canStop = knockbackEffect.canStop || (!wasStanding && standing)
+                    if (knockbackEffect.canStop && knockbackEffect.atLeastForTicks <= 0 || knockbackEffect.ticksToWearOff <= 0) {
+                        entity.configure {
+                            it -= KnockbackComponent
+                        }
+                    }
                 }
             }
         }
@@ -146,6 +163,16 @@ class Box2DPhysicsSystem(
         physicsComponent: Box2DPhysicsComponent,
         entity: Entity
     ) {
+        entity.getOrNull(MomentaryForceComponent)?.let {
+            it.forces.forEach { force ->
+                physicsComponent.body.applyImpulse(force.x, force.y)
+            }
+            it.forces.clear()
+        }
+        if (entity.getOrNull(KnockbackComponent) != null) {
+            return
+        }
+
         physicsComponent.body.gravityScale = 0f
         entity.getOrNull(MoveComponent)?.let { move ->
             physicsComponent.body.applyImpulse(
@@ -159,10 +186,13 @@ class Box2DPhysicsSystem(
                 physicsComponent.body.linearVelocityX = move.dashDirection.x
                 physicsComponent.body.linearVelocityY = move.dashDirection.y
 
-                entity[RotationComponent].currentRotation = move.dashDirection.angleTo(NO_ROTATION).radians
-                entity[RotationComponent].targetRotation = move.dashDirection.angleTo(NO_ROTATION).radians
+                entity[RotationComponent].currentRotation =
+                    (move.dashDirection.angleTo(NO_ROTATION).radians + HALF_PI_F + PI2_F) % PI2_F
+                entity[RotationComponent].targetRotation =
+                    (move.dashDirection.angleTo(NO_ROTATION).radians + HALF_PI_F + PI2_F) % PI2_F
             } else if (move.moveDirection.x != 0f || move.moveDirection.y != 0f) {
-                entity[RotationComponent].targetRotation = move.moveDirection.angleTo(NO_ROTATION).radians
+                entity[RotationComponent].targetRotation =
+                    (move.moveDirection.angleTo(NO_ROTATION).radians + HALF_PI_F + PI2_F) % PI2_F
             }
         }
 
@@ -187,6 +217,16 @@ class Box2DPhysicsSystem(
         context: ContextComponent,
         entity: Entity
     ) {
+        entity.getOrNull(MomentaryForceComponent)?.let {
+            it.forces.forEach { force ->
+                physicsComponent.body.applyImpulse(force.x, force.y)
+            }
+            it.forces.clear()
+        }
+        if (entity.getOrNull(KnockbackComponent) != null) {
+            return
+        }
+
         physicsComponent.apply {
             if (context.touchingWalls && (body.linearVelocityY > 0f || context.wallSlide) && body.linearVelocityX == 0f) {
                 body.linearVelocityY = 1f
@@ -229,12 +269,6 @@ class Box2DPhysicsSystem(
                     wasJumping -> GRAVITY_IN_JUMPFALL
                     else -> GRAVITY_IN_FALL
                 }
-        }
-        entity.getOrNull(MomentaryForceComponent)?.let {
-            it.forces.forEach { force ->
-                physicsComponent.body.applyImpulse(force.x, force.y)
-            }
-            it.forces.clear()
         }
         entity.getOrNull(MoveComponent)?.let { move ->
             physicsComponent.body.applyImpulse(
@@ -329,7 +363,7 @@ class Box2DPhysicsSystem(
                         maskBits = 0
                     }
                     shape = CircleShape(radius = initialPlayerBounds.width * 0.45f)
-                    //userData = entity
+                    userData = entity
                 })!!
 
                 body.createFixture(FixtureDef().apply {
@@ -341,7 +375,7 @@ class Box2DPhysicsSystem(
                     shape = PolygonShape().apply {
                         setAsBox(
                             initialPlayerBounds.width * 0.5f * 0.8f, // a bit shorter that body width
-                            0.2f, // just a tiny block at the bottom
+                            0.1f, // just a tiny block at the bottom
                             center = Vec2(0f, initialPlayerBounds.height * 0.5f),
                             angle = Angle.ZERO
                         )
@@ -357,6 +391,37 @@ class Box2DPhysicsSystem(
                     shape = CircleShape(radius = initialPlayerBounds.width * 0.3f)
                     userData = Torso(body.position)
                 })!!
+            }
+        }
+    }
+
+    fun createCrabBody(entityCreateContext: EntityCreateContext, entity: Entity, x: Float, y: Float, width: Float, height: Float,) {
+        with(entityCreateContext) {
+            entity += Box2DPhysicsComponent(
+                body = physics.createBody(BodyDef().apply {
+                    type = BodyType.STATIC
+                    position.set(x, y)
+                    gravityScale = GRAVITY_IN_FALL
+                }).apply {
+                    isFixedRotation = false
+                },
+            ).apply {
+                // land body
+                landBodyFixture = body.createFixture(FixtureDef().apply {
+                    friction = 0f
+                    filter = Filter().apply {
+                        categoryBits = ENEMY_BODY_MASK
+                        maskBits = ENEMY_BODY_COLLISION
+                    }
+                    shape = PolygonShape().apply {
+                        setAsBox(
+                            width * 0.48f,
+                            height * 0.48f
+                        )
+                    }
+                    userData = Hazard(1f, body.position)
+                })!!
+                waterBodyFixture = landBodyFixture
             }
         }
     }
@@ -436,7 +501,36 @@ class Box2DPhysicsSystem(
     }
 
     override fun beginContact(contact: Contact) {
-
+        contact.with<Entity> { other ->
+            when (other) {
+                is Hazard -> {
+                    if (contact.isTouching) {
+                        if (this.getOrNull(KnockbackComponent) == null) {
+                            this.configure {
+                                it += KnockbackComponent()
+                            }
+                            println("DAMAGE: ${other.damage}")
+                            val body = this[Box2DPhysicsComponent].body
+                            body.linearVelocityY = 0f
+                            body.linearVelocityX = 0f
+                            val position = body.position
+                            if (this[ContextComponent].swimming) {
+                                tempVec2f.set(position.x - other.bodyPosition.x, position.y - other.bodyPosition.y).setLength(10f)
+                                this[MomentaryForceComponent].forces += Vec2f(
+                                    tempVec2f.x,
+                                    tempVec2f.y,
+                                )
+                            } else {
+                                this[MomentaryForceComponent].forces += Vec2f(
+                                    10f * sign(position.x - other.bodyPosition.x),
+                                    -10f
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     override fun endContact(contact: Contact) {
@@ -465,6 +559,7 @@ class Box2DPhysicsSystem(
     private class Feet(val entity: Entity)
     private class Torso(val bodyPosition: Vec2)
     private class Hands(val entity: Entity)
+    private class Hazard(val damage: Float, val bodyPosition: Vec2)
 
     companion object {
         private val tempVec2 = Vec2()
@@ -482,8 +577,11 @@ class Box2DPhysicsSystem(
         private val PLAYER_HEAD_MASK = NEXT_MASK
         private val PLAYER_HANDS_MASK = NEXT_MASK
 
-        private val PLAYER_BODY_COLLISIONS = WALL_MASK// or PLATFORM_MASK
+        private val ENEMY_BODY_MASK = NEXT_MASK
+
+        private val PLAYER_BODY_COLLISIONS = WALL_MASK or ENEMY_BODY_MASK
         private val PLAYER_LIMB_COLLISIONS = WALL_MASK or WATER_MASK
+        private val ENEMY_BODY_COLLISION = WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK
 
         private inline fun <reified T> Contact.with(crossinline action: T.(Any?) -> Unit) =
             (getFixtureA()?.userData as? T)?.action(getFixtureB()?.userData) ?: (getFixtureB()?.userData as? T)?.action(

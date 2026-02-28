@@ -11,16 +11,19 @@ import com.littlekt.graphics.g2d.SpriteBatch
 import com.littlekt.graphics.g2d.shape.ShapeRenderer
 import com.littlekt.graphics.toFloatBits
 import com.littlekt.math.Rect
+import com.littlekt.math.floor
 import com.littlekt.util.Scaler
 import com.littlekt.util.viewport.ScalingViewport
 import net.mattemade.platformer.HALF_WORLD_UNIT_HEIGHT
 import net.mattemade.platformer.HALF_WORLD_UNIT_WIDTH
 import net.mattemade.platformer.PIXEL_PER_UNIT_FLOAT
 import net.mattemade.platformer.PlatformerGameContext
+import net.mattemade.platformer.UNITS_PER_PIXEL
 import net.mattemade.platformer.WORLD_HEIGHT
 import net.mattemade.platformer.WORLD_UNIT_HEIGHT
 import net.mattemade.platformer.WORLD_UNIT_WIDTH
 import net.mattemade.platformer.WORLD_WIDTH
+import net.mattemade.platformer.component.PlayerComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.UiComponent
 import net.mattemade.platformer.px
@@ -30,7 +33,7 @@ class UiRenderingSystem(
     private val gameContext: PlatformerGameContext = inject(),
     private val worldArea: Rect,
     private val mapTexture: () -> Texture?,
-) : IteratingSystem(family = family { any(UiComponent, PositionComponent) }) {
+) : IteratingSystem(family = family { any(UiComponent, PlayerComponent) }) {
 
     private var mapScale = 0f
     private var mapUnitPerPixel = 0f
@@ -69,7 +72,7 @@ class UiRenderingSystem(
     override fun onTickEntity(entity: Entity) {
         entity.getOrNull(PositionComponent)?.let { position ->
             shapeRenderer.filledRectangle(
-                x = (roomPlacementOnMap.x + position.position.x * mapScale).px,
+                x = (roomPlacementOnMap.x + (position.position.x - 0.5f) * mapScale).px,
                 y = (roomPlacementOnMap.y + (position.position.y - 1f) * mapScale).px,
                 width = mapScale,
                 height = mapScale * 2f,
@@ -95,6 +98,7 @@ class UiRenderingSystem(
                     (WORLD_UNIT_WIDTH - doubleOffset) / texture.width,
                     (WORLD_UNIT_HEIGHT - doubleOffset) / texture.height
                 )
+                mapScale = (mapScale * PIXEL_PER_UNIT_FLOAT).floor() * UNITS_PER_PIXEL // to maintain pixel-perfect integer map scaling
                 val width = texture.width * mapScale
                 val height = texture.height * mapScale
                 val horizontalOffset = (WORLD_UNIT_WIDTH - width) * 0.5f

@@ -51,7 +51,7 @@ fun FloatArray.fill(block: (Int) -> Float) {
 fun lerp(a: Float, b: Float, t: Float): Float = a + (b - a) * t
 
 
-val NO_ROTATION = Vec2f(0f, -100f)
+val NO_ROTATION = Vec2f(1000f, 0f)
 
 fun minByAbs(a: Float, b: Float): Float = if (abs(a) < abs(b)) a else b
 
