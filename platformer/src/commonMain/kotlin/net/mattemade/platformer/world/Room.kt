@@ -13,13 +13,16 @@ import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
+import net.mattemade.platformer.component.MomentaryForceComponent
 import net.mattemade.platformer.component.PositionComponent
+import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.component.UiComponent
 import net.mattemade.platformer.px
 import net.mattemade.platformer.system.ControlsSystem
 import net.mattemade.platformer.system.Box2DPhysicsSystem
 import net.mattemade.platformer.system.RenderingSystem
+import net.mattemade.platformer.system.RotationSystem
 import net.mattemade.platformer.system.UiControlsSystem
 import net.mattemade.platformer.system.UiRenderingSystem
 import net.mattemade.utils.releasing.Releasing
@@ -64,6 +67,7 @@ class Room(
             add(ControlsSystem())
             add(UiControlsSystem())
             add(Box2DPhysicsSystem().also { physicsSystem = it }.releasing())
+            add(RotationSystem())
             add(RenderingSystem())
             add(UiRenderingSystem(worldArea = worldArea, mapTexture = { mapTexture }))
         }
@@ -84,8 +88,10 @@ class Room(
             it.position.set(initialPlayerBounds.cx, initialPlayerBounds.cy)
             playerPosition = it.position
         }
+        it += RotationComponent(maxRotationVelocity = 0.1f)
         it += MoveComponent()
         it += JumpComponent()
+        it += MomentaryForceComponent()
         it += ContextComponent()
         physicsSystem.createPlayerBody(this, it, initialPlayerBounds)
     }
@@ -157,21 +163,33 @@ class Room(
                             followingWaterFrom = y
                         }
                     } else if (followingWaterFrom != -1) {
-                        physicsSystem.createWater(followingWaterFrom.toFloat(), y.toFloat(), x.toFloat())
+                        placeSwimmableWaterBlock(followingWaterFrom, y, x)
                         followingWaterFrom = -1
                     }
                 }
                 if (followingWaterFrom != -1) {
-                    physicsSystem.createWater(followingWaterFrom.toFloat(), map.height.toFloat(), x.toFloat())
+                    placeSwimmableWaterBlock(followingWaterFrom, map.height, x)
                 }
             }
         }
+    }
+
+    private fun placeSwimmableWaterBlock(fromY: Int, toY: Int, x: Int) {
+        if (toY - fromY == 1) {
+            // if that's a single tile with a ground below it - don't make it swimmable
+            // TODO: but make it splashable!
+            if (tileTypeMap["solid"]?.getOrNull(x)?.getOrNull(toY) == true) {
+                return
+            }
+        }
+        physicsSystem.createWater(fromY.toFloat(), toY.toFloat(), x.toFloat())
     }
 
 
     fun enter(
         spriteComponent: SpriteComponent,
         positionComponent: PositionComponent,
+        rotationComponent: RotationComponent,
         moveComponent: MoveComponent,
         jumpComponent: JumpComponent,
         contextComponent: ContextComponent,
@@ -184,6 +202,7 @@ class Room(
                 it += positionComponent.also {
                     playerPosition = it.position
                 }
+                it += rotationComponent
                 it += moveComponent
                 it += jumpComponent
                 it += contextComponent

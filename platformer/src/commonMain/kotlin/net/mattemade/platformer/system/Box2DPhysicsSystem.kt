@@ -6,7 +6,6 @@ import com.github.quillraven.fleks.Fixed
 import com.github.quillraven.fleks.Interval
 import com.github.quillraven.fleks.IteratingSystem
 import com.github.quillraven.fleks.World.Companion.family
-import com.littlekt.math.HALF_PI_F
 import com.littlekt.math.MutableVec2f
 import com.littlekt.math.Rect
 import com.littlekt.math.Vec2f
@@ -23,6 +22,7 @@ import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PositionComponent
+import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.utils.math.NO_ROTATION
 import net.mattemade.utils.math.lerp
 import net.mattemade.utils.releasing.Releasing
@@ -42,12 +42,16 @@ import org.jbox2d.dynamics.Filter
 import org.jbox2d.dynamics.FixtureDef
 import org.jbox2d.dynamics.contacts.Contact
 import org.jbox2d.dynamics.contacts.ContactEdge
+import kotlin.math.abs
 import org.jbox2d.dynamics.World as B2dWorld
 
 class Box2DPhysicsSystem(
     //private val physics: B2dWorld = inject(),
     interval: Interval = Fixed(1 / 100f)
-) : IteratingSystem(family { all(Box2DPhysicsComponent, PositionComponent, ContextComponent) }, interval = interval),
+) : IteratingSystem(
+    family { all(Box2DPhysicsComponent, PositionComponent, RotationComponent, ContextComponent) },
+    interval = interval
+),
     ContactListener, Releasing by Self() {
 
     private val physics: B2dWorld = B2dWorld().rememberTo {
@@ -92,9 +96,16 @@ class Box2DPhysicsSystem(
                         physicsComponent.waterBodyFixture.filterData.maskBits = 0
                         physicsComponent.landBodyFixture.filterData.maskBits = PLAYER_BODY_COLLISIONS
                         body.setTransformRadians(body.position, 0f)
-                        physicsComponent.previousRotation = 0f
-                        physicsComponent.rotation = 0f
-
+                        entity[RotationComponent].targetRotation = 0f
+                        // maybe jump a bit from the water if we are moving mostly up?
+                        if (physicsComponent.body.linearVelocityY < 0f
+                            && abs(physicsComponent.body.linearVelocityY) >= abs(physicsComponent.body.linearVelocityX)
+                        ) {
+                            // TODO: but maybe not do that if we are going to jump up? oh well, let's not overcomplicate
+                            entity.getOrNull(MomentaryForceComponent)?.let {
+                                it.forces += Vec2f(0f, -15f)
+                            }
+                        }
                     }
                 }
             }
@@ -133,22 +144,19 @@ class Box2DPhysicsSystem(
                 physicsComponent.body.gravityScale = 0f
                 physicsComponent.body.linearVelocityX = move.dashDirection.x
                 physicsComponent.body.linearVelocityY = move.dashDirection.y
+
+                entity[RotationComponent].currentRotation = move.dashDirection.angleTo(NO_ROTATION).radians
+                entity[RotationComponent].targetRotation = move.dashDirection.angleTo(NO_ROTATION).radians
+            } else if (move.moveDirection.x != 0f || move.moveDirection.y != 0f) {
+                entity[RotationComponent].targetRotation = move.moveDirection.angleTo(NO_ROTATION).radians
             }
         }
 
         // movement dampening
         physicsComponent.body.apply {
             if (linearVelocityX != 0f || linearVelocityY != 0f) {
-                tempVec2f.set(
-                    linearVelocityX,
-                    linearVelocityY,
-                )
-                val rotation = tempVec2f.angleTo(NO_ROTATION).radians + HALF_PI_F
-                val diff = rotation - physicsComponent.rotation
-                //applyAngularImpulse(diff)
+                val rotation = entity[RotationComponent].currentRotation
                 setTransformRadians(position, rotation)
-                physicsComponent.previousRotation = physicsComponent.rotation
-                physicsComponent.rotation = rotation
 
                 linearVelocityX *= 0.9f
                 linearVelocityY *= 0.9f
@@ -205,11 +213,11 @@ class Box2DPhysicsSystem(
                     else -> GRAVITY_IN_FALL
                 }
         }
-        entity.getOrNull(MomentaryForceComponent)?.let { force ->
-            physicsComponent.body.applyImpulse(force.force.x, force.force.y)
-            entity.configure {
-                it -= MomentaryForceComponent
+        entity.getOrNull(MomentaryForceComponent)?.let {
+            it.forces.forEach { force ->
+                physicsComponent.body.applyImpulse(force.x, force.y)
             }
+            it.forces.clear()
         }
         entity.getOrNull(MoveComponent)?.let { move ->
             physicsComponent.body.applyImpulse(
@@ -251,7 +259,6 @@ class Box2DPhysicsSystem(
             lerp(physicsComponent.previousPosition.x, physicsComponent.body.position.x, alpha),
             lerp(physicsComponent.previousPosition.y, physicsComponent.body.position.y, alpha),
         )
-        positionComponent.rotation = lerp(physicsComponent.previousRotation, physicsComponent.rotation, alpha)
     }
 
     fun createPlayerBody(entityCreateContext: EntityCreateContext, entity: Entity, initialPlayerBounds: Rect) {
@@ -367,12 +374,6 @@ class Box2DPhysicsSystem(
 
     // vertical narrow "stripes"
     fun createWater(fromY: Float, toY: Float, x: Float) {
-        if (toY - fromY < 1.1f) {
-            // if that's a single tile - don't make it swimmable
-            // TODO: but make it splashable!
-            return
-        }
-
         val hy = (toY - fromY) * 0.5f
         physics.createBody(BodyDef()).apply {
             position.set(x + 0.5f, fromY + hy)

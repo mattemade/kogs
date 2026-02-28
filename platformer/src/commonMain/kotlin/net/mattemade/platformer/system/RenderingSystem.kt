@@ -25,6 +25,7 @@ import net.mattemade.platformer.WORLD_UNIT_HEIGHT
 import net.mattemade.platformer.WORLD_UNIT_WIDTH
 import net.mattemade.platformer.WORLD_WIDTH
 import net.mattemade.platformer.component.PositionComponent
+import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.px
 import net.mattemade.utils.msdf.MsdfFontRenderer
@@ -33,7 +34,7 @@ class RenderingSystem(
     private val context: Context = inject(),
     private val gameContext: PlatformerGameContext = inject(),
     val map: TiledMap = inject(),
-) : IteratingSystem(family = family { all(PositionComponent, SpriteComponent) }) {
+) : IteratingSystem(family = family { all(PositionComponent, RotationComponent, SpriteComponent) }) {
 
     private val viewport = ScalingViewport(
         scaler = Scaler.Stretch(),
@@ -154,7 +155,8 @@ class RenderingSystem(
 
     override fun onTickEntity(entity: Entity) {
         val bounds = entity[SpriteComponent].bounds
-        val (position, rotation) = entity[PositionComponent]
+        val (position) = entity[PositionComponent]
+        val (rotation) = entity[RotationComponent]
 
         val angle = rotation.radians
         tempVec2f.set(bounds.x, bounds.y).rotate(angle)
