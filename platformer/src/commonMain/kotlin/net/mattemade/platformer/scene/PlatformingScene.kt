@@ -17,6 +17,7 @@ import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PositionComponent
+import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.world.Room
 import net.mattemade.utils.releasing.Releasing
@@ -115,6 +116,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                         it.enter(
                             player[SpriteComponent],
                             player[PositionComponent],
+                            player[RotationComponent],
                             player[MoveComponent],
                             player[JumpComponent],
                             player[ContextComponent],
