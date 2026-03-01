@@ -27,6 +27,7 @@ import net.mattemade.platformer.WORLD_WIDTH
 import net.mattemade.platformer.component.HealthComponent
 import net.mattemade.platformer.component.PlayerComponent
 import net.mattemade.platformer.component.PositionComponent
+import net.mattemade.platformer.component.StaminaComponent
 import net.mattemade.platformer.component.UiComponent
 import net.mattemade.platformer.px
 
@@ -74,6 +75,8 @@ class UiRenderingSystem(
         for (i in 0 until player[HealthComponent].health.floorToInt()) {
             shapeRenderer.filledRectangle(x = 0.25f + i * 0.6f, y = 0.25f, width = 0.5f, height = 0.5f, color = Color.RED.toFloatBits())
         }
+        shapeRenderer.filledRectangle(x = 0.25f, y = 0.85f, width = 1.7f, height = 0.25f, color = Color.LIGHT_GRAY.toFloatBits())
+        shapeRenderer.filledRectangle(x = 0.25f, y = 0.85f, width = 1.7f * player[StaminaComponent].stamina, height = 0.25f, color = Color.BLUE.toFloatBits())
     }
 
     override fun onTickEntity(entity: Entity) {
