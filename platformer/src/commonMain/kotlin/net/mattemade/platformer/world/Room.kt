@@ -22,6 +22,8 @@ import net.mattemade.platformer.component.PlayerComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.platformer.component.SpriteComponent
+import net.mattemade.platformer.component.StaminaComponent
+import net.mattemade.platformer.component.StaminaDamageComponent
 import net.mattemade.platformer.component.UiComponent
 import net.mattemade.platformer.px
 import net.mattemade.platformer.system.Box2DPhysicsSystem
@@ -30,6 +32,9 @@ import net.mattemade.platformer.system.LoadOnPlayerDeathSystem
 import net.mattemade.platformer.system.FloatingSystem
 import net.mattemade.platformer.system.RenderingSystem
 import net.mattemade.platformer.system.RotationSystem
+import net.mattemade.platformer.system.LowStaminaDamageSystem
+import net.mattemade.platformer.system.StaminaBreathingSystem
+import net.mattemade.platformer.system.StaminaRestorationSystem
 import net.mattemade.platformer.system.UiControlsSystem
 import net.mattemade.platformer.system.UiRenderingSystem
 import net.mattemade.utils.releasing.Releasing
@@ -80,8 +85,11 @@ class Room(
                     physicsSystem.createCheckpoint(it.cx * unitSize, it.cy * unitSize, it.width * unitSize, it.height * unitSize)
                 }
             }.releasing())
+            add(StaminaBreathingSystem())
+            add(LowStaminaDamageSystem())
+            add(StaminaRestorationSystem())
             add(LoadOnPlayerDeathSystem())
-            add(FloatingSystem())
+            //add(FloatingSystem())
             add(RotationSystem())
             add(RenderingSystem())
             add(UiRenderingSystem(worldArea = worldArea, mapTexture = { mapTexture }))
@@ -111,6 +119,8 @@ class Room(
         it += MomentaryForceComponent()
         it += ContextComponent()
         it += HealthComponent()
+        it += StaminaComponent()
+        it += StaminaDamageComponent()
         it += PlayerComponent()
         physicsSystem.createPlayerBody(this, it, initialPlayerBounds)
     }
@@ -337,6 +347,8 @@ class Room(
         floatUpComponent: FloatUpComponent,
         contextComponent: ContextComponent,
         healthComponent: HealthComponent,
+        staminaComponent: StaminaComponent,
+        staminaDamageComponent: StaminaDamageComponent,
         physicsComponent: Box2DPhysicsComponent
     ) {
         ecs.apply {
@@ -352,6 +364,8 @@ class Room(
                 it += floatUpComponent
                 it += contextComponent
                 it += healthComponent
+                it += staminaComponent
+                it += staminaDamageComponent
             }
             physicsSystem.teleport(playerEntity, playerPosition, physicsComponent)
             contextComponent.swimming = false // next room should switch body parameters for swimming if needed
