@@ -50,7 +50,7 @@ class PlatformerGame(
     private var assetsReady: Boolean = false
     private var fmodAssetsReady: Boolean = false
     private val gameContext =
-        PlatformerGameContext(context, log, encodeUrlComponent, getBlocking, overrideResourcesFrom, fmodFolderPrefix, fmodLiveUpdate,)
+        PlatformerGameContext(context, log, encodeUrlComponent, getBlocking, overrideResourcesFrom, fmodFolderPrefix, fmodLiveUpdate, ::restartScene)
     private val pixelRender =
         PixelRender(
             context,
@@ -101,6 +101,11 @@ class PlatformerGame(
                 oldValue?.release()
             }
         }
+
+    private fun restartScene() {
+        scene?.release()
+        scene = PlatformingScene(gameContext)
+    }
 
     override suspend fun Context.start() {
         gameContext.log("start")
@@ -157,6 +162,8 @@ class PlatformerGame(
 
                     directRender.updateShapeRenderer()
                     pixelRender.updateShapeRenderer()
+
+                    gameContext.load()
                     scene = PlatformingScene(gameContext)
                 }
             }

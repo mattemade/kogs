@@ -15,6 +15,7 @@ class PlatformerGameContext(
     val overrideResourcesFrom: String?,
     val fmodFolderPrefix: String,
     val fmodLiveUpdate: Boolean,
+    val restartScene: () -> Unit,
 ) {
 
     val assets = PlatformerAssets(context, this, getFromUrl, fmodFolderPrefix, fmodLiveUpdate, overrideResourcesFrom)
@@ -27,16 +28,7 @@ class PlatformerGameContext(
         isLenient = true
     }
     private var previousSavedState: String? = null
-    val gameState: GameState by lazy {
-        context.vfs.loadString("save")?.let {
-            try {
-                previousSavedState = it
-                json.decodeFromString(it)
-            } catch (_: Exception) {
-                null
-            }
-        } ?: GameState()
-    }
+    lateinit var gameState: GameState
 
 
     private var tag =
@@ -58,9 +50,33 @@ class PlatformerGameContext(
         }
     }
 
+    fun load(forceRestart: Boolean = false, reset: Boolean = false) {
+        if (reset) {
+            previousSavedState = null
+            gameState = GameState()
+            save()
+            restartScene()
+            return
+        }
+
+        gameState = context.vfs.loadString("save")?.let {
+            try {
+                previousSavedState = it
+                json.decodeFromString(it)
+            } catch (_: Exception) {
+                null
+            }
+        } ?: GameState()
+        if (forceRestart) {
+            restartScene()
+        }
+    }
+
     @Serializable
     data class GameState(
         var roomStates: MutableMap<String, RoomState> = mutableMapOf(),
+        var waterPearl: Boolean = false,
+        var airPearl: Boolean = false,
         var currentRoom: String = FIRST_LEVEL_NAME,
     )
 

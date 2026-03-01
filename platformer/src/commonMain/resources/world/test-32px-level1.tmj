@@ -80,6 +80,28 @@
                  "width":96,
                  "x":320,
                  "y":192
+                }, 
+                {
+                 "height":32,
+                 "id":7,
+                 "name":"water-pearl",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":544,
+                 "y":64
+                }, 
+                {
+                 "height":32,
+                 "id":8,
+                 "name":"air-pearl",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":32,
+                 "x":64,
+                 "y":128
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -147,7 +169,7 @@
          "y":0
         }],
  "nextlayerid":7,
- "nextobjectid":7,
+ "nextobjectid":9,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.10.2",

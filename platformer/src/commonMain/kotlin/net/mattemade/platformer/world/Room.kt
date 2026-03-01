@@ -220,6 +220,12 @@ class Room(
                                 )
                             }
                         }
+                        "water-pearl" -> {
+
+                        }
+                        "air-pearl" -> {
+
+                        }
                     }
                 }
             }
