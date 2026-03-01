@@ -1,7 +1,9 @@
 package net.mattemade.platformer
 
+import co.touchlab.stately.collections.ConcurrentMutableMap
 import com.littlekt.Context
 import net.mattemade.fmod.FMOD
+import net.mattemade.fmod.FmodBank
 import net.mattemade.utils.asset.AssetPack
 
 class FmodAssets(
@@ -9,35 +11,36 @@ class FmodAssets(
     fmodFolderPrefix: String,
     private val gameContext: PlatformerGameContext,
 ) : AssetPack(context) {
-    val studioSystem = gameContext.assets.fmod.studioSystem
-    val bank by selfPreparePlain(order = 0, action = {
-        println("bank started")
-        studioSystem.loadBankFile("${fmodFolderPrefix}fmod/Master.bank", FMOD.STUDIO_LOAD_BANK_NONBLOCKING)
+
+    private val studioSystem = gameContext.assets.fmod.studioSystem
+
+    val map = ConcurrentMutableMap<String, FmodBank>()
+
+    val preparation by selfPreparePlain(order = 0, action = {
+        FMOD_BANKS.forEach { bankName ->
+        val bank by selfPreparePlain(order = 0, action = {
+            val bank = studioSystem.loadBankFile("${fmodFolderPrefix}fmod/${bankName}", FMOD.STUDIO_LOAD_BANK_NONBLOCKING)
+            bank
+        }) {
+            val result = it.loadingState == FMOD.STUDIO_LOADING_STATE_LOADED
+            if (result) {
+                map[bankName] = it
+            }
+            result
+        }
+    }}) {
+        map.size == FMOD_BANKS.size
+    }
+
+    val sampleDataPreparation by selfPreparePlain(order = 1, action = {
+        map.values.forEach { it.loadSampleData() }
     }) {
-        val loadingState = it.loadingState
-        println("bank checking: $loadingState")
-        (loadingState == FMOD.STUDIO_LOADING_STATE_LOADED)
+        map.values.all { it.sampleLoadingState == FMOD.STUDIO_LOADING_STATE_LOADED }
     }
-    val bankStrings by selfPreparePlain(order = 0, action = {
-        println("strings bank started")
-        studioSystem.loadBankFile("${fmodFolderPrefix}fmod/Master.strings.bank", FMOD.STUDIO_LOAD_BANK_NONBLOCKING)
-    }) {
-        val loadingState = it.loadingState
-        println("strings bank checking: $loadingState")
-        (loadingState == FMOD.STUDIO_LOADING_STATE_LOADED)
-    }
-    val sampleData by selfPreparePlain(order = 1, action = {
-        println("sample started")
-        bank.loadSampleData()
-    }) {
-        val sampleLoadingState = bank.sampleLoadingState
-        println("sample checking: $sampleLoadingState")
-        sampleLoadingState == FMOD.STUDIO_LOADING_STATE_LOADED
-    }
-    val eventDescription by preparePlain(order = 2) {
-        studioSystem.getEvent("event:/drum")
-    }
+
+    val jump by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump") }
+    val land by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Land") }
     val musicEventDescription by preparePlain(order = 2) {
-        studioSystem.getEvent("event:/Music/test")
+        studioSystem.getEvent("event:/Music/Ocean and caves")
     }
 }

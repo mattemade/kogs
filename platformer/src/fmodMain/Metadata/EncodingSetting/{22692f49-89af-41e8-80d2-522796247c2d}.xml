@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <objects serializationModel="Studio.02.03.00">
-	<object class="EncodingSetting" id="{4404eb71-1d0a-48ee-aad3-bca73158a377}">
+	<object class="EncodingSetting" id="{22692f49-89af-41e8-80d2-522796247c2d}">
 		<property name="encodingFormat">
 			<value>3</value>
 		</property>
@@ -8,10 +8,10 @@
 			<value>37</value>
 		</property>
 		<relationship name="platform">
-			<destination>{7cb57af5-1300-469f-bfaf-76010ec6a7b1}</destination>
+			<destination>{5b51f871-57d4-486e-868f-13265b5e1691}</destination>
 		</relationship>
 		<relationship name="encodable">
-			<destination>{7cb57af5-1300-469f-bfaf-76010ec6a7b1}</destination>
+			<destination>{5b51f871-57d4-486e-868f-13265b5e1691}</destination>
 		</relationship>
 	</object>
 </objects>

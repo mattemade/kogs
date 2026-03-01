@@ -36,4 +36,12 @@ val GRAVITY_IN_JUMP get() = parameterOverride["Jump gravity scale"]?.toFloat() ?
 val GRAVITY_IN_JUMPFALL get() = parameterOverride["Jumpfall gravity scale"]?.toFloat() ?: 10f
 val GRAVITY_IN_FALL get() = parameterOverride["Normal gravity scale"]?.toFloat() ?: 10f
 
+
+val FMOD_BANKS = listOf(
+    "Master.bank",
+    "Master.strings.bank",
+    "Game.bank",
+    "Intro.bank",
+    "Ocean and caves.bank",
+)
 //parameterOverride["Screen"]?.toFloat()
