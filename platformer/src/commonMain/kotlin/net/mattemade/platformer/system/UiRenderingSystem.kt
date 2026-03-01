@@ -12,6 +12,7 @@ import com.littlekt.graphics.g2d.shape.ShapeRenderer
 import com.littlekt.graphics.toFloatBits
 import com.littlekt.math.Rect
 import com.littlekt.math.floor
+import com.littlekt.math.floorToInt
 import com.littlekt.util.Scaler
 import com.littlekt.util.viewport.ScalingViewport
 import net.mattemade.platformer.HALF_WORLD_UNIT_HEIGHT
@@ -23,6 +24,7 @@ import net.mattemade.platformer.WORLD_HEIGHT
 import net.mattemade.platformer.WORLD_UNIT_HEIGHT
 import net.mattemade.platformer.WORLD_UNIT_WIDTH
 import net.mattemade.platformer.WORLD_WIDTH
+import net.mattemade.platformer.component.HealthComponent
 import net.mattemade.platformer.component.PlayerComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.UiComponent
@@ -56,33 +58,29 @@ class UiRenderingSystem(
         //context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
         //context.gl.clearColor(Color.BLACK)
 
-        // TODO: there will be other creatues in the family, we should specify to pick the Player
-
         val uiComponent = family.first { it.getOrNull(UiComponent) != null }[UiComponent]
-        if (uiComponent.showMap) {
-            viewport.apply(context)
-            batch.begin(camera.viewProjection)
-            renderMap()
-            super.onTick() // tich entities
-            batch.end()
-        }
+        val player = family.first { it.getOrNull(PlayerComponent) != null }
 
+        viewport.apply(context)
+        batch.begin(camera.viewProjection)
+        renderUi(player)
+        if (uiComponent.showMap) {
+            renderMap(player)
+        }
+        batch.end()
+    }
+
+    private fun renderUi(player: Entity) {
+        for (i in 0 until player[HealthComponent].health.floorToInt()) {
+            shapeRenderer.filledRectangle(x = 0.25f + i * 0.6f, y = 0.25f, width = 0.5f, height = 0.5f, color = Color.RED.toFloatBits())
+        }
     }
 
     override fun onTickEntity(entity: Entity) {
-        entity.getOrNull(PositionComponent)?.let { position ->
-            shapeRenderer.filledRectangle(
-                x = (roomPlacementOnMap.x + (position.position.x - 0.5f) * mapScale).px,
-                y = (roomPlacementOnMap.y + (position.position.y - 1f) * mapScale).px,
-                width = mapScale,
-                height = mapScale * 2f,
-                color = playerColor
-            )
-        }
-
+        // no-op
     }
 
-    private fun renderMap() {
+    private fun renderMap(player: Entity) {
         shapeRenderer.filledRectangle(
             x = 0f,
             y = 0f,
@@ -122,6 +120,16 @@ class UiRenderingSystem(
                 height = mapPlacement.height,
                 flipY = true
             )
+
+            player.getOrNull(PositionComponent)?.let { position ->
+                shapeRenderer.filledRectangle(
+                    x = (roomPlacementOnMap.x + (position.position.x - 0.5f) * mapScale).px,
+                    y = (roomPlacementOnMap.y + (position.position.y - 1f) * mapScale).px,
+                    width = mapScale,
+                    height = mapScale * 2f,
+                    color = playerColor
+                )
+            }
         }
     }
 

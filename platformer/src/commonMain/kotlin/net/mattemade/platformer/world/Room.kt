@@ -14,6 +14,7 @@ import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.FloatUpComponent
+import net.mattemade.platformer.component.HealthComponent
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
 import net.mattemade.platformer.component.MoveComponent
@@ -25,6 +26,7 @@ import net.mattemade.platformer.component.UiComponent
 import net.mattemade.platformer.px
 import net.mattemade.platformer.system.Box2DPhysicsSystem
 import net.mattemade.platformer.system.ControlsSystem
+import net.mattemade.platformer.system.LoadOnPlayerDeathSystem
 import net.mattemade.platformer.system.FloatingSystem
 import net.mattemade.platformer.system.RenderingSystem
 import net.mattemade.platformer.system.RotationSystem
@@ -78,6 +80,7 @@ class Room(
                     physicsSystem.createCheckpoint(it.cx * unitSize, it.cy * unitSize, it.width * unitSize, it.height * unitSize)
                 }
             }.releasing())
+            add(LoadOnPlayerDeathSystem())
             add(FloatingSystem())
             add(RotationSystem())
             add(RenderingSystem())
@@ -107,6 +110,7 @@ class Room(
         it += FloatUpComponent()
         it += MomentaryForceComponent()
         it += ContextComponent()
+        it += HealthComponent()
         it += PlayerComponent()
         physicsSystem.createPlayerBody(this, it, initialPlayerBounds)
     }
@@ -332,6 +336,7 @@ class Room(
         jumpComponent: JumpComponent,
         floatUpComponent: FloatUpComponent,
         contextComponent: ContextComponent,
+        healthComponent: HealthComponent,
         physicsComponent: Box2DPhysicsComponent
     ) {
         ecs.apply {
@@ -346,6 +351,7 @@ class Room(
                 it += jumpComponent
                 it += floatUpComponent
                 it += contextComponent
+                it += healthComponent
             }
             physicsSystem.teleport(playerEntity, playerPosition, physicsComponent)
             contextComponent.swimming = false // next room should switch body parameters for swimming if needed
