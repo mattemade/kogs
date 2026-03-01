@@ -37,6 +37,13 @@ class ControlsSystem(
     private var jumpPressed = false
 
     override fun onTickEntity(entity: Entity) {
+        if (input.isKeyPressed(Key.R)) {
+            gameContext.load(reset = true)
+            return
+        } else if (input.isKeyPressed(Key.L)) {
+            gameContext.load(forceRestart = true)
+            return
+        }
 
         val context = entity[ContextComponent]
 

@@ -59,6 +59,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
             }
         }
     ).apply {
+        gameContext.gameState.roomStates.getOrPut(currentRoom.name) { PlatformerGameContext.RoomState() }.isVisited = true
         render(0f.seconds)
         texture.also { mapTexture ->
             rooms.forEach { it.mapTexture = mapTexture }
@@ -131,7 +132,6 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                         gameContext.gameState.roomStates.getOrPut(it.name) { PlatformerGameContext.RoomState() }.isVisited = true
                         gameContext.gameState.currentRoom = it.name
                         sharedMapRenderer.render(0f.seconds)
-                        gameContext.save()
                         return
                     }
                 }
