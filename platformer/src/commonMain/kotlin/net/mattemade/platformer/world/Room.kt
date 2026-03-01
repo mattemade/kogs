@@ -70,7 +70,12 @@ class Room(
         systems {
             add(ControlsSystem())
             add(UiControlsSystem())
-            add(Box2DPhysicsSystem().also { physicsSystem = it }.releasing())
+            add(Box2DPhysicsSystem().also {
+                physicsSystem = it
+                (map.layer("player-spawn") as? TiledObjectLayer)?.objects?.firstOrNull()?.bounds?.let {
+                    physicsSystem.createCheckpoint(it.cx * unitSize, it.cy * unitSize, it.width * unitSize, it.height * unitSize)
+                }
+            }.releasing())
             add(FloatingSystem())
             add(RotationSystem())
             add(RenderingSystem())

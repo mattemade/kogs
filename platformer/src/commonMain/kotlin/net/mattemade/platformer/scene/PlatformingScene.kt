@@ -40,7 +40,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
             switchRoom = ::switchRoom,
         ).releasing()
     }
-    private var currentRoom: Room = rooms.first { it.name == FIRST_LEVEL_NAME }
+    private var currentRoom: Room = rooms.first { it.name == gameContext.gameState.currentRoom }
     private val sharedMapRenderer = PixelRender(
         gameContext.context,
         targetWidth = fullWorldRect.width.roundToInt(),
@@ -51,10 +51,12 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
             camera.position.set(fullWorldRect.cx, fullWorldRect.cy, 0f)
         },
         renderCall = { dt, camera, batch, shapeRenderer ->
-            addRoomToMap(currentRoom, shapeRenderer)
-            /*rooms.forEach {
-                addRoomToMap(it, shapeRenderer)
-            }*/
+            // TODO: clear the texture before drawing rooms
+            rooms.forEach {
+                if (gameContext.gameState.roomStates[it.name]?.isVisited == true) {
+                    addRoomToMap(it, shapeRenderer)
+                }
+            }
         }
     ).apply {
         render(0f.seconds)
@@ -126,7 +128,10 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                             player[Box2DPhysicsComponent], // just to copy velocity and stuff, SHOULD NOT BE REUSED THERE as it's connected to the Room's B2D World
                         )
                         currentRoom = it
+                        gameContext.gameState.roomStates.getOrPut(it.name) { PlatformerGameContext.RoomState() }.isVisited = true
+                        gameContext.gameState.currentRoom = it.name
                         sharedMapRenderer.render(0f.seconds)
+                        gameContext.save()
                         return
                     }
                 }

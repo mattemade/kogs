@@ -130,15 +130,15 @@
          "name":"player-spawn",
          "objects":[
                 {
-                 "height":64,
+                 "height":192,
                  "id":1,
                  "name":"",
                  "rotation":0,
                  "type":"",
                  "visible":true,
-                 "width":32,
-                 "x":303.5,
-                 "y":345.5
+                 "width":128,
+                 "x":256,
+                 "y":224
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -147,7 +147,7 @@
          "y":0
         }],
  "nextlayerid":7,
- "nextobjectid":5,
+ "nextobjectid":7,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.10.2",

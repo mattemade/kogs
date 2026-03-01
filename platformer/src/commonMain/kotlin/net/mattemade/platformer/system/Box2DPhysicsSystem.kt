@@ -6,6 +6,7 @@ import com.github.quillraven.fleks.Fixed
 import com.github.quillraven.fleks.Interval
 import com.github.quillraven.fleks.IteratingSystem
 import com.github.quillraven.fleks.World.Companion.family
+import com.github.quillraven.fleks.World.Companion.inject
 import com.littlekt.math.HALF_PI_F
 import com.littlekt.math.MutableVec2f
 import com.littlekt.math.PI2_F
@@ -17,6 +18,7 @@ import net.mattemade.platformer.GRAVITY_IN_JUMP
 import net.mattemade.platformer.GRAVITY_IN_JUMPFALL
 import net.mattemade.platformer.JUMP_VELOCITY
 import net.mattemade.platformer.MAX_FALL_VELOCITY
+import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.WALK_VELOCITY
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
@@ -52,6 +54,7 @@ import org.jbox2d.dynamics.World as B2dWorld
 
 class Box2DPhysicsSystem(
     //private val physics: B2dWorld = inject(),
+    private val gameContext: PlatformerGameContext = inject(),
     interval: Interval = Fixed(1 / 100f)
 ) : IteratingSystem(
     family { all(Box2DPhysicsComponent, PositionComponent, RotationComponent, ContextComponent) },
@@ -123,7 +126,7 @@ class Box2DPhysicsSystem(
                 swimming = currentlySwimming
 
                 if (currentlyDiving) {
-                    //entity.getOrNull(FloatUpComponent)?.floatUpAcceleration = -0.001f
+                    entity.getOrNull(FloatUpComponent)?.floatUpAcceleration = -0.001f
                 } else {
                     entity.getOrNull(FloatUpComponent)?.floatUpAcceleration = 0f
                 }
@@ -426,6 +429,28 @@ class Box2DPhysicsSystem(
         }
     }
 
+    fun createCheckpoint(x: Float, y: Float, width: Float, height: Float,) {
+        physics.createBody(BodyDef().apply {
+            type = BodyType.STATIC
+            position.set(x, y)
+        }).apply {
+            createFixture(FixtureDef().apply {
+                isSensor = true
+                filter = Filter().apply {
+                    categoryBits = CHECKPOINT_MASK
+                    maskBits = CHECKPOINT_COLLISIONS
+                }
+                shape = PolygonShape().apply {
+                    setAsBox(
+                        width * 0.48f,
+                        height * 0.48f
+                    )
+                }
+                userData = Checkpoint
+            })
+        }
+    }
+
     // free-shape chains of solid surface
     fun createWall(vertices: Array<Vec2>, userData: Any? = null) {
         physics.createBody(BodyDef()).apply {
@@ -502,10 +527,11 @@ class Box2DPhysicsSystem(
 
     override fun beginContact(contact: Contact) {
         contact.with<Entity> { other ->
+            if (contact.isTouching) {
             when (other) {
+                is Checkpoint -> gameContext.save()
                 is Hazard -> {
-                    if (contact.isTouching) {
-                        if (this.getOrNull(KnockbackComponent) == null) {
+                        //if (this.getOrNull(KnockbackComponent) == null) {
                             this.configure {
                                 it += KnockbackComponent()
                             }
@@ -526,10 +552,11 @@ class Box2DPhysicsSystem(
                                     -10f
                                 )
                             }
-                        }
+                        //}
                     }
                 }
             }
+
         }
     }
 
@@ -560,6 +587,7 @@ class Box2DPhysicsSystem(
     private class Torso(val bodyPosition: Vec2)
     private class Hands(val entity: Entity)
     private class Hazard(val damage: Float, val bodyPosition: Vec2)
+    private object Checkpoint
 
     companion object {
         private val tempVec2 = Vec2()
@@ -579,9 +607,12 @@ class Box2DPhysicsSystem(
 
         private val ENEMY_BODY_MASK = NEXT_MASK
 
-        private val PLAYER_BODY_COLLISIONS = WALL_MASK or ENEMY_BODY_MASK
+        private val CHECKPOINT_MASK = NEXT_MASK
+
+        private val PLAYER_BODY_COLLISIONS = WALL_MASK or ENEMY_BODY_MASK or CHECKPOINT_MASK
         private val PLAYER_LIMB_COLLISIONS = WALL_MASK or WATER_MASK
         private val ENEMY_BODY_COLLISION = WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK
+        private val CHECKPOINT_COLLISIONS = PLAYER_BODY_MASK
 
         private inline fun <reified T> Contact.with(crossinline action: T.(Any?) -> Unit) =
             (getFixtureA()?.userData as? T)?.action(getFixtureB()?.userData) ?: (getFixtureB()?.userData as? T)?.action(

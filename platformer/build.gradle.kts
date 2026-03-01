@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.targets.js.ir.JsIrBinary
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
@@ -104,6 +105,7 @@ kotlin {
                 multiplatformDependencies.forEach {
                     implementation(project(it))
                     implementation(libs.fleks)
+                    implementation(libs.kotlinx.serialization.json)
                 }
             }
         }
