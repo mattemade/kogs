@@ -23,6 +23,7 @@ import net.mattemade.platformer.WALK_VELOCITY
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.FloatUpComponent
+import net.mattemade.platformer.component.HealthComponent
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.KnockbackComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
@@ -88,7 +89,8 @@ class Box2DPhysicsSystem(
             val body = physicsComponent.body
             entity[ContextComponent].apply {
                 val wasStanding = standing
-                standing = body.getContactList().let { it.isTouching<Feet, Wall>() || it.isTouching<Feet, Platform>() } && body.linearVelocityY == 0f
+                standing = body.getContactList()
+                    .let { it.isTouching<Feet, Wall>() || it.isTouching<Feet, Platform>() } && body.linearVelocityY == 0f
                 touchingWalls = body.getContactList().isTouching<Hands, Wall>()
 
                 var currentlySwimming = false
@@ -238,7 +240,8 @@ class Box2DPhysicsSystem(
                 }
             } else if (context.wallSlide) {
                 entity[JumpComponent].apply {
-                    coyoteTimeInTicks = JumpComponent.COYOTE_TICKS // just to allow jump off the wall without using double jump
+                    coyoteTimeInTicks =
+                        JumpComponent.COYOTE_TICKS // just to allow jump off the wall without using double jump
                     wasJumping = true // just to force applying lower gravity
                 }
                 context.wallSlide = false
@@ -399,7 +402,14 @@ class Box2DPhysicsSystem(
         }
     }
 
-    fun createCrabBody(entityCreateContext: EntityCreateContext, entity: Entity, x: Float, y: Float, width: Float, height: Float,) {
+    fun createCrabBody(
+        entityCreateContext: EntityCreateContext,
+        entity: Entity,
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+    ) {
         with(entityCreateContext) {
             entity += Box2DPhysicsComponent(
                 body = physics.createBody(BodyDef().apply {
@@ -430,7 +440,7 @@ class Box2DPhysicsSystem(
         }
     }
 
-    fun createCheckpoint(x: Float, y: Float, width: Float, height: Float,) {
+    fun createCheckpoint(x: Float, y: Float, width: Float, height: Float) {
         physics.createBody(BodyDef().apply {
             type = BodyType.STATIC
             position.set(x, y)
@@ -452,7 +462,15 @@ class Box2DPhysicsSystem(
         }
     }
 
-    fun createPearl(entityCreateContext: EntityCreateContext, entity: Entity, x: Float, y: Float, width: Float, height: Float, onTouch: () -> Unit) {
+    fun createPearl(
+        entityCreateContext: EntityCreateContext,
+        entity: Entity,
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        onTouch: () -> Unit
+    ) {
         with(entityCreateContext) {
             entity += Box2DPhysicsComponent(
                 body = physics.createBody(BodyDef().apply {
@@ -560,32 +578,39 @@ class Box2DPhysicsSystem(
     override fun beginContact(contact: Contact) {
         contact.with<Entity> { other ->
             if (contact.isTouching) {
-            when (other) {
-                is Checkpoint -> gameContext.save()
-                is Action -> other.onTouch()
-                is Hazard -> {
-                        //if (this.getOrNull(KnockbackComponent) == null) {
-                            this.configure {
-                                it += KnockbackComponent()
-                            }
-                            println("DAMAGE: ${other.damage}")
-                            val body = this[Box2DPhysicsComponent].body
-                            body.linearVelocityY = 0f
-                            body.linearVelocityX = 0f
-                            val position = body.position
-                            if (this[ContextComponent].swimming) {
-                                tempVec2f.set(position.x - other.bodyPosition.x, position.y - other.bodyPosition.y).setLength(10f)
-                                this[MomentaryForceComponent].forces += Vec2f(
-                                    tempVec2f.x,
-                                    tempVec2f.y,
-                                )
-                            } else {
-                                this[MomentaryForceComponent].forces += Vec2f(
-                                    10f * sign(position.x - other.bodyPosition.x),
-                                    -10f
-                                )
-                            }
-                        //}
+                when (other) {
+                    is Checkpoint -> {
+                        this.getOrNull(HealthComponent)?.apply {
+                            health = maxHealth
+                        }
+                        gameContext.save()
+                    }
+                    is Action -> other.onTouch()
+                    is Hazard -> {
+                        this.configure {
+                            it += KnockbackComponent()
+                        }
+                        this.getOrNull(HealthComponent)?.let {
+                            it.health -= other.damage
+                        }
+
+                        val body = this[Box2DPhysicsComponent].body
+                        body.linearVelocityY = 0f
+                        body.linearVelocityX = 0f
+                        val position = body.position
+                        if (this[ContextComponent].swimming) {
+                            tempVec2f.set(position.x - other.bodyPosition.x, position.y - other.bodyPosition.y)
+                                .setLength(10f)
+                            this[MomentaryForceComponent].forces += Vec2f(
+                                tempVec2f.x,
+                                tempVec2f.y,
+                            )
+                        } else {
+                            this[MomentaryForceComponent].forces += Vec2f(
+                                10f * sign(position.x - other.bodyPosition.x),
+                                -10f
+                            )
+                        }
                     }
                 }
             }
