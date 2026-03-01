@@ -41,6 +41,10 @@ class PlatformerGameContext(
         sendLog("$LOG_TAG|$tag|$run|$log")
     }
 
+    fun update(seconds: Float) {
+        scheduler.update(seconds)
+    }
+
     fun save() {
         val state = json.encodeToString(gameState)
         if (previousSavedState != state) {
