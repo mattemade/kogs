@@ -60,7 +60,7 @@ class ControlsSystem(
     ) {
         var horizontalSpeed = 0f
         var verticalSpeed = 0f
-        val dash = input.isKeyPressed(Key.SHIFT_LEFT) && !context.touchingWalls
+        val dash = gameContext.gameState.airPearl && input.isKeyPressed(Key.SHIFT_LEFT) && !context.touchingWalls
 
         if (input.isKeyPressed(Key.ARROW_RIGHT) || input.isKeyPressed(Key.D)) {
             horizontalSpeed += WALK_VELOCITY
@@ -74,7 +74,7 @@ class ControlsSystem(
             val jumpCurrentlyPressed = input.isKeyPressed(Key.SPACE) || input.isTouching
             val jumpJustPressed = jumpCurrentlyPressed && !jumpPressed
             jumpPressed = jumpCurrentlyPressed
-            if (jumpJustPressed && (canJumpFromGround || canJumpInAir > 0 || context.touchingWalls) && !jumping) {
+            if (jumpJustPressed && (canJumpFromGround || canJumpInAir > 0 || (gameContext.gameState.airPearl && context.touchingWalls)) && !jumping) {
                 if (input.isKeyPressed(Key.ARROW_DOWN) || input.isKeyPressed(Key.S)) {
                     entity[MoveComponent].fallThrough = true
                 } else {
@@ -117,7 +117,7 @@ class ControlsSystem(
     ) {
         var horizontalSpeed = 0f
         var verticalSpeed = 0f
-        val dash = input.isKeyPressed(Key.SHIFT_LEFT)
+        val dash = gameContext.gameState.waterPearl && input.isKeyPressed(Key.SHIFT_LEFT)
 
         if (input.isKeyPressed(Key.ARROW_RIGHT) || input.isKeyPressed(Key.D)) {
             horizontalSpeed += SWIM_ACCELERATION

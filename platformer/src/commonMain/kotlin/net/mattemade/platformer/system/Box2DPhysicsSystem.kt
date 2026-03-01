@@ -125,7 +125,7 @@ class Box2DPhysicsSystem(
                 }
                 swimming = currentlySwimming
 
-                if (currentlyDiving) {
+                if (currentlyDiving && !gameContext.gameState.waterPearl) {
                     entity.getOrNull(FloatUpComponent)?.floatUpAcceleration = -0.001f
                 } else {
                     entity.getOrNull(FloatUpComponent)?.floatUpAcceleration = 0f
@@ -232,12 +232,13 @@ class Box2DPhysicsSystem(
 
         physicsComponent.apply {
             if (context.touchingWalls && (body.linearVelocityY > 0f || context.wallSlide) && body.linearVelocityX == 0f) {
-                body.linearVelocityY = 1f
-                context.wallSlide = true
+                if (gameContext.gameState.airPearl) {
+                    body.linearVelocityY = 1f
+                    context.wallSlide = true
+                }
             } else if (context.wallSlide) {
                 entity[JumpComponent].apply {
-                    coyoteTimeInTicks =
-                        JumpComponent.COYOTE_TICKS // just to allow jump off the wall without using double jump
+                    coyoteTimeInTicks = JumpComponent.COYOTE_TICKS // just to allow jump off the wall without using double jump
                     wasJumping = true // just to force applying lower gravity
                 }
                 context.wallSlide = false
@@ -259,7 +260,7 @@ class Box2DPhysicsSystem(
             if (physicsComponent.body.linearVelocityY == 0f && context.standing) {
                 coyoteTimeInTicks = JumpComponent.COYOTE_TICKS
                 canJumpFromGround = true
-                canJumpInAir = JumpComponent.MAX_AIR_JUMPS
+                canJumpInAir = if (gameContext.gameState.airPearl) JumpComponent.MAX_AIR_JUMPS else 0
                 wasJumping = false
             } else {
                 coyoteTimeInTicks--
