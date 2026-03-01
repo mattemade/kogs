@@ -1,38 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <objects serializationModel="Studio.02.03.00">
-	<object class="Workspace" id="{5024d373-b760-4a65-b101-7bf3dec233c3}">
+	<object class="Workspace" id="{7a44056e-93eb-4f9e-8d3a-cee67d39091f}">
 		<property name="builtBanksOutputDirectory">
 			<value>../commonMain/resources/fmod</value>
 		</property>
 		<relationship name="masterEventFolder">
-			<destination>{f7408fc0-de22-40b9-a6d0-ff4925839254}</destination>
+			<destination>{1ac62dc7-c65b-4324-9540-fb05148ee07d}</destination>
 		</relationship>
 		<relationship name="masterTagFolder">
-			<destination>{87365ef2-3b1e-4908-87b4-a25c7680cd13}</destination>
+			<destination>{4d3c54e0-5270-4cf8-872a-bc8e2762a55d}</destination>
 		</relationship>
 		<relationship name="masterEffectPresetFolder">
-			<destination>{197820f3-cd18-4dc9-bbc3-2621dae6a69a}</destination>
+			<destination>{49646f03-0558-4211-8600-cb0ab84ff77a}</destination>
 		</relationship>
 		<relationship name="masterParameterPresetFolder">
-			<destination>{f6cb5c7e-0e3a-4045-af06-85d6813dda5b}</destination>
+			<destination>{2df2b96b-b40c-413e-87c0-6724dda29d49}</destination>
 		</relationship>
 		<relationship name="masterBankFolder">
-			<destination>{84ba33c6-7514-4872-acb5-24718be7b8bf}</destination>
+			<destination>{ffc85afb-a731-45c3-a2f8-9cc4109ea489}</destination>
 		</relationship>
 		<relationship name="masterSandboxFolder">
-			<destination>{6505ded2-5404-4098-bcb2-b0d537a3071b}</destination>
+			<destination>{d7942212-f036-4308-a12d-1502bd28ca67}</destination>
 		</relationship>
 		<relationship name="masterAssetFolder">
-			<destination>{7603ae04-1e86-4297-8975-64810897136e}</destination>
+			<destination>{54608255-0d79-4d5d-be7a-08bb25b217a3}</destination>
 		</relationship>
 		<relationship name="mixer">
-			<destination>{44a55920-803c-4ecb-8e3c-6dc53e247e47}</destination>
+			<destination>{e93f63e3-7f86-47e1-a67c-c01de3197707}</destination>
 		</relationship>
 		<relationship name="profilerSessionFolder">
-			<destination>{ec0dfcdb-160c-4ee7-bbcc-e30391a6d3e7}</destination>
+			<destination>{aba04cf6-d5e8-437d-8771-8972665e633f}</destination>
 		</relationship>
 		<relationship name="platforms">
-			<destination>{15d4b708-0be5-4155-b366-2617bddac274}</destination>
+			<destination>{7cb57af5-1300-469f-bfaf-76010ec6a7b1}</destination>
 		</relationship>
 	</object>
 </objects>

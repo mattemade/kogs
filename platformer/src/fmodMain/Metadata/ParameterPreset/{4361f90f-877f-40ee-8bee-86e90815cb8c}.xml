@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="ParameterPreset" id="{4361f90f-877f-40ee-8bee-86e90815cb8c}">
+		<property name="name">
+			<value>Player state</value>
+		</property>
+		<relationship name="folder">
+			<destination>{2df2b96b-b40c-413e-87c0-6724dda29d49}</destination>
+		</relationship>
+		<relationship name="parameter">
+			<destination>{9013c5ea-ea4b-4f5d-a2fb-82cfacd88ece}</destination>
+		</relationship>
+	</object>
+	<object class="GameParameter" id="{9013c5ea-ea4b-4f5d-a2fb-82cfacd88ece}">
+		<property name="parameterType">
+			<value>2</value>
+		</property>
+		<property name="maximum">
+			<value>9</value>
+		</property>
+		<property name="enumerationLabels">
+			<value>Walking</value>
+			<value>Walking, low health</value>
+			<value>Swimming</value>
+			<value>Swimming, low stamina</value>
+			<value>Swimming, low health</value>
+			<value>Enemy nearby</value>
+			<value>Enemy nearby, low health</value>
+			<value>Fighting</value>
+			<value>Fighting, low health</value>
+		</property>
+		<property name="initialValue">
+			<value>0</value>
+		</property>
+	</object>
+</objects>
