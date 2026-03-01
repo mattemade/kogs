@@ -63,6 +63,8 @@ class Box2DPhysicsSystem(
 ),
     ContactListener, Releasing by Self() {
 
+    private val landVelocity by lazy { gameContext.fmodAssets.land.getParameterDescriptionByName("Velocity").id }
+
     private val physics: B2dWorld = B2dWorld().rememberTo {
         var body = it.bodyList
         while (body != null) {
@@ -92,6 +94,14 @@ class Box2DPhysicsSystem(
                 standing = body.getContactList()
                     .let { it.isTouching<Feet, Wall>() || it.isTouching<Feet, Platform>() } && body.linearVelocityY == 0f
                 touchingWalls = body.getContactList().isTouching<Hands, Wall>()
+
+                if (standing && physicsComponent.previousVelocity.y != 0f) {
+                    gameContext.fmodAssets.land.createInstance().apply {
+                        setParameterByID(landVelocity, physicsComponent.previousVelocity.y, 0)
+                        start()
+                    }
+
+                }
 
                 var currentlySwimming = false
                 var currentlyDiving = false
@@ -151,6 +161,7 @@ class Box2DPhysicsSystem(
     override fun onTickEntity(entity: Entity) {
         val context = entity[ContextComponent]
         val physicsComponent = entity[Box2DPhysicsComponent].apply {
+            previousVelocity.set(body.linearVelocityX, body.linearVelocityY)
             previousPosition.set(
                 body.position.x, body.position.y,
             )

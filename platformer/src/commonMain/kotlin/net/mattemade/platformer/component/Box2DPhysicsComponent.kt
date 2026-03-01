@@ -11,6 +11,7 @@ import org.jbox2d.dynamics.Fixture
 class Box2DPhysicsComponent(
     var body: Body,
     val previousPosition: MutableVec2f = MutableVec2f(body.position.x, body.position.y),
+    val previousVelocity: MutableVec2f = MutableVec2f(0f, 0f),
 ) : Component<Box2DPhysicsComponent> {
 
     lateinit var landBodyFixture: Fixture

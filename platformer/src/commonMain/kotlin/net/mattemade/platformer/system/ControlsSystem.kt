@@ -12,9 +12,6 @@ import com.littlekt.math.MutableVec2f
 import net.mattemade.fmod.FMOD
 import net.mattemade.fmod.FMOD.STUDIO_EVENT_CALLBACK_SOUND_STOPPED
 import net.mattemade.fmod.FmodCallback
-import net.mattemade.fmod.FmodCallbackExternal
-import net.mattemade.fmod.FmodCallbackType
-import net.mattemade.fmod.FmodResult
 import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.SWIM_ACCELERATION
 import net.mattemade.platformer.SWIM_VELOCITY
@@ -152,9 +149,9 @@ class ControlsSystem(
         }
     }
 
-    private val testParametedId by lazy { gameContext.fmodAssets.eventDescription.getParameterDescriptionByName("bassy").id }
+    private val testParametedId by lazy { gameContext.fmodAssets.jump.getParameterDescriptionByName("bassy").id }
     private fun JumpComponent.executeJump(wallJump: Boolean = false) {
-        val instance = gameContext.fmodAssets.eventDescription.createInstance()
+        val instance = gameContext.fmodAssets.jump.createInstance()
         instance.setCallback(FmodCallback { type, event, parameters ->
             println("jump sound stopped")
             FMOD.OK

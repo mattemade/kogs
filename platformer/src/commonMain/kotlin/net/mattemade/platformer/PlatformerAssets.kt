@@ -250,8 +250,9 @@ class Fmod(context: Context, fmodFolderPrefix: String, fmodLiveUpdate: Boolean) 
     private var studioSystemReady = false
     private val module by selfPreparePlain(order = 0, tag= "module", {
         FMOD_Module_Create({
-            FMOD_FS_createPreloadedFile("${fmodFolderPrefix}fmod/Master.bank")
-            FMOD_FS_createPreloadedFile("${fmodFolderPrefix}fmod/Master.strings.bank")
+            FMOD_BANKS.forEach {
+                FMOD_FS_createPreloadedFile("${fmodFolderPrefix}fmod/${it}")
+            }
         }) {
             studioSystem = FMOD_Studio_System_Create()
             val core = studioSystem.coreSystem
