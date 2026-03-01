@@ -154,7 +154,7 @@ class RenderingSystem(
     }
 
     override fun onTickEntity(entity: Entity) {
-        val bounds = entity[SpriteComponent].bounds
+        val (sprite, bounds, tint) = entity[SpriteComponent]
         val (position) = entity[PositionComponent]
         val (rotation) = entity[RotationComponent]
 
@@ -167,8 +167,8 @@ class RenderingSystem(
             height = bounds.height,
             color = bottomColor,
             color2 = bottomColor,
-            color3 = topColor,
-            color4 = topColor,
+            color3 = tint,
+            color4 = tint,
             rotation = angle
         )
     }

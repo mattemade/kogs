@@ -2,10 +2,12 @@ package net.mattemade.platformer.world
 
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.configureWorld
+import com.littlekt.graphics.Color
 import com.littlekt.graphics.Texture
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledMap
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledObjectLayer
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledTilesLayer
+import com.littlekt.graphics.toFloatBits
 import com.littlekt.math.Rect
 import com.littlekt.math.Vec2f
 import net.mattemade.platformer.PlatformerGameContext
@@ -92,7 +94,8 @@ class Room(
         it += SpriteComponent(
             gameContext.assets.textureFiles.whitePixel,
             // baking offset into the bounds, maybe it should be a separate property?
-            Rect(-0.45f.px, -0.9f.px, initialPlayerBounds.width * 0.91f, initialPlayerBounds.height * 0.91f)
+            Rect(-0.45f.px, -0.9f.px, initialPlayerBounds.width * 0.91f, initialPlayerBounds.height * 0.91f),
+            tint = Color.ORANGE.toFloatBits(),
         )
         it += PositionComponent().also {
             it.position.set(initialPlayerBounds.cx, initialPlayerBounds.cy)
@@ -199,7 +202,8 @@ class Room(
                                         spawn.bounds.height * unitSize * -0.48f,
                                         spawn.bounds.width * unitSize,
                                         spawn.bounds.height * unitSize
-                                    )
+                                    ),
+                                    tint = Color.RED.toFloatBits(),
                                 )
                                 it += PositionComponent().also {
                                     it.position.set(spawn.bounds.cx * unitSize, spawn.bounds.cy * unitSize)
@@ -221,10 +225,80 @@ class Room(
                             }
                         }
                         "water-pearl" -> {
-
+                            if (!gameContext.gameState.waterPearl) {
+                                ecs.entity { entity ->
+                                    entity += SpriteComponent(
+                                        gameContext.assets.textureFiles.whitePixel,
+                                        // baking offset into the bounds, maybe it should be a separate property?
+                                        Rect(
+                                            spawn.bounds.width * unitSize * -0.48f,
+                                            spawn.bounds.height * unitSize * -0.48f,
+                                            spawn.bounds.width * unitSize,
+                                            spawn.bounds.height * unitSize
+                                        ),
+                                        tint = Color.BLUE.toFloatBits(),
+                                    )
+                                    entity += PositionComponent().also {
+                                        it.position.set(
+                                            spawn.bounds.cx * unitSize,
+                                            spawn.bounds.cy * unitSize
+                                        )
+                                    }
+                                    entity += RotationComponent()
+                                    physicsSystem.createPearl(
+                                        this,
+                                        entity,
+                                        spawn.bounds.cx * unitSize,
+                                        spawn.bounds.cy * unitSize,
+                                        spawn.bounds.width * unitSize,
+                                        spawn.bounds.height * unitSize,
+                                    ) {
+                                        gameContext.gameState.waterPearl = true
+                                        gameContext.save()
+                                        gameContext.scheduler.schedule().then {
+                                            entity.remove()
+                                        }
+                                    }
+                                }
+                            }
                         }
                         "air-pearl" -> {
-
+                            if (!gameContext.gameState.airPearl) {
+                                ecs.entity { entity ->
+                                    entity += SpriteComponent(
+                                        gameContext.assets.textureFiles.whitePixel,
+                                        // baking offset into the bounds, maybe it should be a separate property?
+                                        Rect(
+                                            spawn.bounds.width * unitSize * -0.48f,
+                                            spawn.bounds.height * unitSize * -0.48f,
+                                            spawn.bounds.width * unitSize,
+                                            spawn.bounds.height * unitSize
+                                        ),
+                                        tint = Color.GREEN.toFloatBits(),
+                                    )
+                                    entity += PositionComponent().also {
+                                        it.position.set(
+                                            spawn.bounds.cx * unitSize,
+                                            spawn.bounds.cy * unitSize
+                                        )
+                                    }
+                                    entity += RotationComponent()
+                                    physicsSystem.createPearl(
+                                        this,
+                                        entity,
+                                        spawn.bounds.cx * unitSize,
+                                        spawn.bounds.cy * unitSize,
+                                        spawn.bounds.width * unitSize,
+                                        spawn.bounds.height * unitSize,
+                                    ) {
+                                        gameContext.gameState.airPearl = true
+                                        gameContext.save()
+                                        gameContext.scheduler.schedule().then {
+                                            entity.remove()
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

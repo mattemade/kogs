@@ -452,6 +452,37 @@ class Box2DPhysicsSystem(
         }
     }
 
+    fun createPearl(entityCreateContext: EntityCreateContext, entity: Entity, x: Float, y: Float, width: Float, height: Float, onTouch: () -> Unit) {
+        with(entityCreateContext) {
+            entity += Box2DPhysicsComponent(
+                body = physics.createBody(BodyDef().apply {
+                    type = BodyType.STATIC
+                    position.set(x, y)
+                    gravityScale = GRAVITY_IN_FALL
+                }).apply {
+                    isFixedRotation = false
+                },
+            ).apply {
+                // land body
+                landBodyFixture = body.createFixture(FixtureDef().apply {
+                    friction = 0f
+                    filter = Filter().apply {
+                        categoryBits = PEARL_MASK
+                        maskBits = PEARL_COLLISIONS
+                    }
+                    shape = PolygonShape().apply {
+                        setAsBox(
+                            width * 0.48f,
+                            height * 0.48f
+                        )
+                    }
+                    userData = Action(onTouch = onTouch)
+                })!!
+                waterBodyFixture = landBodyFixture
+            }
+        }
+    }
+
     // free-shape chains of solid surface
     fun createWall(vertices: Array<Vec2>, userData: Any? = null) {
         physics.createBody(BodyDef()).apply {
@@ -531,6 +562,7 @@ class Box2DPhysicsSystem(
             if (contact.isTouching) {
             when (other) {
                 is Checkpoint -> gameContext.save()
+                is Action -> other.onTouch()
                 is Hazard -> {
                         //if (this.getOrNull(KnockbackComponent) == null) {
                             this.configure {
@@ -589,6 +621,7 @@ class Box2DPhysicsSystem(
     private class Hands(val entity: Entity)
     private class Hazard(val damage: Float, val bodyPosition: Vec2)
     private object Checkpoint
+    private class Action(val onTouch: () -> Unit)
 
     companion object {
         private val tempVec2 = Vec2()
@@ -610,10 +643,13 @@ class Box2DPhysicsSystem(
 
         private val CHECKPOINT_MASK = NEXT_MASK
 
-        private val PLAYER_BODY_COLLISIONS = WALL_MASK or ENEMY_BODY_MASK or CHECKPOINT_MASK
+        private val PEARL_MASK = NEXT_MASK
+
+        private val PLAYER_BODY_COLLISIONS = WALL_MASK or ENEMY_BODY_MASK or CHECKPOINT_MASK or PEARL_MASK
         private val PLAYER_LIMB_COLLISIONS = WALL_MASK or WATER_MASK
         private val ENEMY_BODY_COLLISION = WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK
         private val CHECKPOINT_COLLISIONS = PLAYER_BODY_MASK
+        private val PEARL_COLLISIONS = PLAYER_BODY_MASK
 
         private inline fun <reified T> Contact.with(crossinline action: T.(Any?) -> Unit) =
             (getFixtureA()?.userData as? T)?.action(getFixtureB()?.userData) ?: (getFixtureB()?.userData as? T)?.action(
