@@ -28,6 +28,7 @@ import net.mattemade.platformer.resources.ResourceLevel
 import net.mattemade.platformer.resources.Sound
 import net.mattemade.platformer.resources.Sprite
 import net.mattemade.utils.animation.SignallingAnimationPlayer
+import net.mattemade.utils.animation.readAnimationMultiPlayer
 import net.mattemade.utils.animation.readAnimationPlayer
 import net.mattemade.utils.asset.AssetPack
 import net.mattemade.utils.atlas.RuntimeTextureAtlasPacker
@@ -92,7 +93,7 @@ class PlatformerAssets(
     fun animation(id: String): AnimationWithOffset =
         resourceSheet.animationById[id]!!.let { animationWithOffset ->
             AnimationWithOffset(
-                animationFiles.map[animationWithOffset.file]!!.copy(),
+                animationFiles.map[animationWithOffset.file]!![animationWithOffset.segment]!!.copy(),
                 Vec2f(animationWithOffset.offsetX, animationWithOffset.offsetY)
             )
         }
@@ -104,11 +105,11 @@ class AnimationFiles(
     private val packer: RuntimeTextureAtlasPacker,
     private val resourceSheet: PlatformerResourceSheet,
 ) : AssetPack(context) {
-    val map = ConcurrentMutableMap<String, SignallingAnimationPlayer>()
+    val map = ConcurrentMutableMap<String, Map<String, SignallingAnimationPlayer>>()
 
-    private fun String.pack(file: String): PreparableGameAsset<SignallingAnimationPlayer> =
+    private fun String.pack(file: String): PreparableGameAsset< Map<String, SignallingAnimationPlayer>> =
         preparePlain {
-            val result = context.resourcesVfs[this].readAnimationPlayer(packer)
+            val result = context.resourcesVfs[this].readAnimationMultiPlayer(packer)
             map[file] = result
             result
         }
