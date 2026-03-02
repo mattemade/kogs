@@ -34,11 +34,11 @@ actual fun FMOD_FS_createPreloadedFile(filename: String) {
 }
 
 actual fun FMOD_Studio_System_Create(): FmodStudioSystem =
-    FmodStudioSystem(getResult { fmodJS.Studio_System_Create(it) })
+    FmodStudioSystem(getResult { checkError(fmodJS.Studio_System_Create(it)) })
 
 actual class FmodStudioSystem(private val actualSystem: dynamic) {
     actual val coreSystem: FmodStudioSystemCore
-        get() = FmodStudioSystemCore(getResult { actualSystem.getCoreSystem(it) })
+        get() = FmodStudioSystemCore(getResult { checkError(actualSystem.getCoreSystem(it)) })
 
     actual fun initialize(
         maxChannels: Int,
@@ -46,35 +46,35 @@ actual class FmodStudioSystem(private val actualSystem: dynamic) {
         initFlags: FmodInitFlag,
         extraDriverData: Long?
     ) {
-        actualSystem.initialize(maxChannels, studioInitFlags, initFlags, extraDriverData)
+        checkError(actualSystem.initialize(maxChannels, studioInitFlags, initFlags, extraDriverData))
     }
 
     actual fun loadBankFile(
         file: String,
         studioLoadingBankType: FmodStudioLoadingType
     ): FmodBank =
-        FmodBank(getResult { actualSystem.loadBankFile(file, studioLoadingBankType, it) })
+        FmodBank(getResult { checkError(actualSystem.loadBankFile(file, studioLoadingBankType, it)) })
 
     actual fun update() {
-        actualSystem.update()
+        checkError(actualSystem.update())
     }
 
     actual fun getEvent(eventName: String): FmodEventDescription =
-        FmodEventDescription(getResult { actualSystem.getEvent(eventName, it) })
+        FmodEventDescription(getResult { checkError(actualSystem.getEvent(eventName, it)) })
 
     actual fun setListenerAttributes(listener: Int, attributes: Fmod3DAttributes, attenuationPosition: FmodVector?) {
-        actualSystem.setListenerAttributes(listener, attributes.actual, attenuationPosition?.actual)
+        checkError(actualSystem.setListenerAttributes(listener, attributes.actual, attenuationPosition?.actual))
     }
 }
 
 actual class FmodStudioSystemCore(private val actualCore: dynamic) {
 
     actual fun setDSPBufferSize(bufferLength: Int, numBuffers: Int) {
-        actualCore.setDSPBufferSize(bufferLength, numBuffers)
+        checkError(actualCore.setDSPBufferSize(bufferLength, numBuffers))
     }
 
     actual fun getCPUUsage(cpu: FmodCpu) {
-        actualCore.getCPUUsage(cpu.actualCpu)
+        checkError(actualCore.getCPUUsage(cpu.actualCpu))
     }
 
     actual fun getDriverInfo(
@@ -83,7 +83,7 @@ actual class FmodStudioSystemCore(private val actualCore: dynamic) {
         val systemRate = js("{}")
         val spearkerMode = js("{}")
         val speakerModeChanels = js("{}")
-        actualCore.getDriverInfo(id, null, null, systemRate, spearkerMode, speakerModeChanels)
+        checkError(actualCore.getDriverInfo(id, null, null, systemRate, spearkerMode, speakerModeChanels))
         return FmodDriverInfo(
             systemRate.`val`,
             spearkerMode.`val`,
@@ -96,37 +96,36 @@ actual class FmodStudioSystemCore(private val actualCore: dynamic) {
         speakerMode: FmodSpeakerMode,
         numSpeakers: Int
     ) {
-        actualCore.setSoftwareFormat(sampleRate, speakerMode, numSpeakers)
+        checkError(actualCore.setSoftwareFormat(sampleRate, speakerMode, numSpeakers))
     }
 }
 
 actual class FmodBank(private val actualBank: dynamic) {
     actual val loadingState: FmodStudioLoadingState
-        get() = getResult { actualBank.getLoadingState(it) }
+        get() = getResult { checkError(actualBank.getLoadingState(it)) }
     actual val sampleLoadingState: FmodStudioLoadingState
-        get() = getResult { actualBank.getSampleLoadingState(it) }
+        get() = getResult { checkError(actualBank.getSampleLoadingState(it)) }
 
     actual fun loadSampleData() {
-        actualBank.loadSampleData()
+        checkError(actualBank.loadSampleData())
     }
 
     actual fun unloadSampleData() {
-        actualBank.unloadSampleData()
+        checkError(actualBank.unloadSampleData())
     }
 }
 
 actual class FmodEventDescription(private val actualEventDescription: dynamic) {
     actual fun createInstance(): FmodEventInstance =
-        FmodEventInstance(getResult { actualEventDescription.createInstance(it) })
+        FmodEventInstance(getResult { checkError(actualEventDescription.createInstance(it)) })
 
     actual fun loadSampleData() {
-        actualEventDescription.loadSampleData()
+        checkError(actualEventDescription.loadSampleData())
     }
 
     actual fun getParameterDescriptionByName(name: String): FmodParameterDescription {
         val outval = js("{}")
-        val result = actualEventDescription.getParameterDescriptionByName(name, outval)
-        println("${name} is ${outval} with ${outval.id} by ${result}")
+        checkError(actualEventDescription.getParameterDescriptionByName(name, outval))
         return FmodParameterDescription(outval.id)
     }
 }
@@ -137,22 +136,22 @@ actual class FmodParameterDescription(private val actualParameterDescriptionId: 
 
 actual class FmodEventInstance(private val actualEventInstance: dynamic) {
     actual fun start() {
-        actualEventInstance.start()
+        checkError(actualEventInstance.start())
     }
 
     actual fun stop(mode: FmodStudioStopType) {
-        actualEventInstance.stop(mode)
+        checkError(actualEventInstance.stop(mode))
     }
 
     actual fun release() {
-        actualEventInstance.release()
+        checkError(actualEventInstance.release())
     }
 
     actual fun setCallback(
         callback: FmodCallback,
         callbackMask: FmodCallbackType
     ) {
-        actualEventInstance.setCallback(callback.externalCallback::invoke, callbackMask)
+        checkError(actualEventInstance.setCallback(callback.externalCallback::invoke, callbackMask))
     }
 
     actual fun setParameterByID(
@@ -160,14 +159,14 @@ actual class FmodEventInstance(private val actualEventInstance: dynamic) {
         value: Float,
         ignoreSeekSpeed: Int
     ) {
-        actualEventInstance.setParameterByID(id.actualId, value, ignoreSeekSpeed)
+        checkError(actualEventInstance.setParameterByID(id.actualId, value, ignoreSeekSpeed))
     }
 
     actual fun getPlaybackState(): FmodPlaybackState =
-        getResult { actualEventInstance.getPlaybackState(it) }
+        getResult { checkError(actualEventInstance.getPlaybackState(it)) }
 
     actual fun set3DAttributes(attributes: Fmod3DAttributes) {
-        actualEventInstance.set3DAttributes(attributes.actual)
+        checkError(actualEventInstance.set3DAttributes(attributes.actual))
     }
 }
 
@@ -192,21 +191,38 @@ actual class FmodCpu {
         get() = actualCpu.update
 }
 
+private inline fun checkError(result: dynamic) {
+    if (result != FMOD.OK) {
+        println("FMOD ERROR: ${fmodJS.ErrorString(result)}")
+    }
+}
+
 actual class FmodParameterId(val actualId: dynamic)
 actual class FmodCallback actual constructor(val externalCallback: FmodCallbackExternal)
 actual class Fmod3DAttributes {
 
-    internal val actual: dynamic = js("FMOD._3D_ATTRIBUTES()")
+    internal val actual: dynamic = fmodJS._3D_ATTRIBUTES()
 
     actual val position: FmodVector = FmodVector(actual.position)
     actual val velocity: FmodVector = FmodVector(actual.velocity)
     actual val forward: FmodVector = FmodVector(actual.forward)
     actual val up: FmodVector = FmodVector(actual.up)
+
+    init {
+        position.apply { x = 0f; y = 0f; z = 0f; }
+        velocity.apply { x = 0f; y = 0f; z = 0f; }
+        forward.apply { x = 0f; y = 0f; z = 0f; }
+        up.apply { x = 0f; y = 0f; z = 0f; }
+    }
 }
 
 actual class FmodVector(internal val actual: dynamic) {
 
-    actual constructor() : this(js("FMOD.VECTOR()"))
+    actual constructor() : this(fmodJS.VECTOR()) {
+        x = 0f
+        y = 0f
+        z = 0f
+    }
 
     actual var x: Float
         get() = actual.x

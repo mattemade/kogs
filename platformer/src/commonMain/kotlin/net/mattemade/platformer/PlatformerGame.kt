@@ -168,6 +168,12 @@ class PlatformerGame(
                 }
             }
 
+            if (focused && assetsReady && fmodAssetsReady) {
+                gameContext.update(dt.seconds)
+                pixelRender.render(dt)
+                directRender.render(dt)
+            }
+
             if (assetsReady) {
                 gameContext.assets.fmod.studioSystem.update()
                 if (!fmodAssetsReady) {
@@ -176,12 +182,6 @@ class PlatformerGame(
                         gameContext.fmodAssets.musicEventDescription.createInstance().start()
                     }
                 }
-            }
-
-            if (focused && assetsReady && fmodAssetsReady) {
-                gameContext.update(dt.seconds)
-                pixelRender.render(dt)
-                directRender.render(dt)
             }
 
             //blockingSleep(TimeSpan(2.0))

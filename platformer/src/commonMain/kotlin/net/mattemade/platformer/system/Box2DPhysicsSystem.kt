@@ -583,6 +583,8 @@ class Box2DPhysicsSystem(
             body.setTransformDegrees(Vec2(moveToPosition.x, moveToPosition.y), 0f)
             body.linearVelocityX = physicsComponentFromPreviousRoom.body.linearVelocityX
             body.linearVelocityY = physicsComponentFromPreviousRoom.body.linearVelocityY
+            attachedSounds.clear()
+            attachedSounds.addAll(physicsComponentFromPreviousRoom.attachedSounds)
 
             if (entity[ContextComponent].swimming) { // was swimming when teleported
                 landBodyFixture.filterData.maskBits = 0
