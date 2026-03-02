@@ -75,7 +75,7 @@ class ControlsSystem(
                 if (input.isKeyPressed(Key.ARROW_DOWN) || input.isKeyPressed(Key.S)) {
                     entity[MoveComponent].fallThrough = true
                 } else {
-                    executeJump(wallJump = context.touchingWalls)
+                    executeJump(entity, wallJump = context.touchingWalls)
                 }
             } else if (!jumpCurrentlyPressed) {
                 jumping = false
@@ -85,7 +85,7 @@ class ControlsSystem(
                     // no-op
                 } else if (canJumpFromGround) {
                     if (!jumping && jumpBuffer < JumpComponent.BUFFER_TICKS) {
-                        executeJump()
+                        executeJump(entity)
                     }
                 } else {
                     jumpBuffer++
@@ -149,17 +149,8 @@ class ControlsSystem(
         }
     }
 
-    private val testParametedId by lazy { gameContext.fmodAssets.jump.getParameterDescriptionByName("bassy").id }
-    private fun JumpComponent.executeJump(wallJump: Boolean = false) {
-        val instance = gameContext.fmodAssets.jump.createInstance()
-        instance.setCallback(FmodCallback { type, event, parameters ->
-            println("jump sound stopped")
-            FMOD.OK
-        }, callbackMask = STUDIO_EVENT_CALLBACK_SOUND_STOPPED)
-        val value = Random.nextInt(3).toFloat()
-        println("start jump sound with bassy of $value")
-        instance.setParameterByID(testParametedId, value, 1)
-        instance.start()
+    private fun JumpComponent.executeJump(entity: Entity, wallJump: Boolean = false) {
+        entity[Box2DPhysicsComponent].playSound(gameContext.fmodAssets.jump)
 
         jumping = true
         if (!canJumpFromGround && !wallJump) {

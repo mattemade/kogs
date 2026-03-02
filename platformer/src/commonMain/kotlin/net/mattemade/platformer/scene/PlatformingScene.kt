@@ -43,7 +43,10 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
             switchRoom = ::switchRoom,
         ).releasing()
     }
-    private var currentRoom: Room = rooms.first { it.name == gameContext.gameState.currentRoom }
+    private var currentRoom: Room = rooms.firstOrNull { it.name == gameContext.gameState.currentRoom } ?: rooms.first().also {
+        // we can't find the room that was saved as the current one! it might be that the save state is corrupted
+        gameContext.load(reset = true)
+    }
     private val sharedMapRenderer = PixelRender(
         gameContext.context,
         targetWidth = fullWorldRect.width.roundToInt(),

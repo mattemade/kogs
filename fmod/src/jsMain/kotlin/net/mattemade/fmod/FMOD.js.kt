@@ -3,6 +3,7 @@ package net.mattemade.fmod
 import kotlinx.browser.window
 
 internal val fmodJS = js("{}")
+internal val outval = js("{}")
 
 internal external fun FMODModule(instance: Any)
 
@@ -60,6 +61,10 @@ actual class FmodStudioSystem(private val actualSystem: dynamic) {
 
     actual fun getEvent(eventName: String): FmodEventDescription =
         FmodEventDescription(getResult { actualSystem.getEvent(eventName, it) })
+
+    actual fun setListenerAttributes(listener: Int, attributes: Fmod3DAttributes, attenuationPosition: FmodVector?) {
+        actualSystem.setListenerAttributes(listener, attributes.actual, attenuationPosition?.actual)
+    }
 }
 
 actual class FmodStudioSystemCore(private val actualCore: dynamic) {
@@ -155,14 +160,18 @@ actual class FmodEventInstance(private val actualEventInstance: dynamic) {
         value: Float,
         ignoreSeekSpeed: Int
     ) {
-        println(id.actualId)
-        println(value)
         actualEventInstance.setParameterByID(id.actualId, value, ignoreSeekSpeed)
+    }
+
+    actual fun getPlaybackState(): FmodPlaybackState =
+        getResult { actualEventInstance.getPlaybackState(it) }
+
+    actual fun set3DAttributes(attributes: Fmod3DAttributes) {
+        actualEventInstance.set3DAttributes(attributes.actual)
     }
 }
 
 private inline fun getResult(crossinline block: (outval: dynamic) -> Unit): dynamic {
-    val outval = js("{}")
     block(outval)
     return outval.`val`
 }
@@ -185,3 +194,33 @@ actual class FmodCpu {
 
 actual class FmodParameterId(val actualId: dynamic)
 actual class FmodCallback actual constructor(val externalCallback: FmodCallbackExternal)
+actual class Fmod3DAttributes {
+
+    internal val actual: dynamic = js("FMOD._3D_ATTRIBUTES()")
+
+    actual val position: FmodVector = FmodVector(actual.position)
+    actual val velocity: FmodVector = FmodVector(actual.velocity)
+    actual val forward: FmodVector = FmodVector(actual.forward)
+    actual val up: FmodVector = FmodVector(actual.up)
+}
+
+actual class FmodVector(internal val actual: dynamic) {
+
+    actual constructor() : this(js("FMOD.VECTOR()"))
+
+    actual var x: Float
+        get() = actual.x
+        set(value) {
+            actual.x = value
+        }
+    actual var y: Float
+        get() = actual.y
+        set(value) {
+            actual.y = value
+        }
+    actual var z: Float
+        get() = actual.z
+        set(value) {
+            actual.z = value
+        }
+}

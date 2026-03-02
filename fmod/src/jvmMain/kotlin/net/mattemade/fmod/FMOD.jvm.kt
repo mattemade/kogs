@@ -5,10 +5,12 @@ import org.lwjgl.PointerBuffer
 import org.lwjgl.fmod.FMOD
 import org.lwjgl.fmod.FMOD.FMOD_VERSION
 import org.lwjgl.fmod.FMODStudio
+import org.lwjgl.fmod.FMOD_3D_ATTRIBUTES
 import org.lwjgl.fmod.FMOD_CPU_USAGE
 import org.lwjgl.fmod.FMOD_STUDIO_EVENT_CALLBACK
 import org.lwjgl.fmod.FMOD_STUDIO_PARAMETER_DESCRIPTION
 import org.lwjgl.fmod.FMOD_STUDIO_PARAMETER_ID
+import org.lwjgl.fmod.FMOD_VECTOR
 
 private val outvalBuffer = PointerBuffer.allocateDirect(1)
 private val intBuffer = BufferUtils.createIntBuffer(1)
@@ -65,6 +67,15 @@ actual class FmodStudioSystem(val id: Long) {
             }
         }
         return FmodEventDescription(id = outvalBuffer.get())
+    }
+
+    actual fun setListenerAttributes(listener: Int, attributes: Fmod3DAttributes, attenuationPosition: FmodVector?) {
+        FMODStudio.FMOD_Studio_System_SetListenerAttributes(
+            id,
+            listener,
+            attributes.actual,
+            attenuationPosition?.actual
+        )
     }
 }
 
@@ -178,6 +189,15 @@ actual class FmodEventInstance(val id: Long) {
     ) {
         FMODStudio.FMOD_Studio_EventInstance_SetParameterByID(this.id, id.id, value, ignoreSeekSpeed)
     }
+
+    actual fun getPlaybackState(): FmodPlaybackState {
+        FMODStudio.FMOD_Studio_EventInstance_GetPlaybackState(this.id, intBuffer.clear()).checkError()
+        return intBuffer.get()
+    }
+
+    actual fun set3DAttributes(attributes: Fmod3DAttributes) {
+        FMODStudio.FMOD_Studio_EventInstance_Set3DAttributes(id, attributes.actual).checkError()
+    }
 }
 
 actual class FmodDriverInfo(
@@ -212,4 +232,34 @@ private inline fun Int.checkError() {
     if (this != net.mattemade.fmod.FMOD.OK) {
         println("FMOD ERROR: ${FMOD.FMOD_ErrorString(this)}")
     }
+}
+
+actual class Fmod3DAttributes {
+    internal val actual: FMOD_3D_ATTRIBUTES = FMOD_3D_ATTRIBUTES.create()
+
+    actual val position: FmodVector = FmodVector(actual.`position$`())
+    actual val velocity: FmodVector = FmodVector(actual.velocity())
+    actual val forward: FmodVector = FmodVector(actual.forward())
+    actual val up: FmodVector = FmodVector(actual.up())
+}
+
+actual class FmodVector(internal val actual: FMOD_VECTOR) {
+
+    actual constructor() : this(FMOD_VECTOR.create())
+
+    actual var x: Float
+        get() = actual.x()
+        set(value) {
+            actual.x(value)
+        }
+    actual var y: Float
+        get() = actual.y()
+        set(value) {
+            actual.y(value)
+        }
+    actual var z: Float
+        get() = actual.z()
+        set(value) {
+            actual.z(value)
+        }
 }

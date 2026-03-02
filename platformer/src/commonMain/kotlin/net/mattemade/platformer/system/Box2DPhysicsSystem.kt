@@ -13,6 +13,7 @@ import com.littlekt.math.PI2_F
 import com.littlekt.math.Rect
 import com.littlekt.math.Vec2f
 import com.soywiz.korma.geom.Angle
+import net.mattemade.fmod.FMOD
 import net.mattemade.platformer.GRAVITY_IN_FALL
 import net.mattemade.platformer.GRAVITY_IN_JUMP
 import net.mattemade.platformer.GRAVITY_IN_JUMPFALL
@@ -96,11 +97,8 @@ class Box2DPhysicsSystem(
                 touchingWalls = body.getContactList().isTouching<Hands, Wall>()
 
                 if (standing && physicsComponent.previousVelocity.y != 0f) {
-                    gameContext.fmodAssets.land.createInstance().apply {
-                        setParameterByID(landVelocity, physicsComponent.previousVelocity.y, 0)
-                        start()
-                    }
-
+                    physicsComponent.playSound(gameContext.fmodAssets.land)
+                        .setParameterByID(landVelocity, physicsComponent.previousVelocity.y, 0)
                 }
 
                 var currentlySwimming = false
@@ -154,6 +152,16 @@ class Box2DPhysicsSystem(
                         }
                     }
                 }
+            }
+            physicsComponent.attachedSounds.removeAll { (sound, attributes) ->
+                val shouldBeRemoved = sound.getPlaybackState() == FMOD.STUDIO_PLAYBACK_STOPPED
+                if (!shouldBeRemoved) {
+                    attributes.position.apply { x = body.position.x; y = body.position.y; }
+                    attributes.velocity.apply { x = body.linearVelocityY; y = body.linearVelocityY; }
+                    sound.set3DAttributes(attributes)
+                }
+
+                shouldBeRemoved
             }
         }
     }

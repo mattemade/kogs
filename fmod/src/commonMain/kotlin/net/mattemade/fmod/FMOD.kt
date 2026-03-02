@@ -61,6 +61,12 @@ object FMOD {
     const val STUDIO_EVENT_CALLBACK_TIMELINE_BEAT: FmodCallbackType = 0x1000
     const val STUDIO_EVENT_CALLBACK_SOUND_PLAYED: FmodCallbackType = 0x2000
     const val STUDIO_EVENT_CALLBACK_SOUND_STOPPED: FmodCallbackType = 0x4000
+
+    const val STUDIO_PLAYBACK_PLAYING: FmodPlaybackState = 0
+    const val STUDIO_PLAYBACK_SUSTAINING: FmodPlaybackState = 1
+    const val STUDIO_PLAYBACK_STOPPED: FmodPlaybackState = 2
+    const val STUDIO_PLAYBACK_STARTING: FmodPlaybackState = 3
+    const val STUDIO_PLAYBACK_STOPPING: FmodPlaybackState = 4
 }
 
 expect class FmodStudioSystem {
@@ -72,6 +78,8 @@ expect class FmodStudioSystem {
     fun update()
 
     fun getEvent(eventName: String): FmodEventDescription
+
+    fun setListenerAttributes(listener: Int, attributes: Fmod3DAttributes, attenuationPosition: FmodVector? = null)
 }
 
 expect class FmodStudioSystemCore {
@@ -108,6 +116,8 @@ expect class FmodEventInstance {
     fun release()
     fun setCallback(callback: FmodCallback, callbackMask: FmodCallbackType)
     fun setParameterByID(id: FmodParameterId, value: Float, ignoreSeekSpeed: Int)
+    fun getPlaybackState(): FmodPlaybackState
+    fun set3DAttributes(attributes: Fmod3DAttributes)
 }
 
 expect class FmodDriverInfo {
@@ -133,6 +143,18 @@ class FmodFile(val memoryPointer: FmodMemoryPointer, val length: Long)
 expect class FmodParameterId
 
 
+expect class Fmod3DAttributes() {
+    val position: FmodVector
+    val velocity: FmodVector
+    val forward: FmodVector
+    val up: FmodVector
+}
+expect class FmodVector() {
+    var x: Float
+    var y: Float
+    var z: Float
+}
+
 typealias FmodResult = Int
 typealias FmodStudioInitFlag = Int
 typealias FmodInitFlag = Int
@@ -144,3 +166,4 @@ typealias FmodStudioLoadMemoryMode = Int
 typealias FmodStudioStopType = Int
 typealias FmodSpeakerMode = Int
 typealias FmodCallbackType = Int
+typealias FmodPlaybackState = Int

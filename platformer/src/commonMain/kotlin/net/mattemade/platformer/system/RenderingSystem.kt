@@ -17,6 +17,7 @@ import com.littlekt.math.clamp
 import com.littlekt.math.geom.radians
 import com.littlekt.util.Scaler
 import com.littlekt.util.viewport.ScalingViewport
+import net.mattemade.fmod.Fmod3DAttributes
 import net.mattemade.platformer.HALF_WORLD_UNIT_HEIGHT
 import net.mattemade.platformer.HALF_WORLD_UNIT_WIDTH
 import net.mattemade.platformer.PlatformerGameContext
@@ -64,16 +65,28 @@ class RenderingSystem(
     private val fontRenderer = MsdfFontRenderer(gameContext.assets.font.fredokaMsdf)
     private val showTutorial = map.layers.any { it.name == "tutorial" }
 
+    private val fmodListenerAttributes = Fmod3DAttributes().apply {
+        forward.apply { x = 0f; y = 0f; z = 1f; }
+        up.apply { x = 0f; y = 1f; z = 0f; }
+    }
+
     override fun onTick() {
         context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
         context.gl.clearColor(Color.BLACK)
 
         val playerPosition = family.first { it.getOrNull(PlayerComponent) != null }[PositionComponent].position
+        val cameraX = playerPosition.x.clamp(minCameraPosition.x, maxCameraPosition.x)
+        val cameraY = playerPosition.y.clamp(minCameraPosition.y, maxCameraPosition.y)
         camera.position.set(
-            playerPosition.x.clamp(minCameraPosition.x, maxCameraPosition.x).px,
-            playerPosition.y.clamp(minCameraPosition.y, maxCameraPosition.y).px,
+            cameraX.px,
+            cameraY.px,
             0f
         )
+        fmodListenerAttributes.position.apply {
+            x = cameraX
+            y = cameraY
+        }
+        gameContext.assets.fmod.studioSystem.setListenerAttributes(0, fmodListenerAttributes)
         //camera.position.set(WORLD_UNIT_WIDTH * 0.5f, WORLD_UNIT_HEIGHT * 0.5f, 0f)
         viewport.apply(context)
         batch.begin(camera.viewProjection)
