@@ -181,6 +181,13 @@ class Box2DPhysicsSystem(
             landBasedMovement(physicsComponent, context, entity)
         }
 
+        val horizontalVelocity = physicsComponent.body.linearVelocityX
+        if (horizontalVelocity > 0f) {
+            context.facingRight = true
+        } else if (horizontalVelocity < 0f) {
+            context.facingRight = false
+        }
+
     }
 
     private fun waterBasedMovement(

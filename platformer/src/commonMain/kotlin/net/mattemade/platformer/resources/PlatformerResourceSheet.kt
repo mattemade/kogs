@@ -1,6 +1,5 @@
 package net.mattemade.platformer.resources
 
-import com.littlekt.math.Rect
 import net.mattemade.platformer.WORLD_NAME
 import net.mattemade.platformer.parameterOverride
 
@@ -9,16 +8,19 @@ class PlatformerResourceSheet(data: List<String>) {
     val sprites = mutableListOf<ResourceSprite>()
     val sounds = mutableListOf<ResourceSound>()
     val music = mutableListOf<ResourceMusic>()
+
     //val levels = mutableListOf<ResourceLevel>()
     val worlds = mutableListOf<String>()
 
     val tilesets = mutableSetOf<String>()
     val textures: Set<String>
+    val animations = mutableSetOf<String>()
     val soundFiles: Set<String>
     val musicFiles: Set<String>
     //val levelFiles: Set<String>
 
     val spriteById = mutableMapOf<String, ResourceSprite>()
+    val animationById = mutableMapOf<String, ResourceAnimation>()
     val soundsById = mutableMapOf<String, MutableList<ResourceSound>>()
     val musicById = mutableMapOf<String, ResourceMusic>()
     val levelByName = mutableMapOf<String, ResourceLevel>()
@@ -48,6 +50,20 @@ class PlatformerResourceSheet(data: List<String>) {
                     header[index] to value
                 }.toMap()*/
                 when (table) {
+                    "Animations" -> {
+                        line["ID"]?.let { id ->
+                            line["Animation spec"]?.let { file ->
+                                animations += file
+                                animationById[id] = ResourceAnimation(
+                                    id = id,
+                                    file = file,
+                                    offsetX = line["Offset X"]?.toFloatOrNull() ?: 0f,
+                                    offsetY = line["Offset Y"]?.toFloatOrNull() ?: 0f,
+                                )
+                            }
+                        }
+                    }
+
                     "Sprites" -> {
                         line["texture"]?.let { file ->
                             line["Sprite ID"]?.let { id ->
@@ -140,6 +156,7 @@ class PlatformerResourceSheet(data: List<String>) {
                 "Music",
                 "Levels",
                 "Parameters",
+                "Animations",
             )
 
         fun ranges(encode: (String) -> String) =

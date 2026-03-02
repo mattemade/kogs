@@ -15,16 +15,20 @@ import com.littlekt.graphics.g2d.tilemap.tiled.TiledMap
 import com.littlekt.graphics.gl.TexMagFilter
 import com.littlekt.graphics.gl.TexMinFilter
 import com.littlekt.math.Rect
+import com.littlekt.math.Vec2f
 import net.mattemade.fmod.FMOD
 import net.mattemade.fmod.FMOD_FS_createPreloadedFile
 import net.mattemade.fmod.FMOD_Module_Create
 import net.mattemade.fmod.FMOD_Studio_System_Create
 import net.mattemade.fmod.FmodStudioSystem
+import net.mattemade.platformer.resources.AnimationWithOffset
 import net.mattemade.platformer.resources.Music
 import net.mattemade.platformer.resources.PlatformerResourceSheet
 import net.mattemade.platformer.resources.ResourceLevel
 import net.mattemade.platformer.resources.Sound
 import net.mattemade.platformer.resources.Sprite
+import net.mattemade.utils.animation.SignallingAnimationPlayer
+import net.mattemade.utils.animation.readAnimationPlayer
 import net.mattemade.utils.asset.AssetPack
 import net.mattemade.utils.atlas.RuntimeTextureAtlasPacker
 import net.mattemade.utils.msdf.MsdfFont
@@ -65,6 +69,7 @@ class PlatformerAssets(
         )
     }
 
+    val animationFiles by pack(order = 1) { AnimationFiles(context, runtimeTextureAtlasPacker, resourceSheet) }
     val textureFiles by pack(order = 1) { TextureFiles(context, runtimeTextureAtlasPacker, resourceSheet) }
     val soundFiles by pack(order = 1) { SoundFiles(context, resourceSheet) }
     val musicFiles by pack(order = 1) { MusicFiles(context, resourceSheet) }
@@ -83,6 +88,34 @@ class PlatformerAssets(
 
     fun music(id: String): Music? =
         resourceSheet.musicById[id]?.let { Music(it, gameContext) }
+
+    fun animation(id: String): AnimationWithOffset =
+        resourceSheet.animationById[id]!!.let { animationWithOffset ->
+            AnimationWithOffset(
+                animationFiles.map[animationWithOffset.file]!!.copy(),
+                Vec2f(animationWithOffset.offsetX, animationWithOffset.offsetY)
+            )
+        }
+}
+
+
+class AnimationFiles(
+    context: Context,
+    private val packer: RuntimeTextureAtlasPacker,
+    private val resourceSheet: PlatformerResourceSheet,
+) : AssetPack(context) {
+    val map = ConcurrentMutableMap<String, SignallingAnimationPlayer>()
+
+    private fun String.pack(file: String): PreparableGameAsset<SignallingAnimationPlayer> =
+        preparePlain {
+            val result = context.resourcesVfs[this].readAnimationPlayer(packer)
+            map[file] = result
+            result
+        }
+
+    private val preparation = resourceSheet.animations.forEach { file ->
+        "animation/$file".pack(file)
+    }
 }
 
 class TextureFiles(
@@ -248,7 +281,7 @@ class Fmod(context: Context, fmodFolderPrefix: String, fmodLiveUpdate: Boolean) 
 
     lateinit var studioSystem: FmodStudioSystem
     private var studioSystemReady = false
-    private val module by selfPreparePlain(order = 0, tag= "module", {
+    private val module by selfPreparePlain(order = 0, tag = "module", {
         FMOD_Module_Create({
             FMOD_BANKS.forEach {
                 FMOD_FS_createPreloadedFile("${fmodFolderPrefix}fmod/${it}")

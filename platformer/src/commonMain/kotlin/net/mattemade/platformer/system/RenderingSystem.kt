@@ -16,15 +16,20 @@ import com.littlekt.math.Vec2f
 import com.littlekt.math.clamp
 import com.littlekt.math.geom.radians
 import com.littlekt.util.Scaler
+import com.littlekt.util.fastForEach
+import com.littlekt.util.seconds
 import com.littlekt.util.viewport.ScalingViewport
 import net.mattemade.fmod.Fmod3DAttributes
 import net.mattemade.platformer.HALF_WORLD_UNIT_HEIGHT
 import net.mattemade.platformer.HALF_WORLD_UNIT_WIDTH
 import net.mattemade.platformer.PlatformerGameContext
+import net.mattemade.platformer.UNITS_PER_PIXEL
 import net.mattemade.platformer.WORLD_HEIGHT
 import net.mattemade.platformer.WORLD_UNIT_HEIGHT
 import net.mattemade.platformer.WORLD_UNIT_WIDTH
 import net.mattemade.platformer.WORLD_WIDTH
+import net.mattemade.platformer.component.Box2DPhysicsComponent
+import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.PlayerComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.RotationComponent
@@ -166,8 +171,12 @@ class RenderingSystem(
         }
     }
 
+    private val animationEvents = mutableListOf<String>()
+
     override fun onTickEntity(entity: Entity) {
-        val (sprite, bounds, tint) = entity[SpriteComponent]
+        val spriteComponent = entity[SpriteComponent]
+        val bounds = spriteComponent.bounds
+        val tint = spriteComponent.tint
         val (position) = entity[PositionComponent]
         val (rotation) = entity[RotationComponent]
 
@@ -184,6 +193,54 @@ class RenderingSystem(
             color4 = tint,
             rotation = angle
         )
+
+        entity.getOrNull(ContextComponent)?.let { context ->
+            val physicsComponent = entity[Box2DPhysicsComponent]
+            val body = physicsComponent.body
+            spriteComponent.currentAnimation = if (context.swimming) {
+                spriteComponent.swimAnimation
+            } else if (context.standing && body.linearVelocityY == 0f) { // grounded
+                if (body.linearVelocityX == 0f) {
+                    spriteComponent.idleAnimation
+                } else {
+                    spriteComponent.walkAnimation
+                }
+            } else if (body.linearVelocityY < 0f) {
+                spriteComponent.jumpAnimation
+            } else if (body.linearVelocityY > 0f) {
+                if (gameContext.gameState.airPearl && context.touchingWalls) {
+                    spriteComponent.wallSlideAnimation
+                } else {
+                    spriteComponent.fallAnimation
+                }
+            } else {
+                spriteComponent.currentAnimation
+            }
+
+            val (currentAnimation, offset) = spriteComponent.currentAnimation
+
+            currentAnimation.update(deltaTime.seconds, animationEvents::add)
+            animationEvents.fastForEach {
+                spriteComponent.animationEventCallback.invoke(it, physicsComponent)
+            }
+            animationEvents.clear()
+
+            tempVec2f.set(
+                -offset.x * UNITS_PER_PIXEL,
+                -offset.y * UNITS_PER_PIXEL + bounds.height * 0.5f, // to put the sprite on the ground
+            ).rotate(angle)
+            currentAnimation.currentKeyFrame?.let {
+                batch.draw(
+                    slice = it,
+                    x = (position.x + tempVec2f.x).px,
+                    y = (position.y + tempVec2f.y).px,
+                    width = it.width * UNITS_PER_PIXEL,
+                    height = it.height * UNITS_PER_PIXEL,
+                    rotation = angle,
+                    flipX = !context.facingRight,
+                )
+            }
+        }
     }
 
     companion object {

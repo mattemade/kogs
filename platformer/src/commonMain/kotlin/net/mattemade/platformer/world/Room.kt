@@ -29,7 +29,6 @@ import net.mattemade.platformer.px
 import net.mattemade.platformer.system.Box2DPhysicsSystem
 import net.mattemade.platformer.system.ControlsSystem
 import net.mattemade.platformer.system.LoadOnPlayerDeathSystem
-import net.mattemade.platformer.system.FloatingSystem
 import net.mattemade.platformer.system.RenderingSystem
 import net.mattemade.platformer.system.RotationSystem
 import net.mattemade.platformer.system.LowStaminaDamageSystem
@@ -103,9 +102,15 @@ class Room(
     private lateinit var playerPosition: Vec2f
     private val playerEntity = ecs.entity {
         it += SpriteComponent(
-            gameContext.assets.textureFiles.whitePixel,
+            idleAnimation = gameContext.assets.animation("MC idle"),
+            walkAnimation = gameContext.assets.animation("MC walk"),
+            jumpAnimation = gameContext.assets.animation("MC jump"),
+            fallAnimation = gameContext.assets.animation("MC fall"),
+            swimAnimation = gameContext.assets.animation("MC swimming"),
+            wallSlideAnimation = gameContext.assets.animation("MC wall slide"),
+            animationEventCallback = { it, _ -> println(it) },
             // baking offset into the bounds, maybe it should be a separate property?
-            Rect(-0.45f.px, -0.9f.px, initialPlayerBounds.width * 0.91f, initialPlayerBounds.height * 0.91f),
+            bounds = Rect(-0.45f.px, -0.9f.px, initialPlayerBounds.width * 0.91f, initialPlayerBounds.height * 0.91f),
             tint = Color.ORANGE.toFloatBits(),
         )
         it += PositionComponent().also {
@@ -209,9 +214,10 @@ class Room(
                         "crab" -> {
                             ecs.entity {
                                 it += SpriteComponent(
-                                    gameContext.assets.textureFiles.whitePixel,
+                                    idleAnimation = gameContext.assets.animation("MC idle"),
+                                    animationEventCallback = { it, _ -> println(it) },
                                     // baking offset into the bounds, maybe it should be a separate property?
-                                    Rect(
+                                    bounds = Rect(
                                         spawn.bounds.width * unitSize * -0.48f,
                                         spawn.bounds.height * unitSize * -0.48f,
                                         spawn.bounds.width * unitSize,
@@ -242,9 +248,10 @@ class Room(
                             if (!gameContext.gameState.waterPearl) {
                                 ecs.entity { entity ->
                                     entity += SpriteComponent(
-                                        gameContext.assets.textureFiles.whitePixel,
+                                        idleAnimation = gameContext.assets.animation("MC idle"),
+                                        animationEventCallback = { it, _ -> println(it) },
                                         // baking offset into the bounds, maybe it should be a separate property?
-                                        Rect(
+                                        bounds = Rect(
                                             spawn.bounds.width * unitSize * -0.48f,
                                             spawn.bounds.height * unitSize * -0.48f,
                                             spawn.bounds.width * unitSize,
@@ -280,9 +287,10 @@ class Room(
                             if (!gameContext.gameState.airPearl) {
                                 ecs.entity { entity ->
                                     entity += SpriteComponent(
-                                        gameContext.assets.textureFiles.whitePixel,
+                                        idleAnimation = gameContext.assets.animation("MC idle"),
+                                        animationEventCallback = { it, _ -> println(it) },
                                         // baking offset into the bounds, maybe it should be a separate property?
-                                        Rect(
+                                        bounds = Rect(
                                             spawn.bounds.width * unitSize * -0.48f,
                                             spawn.bounds.height * unitSize * -0.48f,
                                             spawn.bounds.width * unitSize,

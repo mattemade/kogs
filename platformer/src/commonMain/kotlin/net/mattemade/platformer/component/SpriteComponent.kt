@@ -3,15 +3,31 @@ package net.mattemade.platformer.component
 import com.github.quillraven.fleks.Component
 import com.github.quillraven.fleks.ComponentType
 import com.littlekt.graphics.Color
-import com.littlekt.graphics.g2d.TextureSlice
 import com.littlekt.graphics.toFloatBits
 import com.littlekt.math.Rect
+import net.mattemade.platformer.resources.AnimationWithOffset
+import org.jbox2d.common.Vec2
 
 data class SpriteComponent(
-    val sprite: TextureSlice,
+    val idleAnimation: AnimationWithOffset,
+    val walkAnimation: AnimationWithOffset = idleAnimation,
+    val jumpAnimation: AnimationWithOffset = idleAnimation,
+    val fallAnimation: AnimationWithOffset = idleAnimation,
+    val swimAnimation: AnimationWithOffset = idleAnimation,
+    val wallSlideAnimation: AnimationWithOffset = idleAnimation,
+    val animationEventCallback: (String, Box2DPhysicsComponent) -> Unit,
     val bounds: Rect,
     val tint: Float = Color.RED.toFloatBits(),
 ): Component<SpriteComponent> {
+
+    var currentAnimation = idleAnimation
+        set(value) {
+            if (field != value) {
+                field = value
+                value.animation.restart()
+            }
+        }
+
     override fun type() = SpriteComponent
     companion object: ComponentType<SpriteComponent>()
 }
