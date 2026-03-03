@@ -114,7 +114,7 @@ class Room(
             animationEventCallback = { it, _ -> println(it) },
             // baking offset into the bounds, maybe it should be a separate property?
             bounds = Rect(-0.45f.px, -0.9f.px, initialPlayerBounds.width * 0.91f, initialPlayerBounds.height * 0.91f),
-            tint = Color.ORANGE.toFloatBits(),
+            tint = Color.ORANGE.toMutableColor().apply { a = 0.2f }.toFloatBits(),
             priority = 1,
         )
         it += PositionComponent().also {
@@ -139,7 +139,7 @@ class Room(
             animationEventCallback = { it, _ -> println(it) },
             // baking offset into the bounds, maybe it should be a separate property?
             bounds = Rect(0f, 0f, 0f, 0f),
-            tint = Color.GRAY.toFloatBits(),
+            tint = Color.GRAY.toMutableColor().apply { a = 0.2f }.toFloatBits(),
         )
         it += PositionComponent()
         it += RotationComponent()
@@ -240,7 +240,7 @@ class Room(
                                         spawn.bounds.width * unitSize,
                                         spawn.bounds.height * unitSize
                                     ),
-                                    tint = Color.RED.toFloatBits(),
+                                    tint = Color.RED.toMutableColor().apply { a = 0.2f }.toFloatBits(),
                                 )
                                 it += PositionComponent().also {
                                     it.position.set(spawn.bounds.cx * unitSize, spawn.bounds.cy * unitSize)

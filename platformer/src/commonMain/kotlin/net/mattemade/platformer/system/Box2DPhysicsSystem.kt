@@ -509,7 +509,7 @@ class Box2DPhysicsSystem(
             ).apply {
                 // land body
                 landBodyFixture = body.createFixture(FixtureDef().apply {
-                    friction = 0f
+                    isSensor = true
                     filter = Filter().apply {
                         categoryBits = PEARL_MASK
                         maskBits = PEARL_COLLISIONS

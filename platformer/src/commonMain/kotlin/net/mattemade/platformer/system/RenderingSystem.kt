@@ -254,7 +254,7 @@ class RenderingSystem(
         private val tempVec2f = MutableVec2f()
         private val sideBarColor = Color.BLACK.toFloatBits()
         private val topColor = Color.RED.toFloatBits()
-        private val bottomColor = Color.WHITE.toFloatBits()
+        private val bottomColor = Color.WHITE.toMutableColor().apply{ a = 0.2f }.toFloatBits()
     }
 
 }
