@@ -18,6 +18,7 @@ data class SpriteComponent(
     val animationEventCallback: (String, Box2DPhysicsComponent) -> Unit,
     val bounds: Rect,
     val tint: Float = Color.RED.toFloatBits(),
+    val priority: Int = 0,
 ): Component<SpriteComponent> {
 
     var currentAnimation = idleAnimation

@@ -94,7 +94,8 @@ class PlatformerAssets(
         resourceSheet.animationById[id]!!.let { animationWithOffset ->
             AnimationWithOffset(
                 animationFiles.map[animationWithOffset.file]!![animationWithOffset.segment]!!.copy(),
-                Vec2f(animationWithOffset.offsetX, animationWithOffset.offsetY)
+                Vec2f(animationWithOffset.offsetX * animationWithOffset.scale, animationWithOffset.offsetY * animationWithOffset.scale),
+                animationWithOffset.scale,
             )
         }
 }

@@ -54,14 +54,17 @@ class PlatformerResourceSheet(data: List<String>) {
                         line["ID"]?.let { id ->
                             line["Animation spec"]?.let { file ->
                                 line["Spec segment"]?.let { segment ->
-                                    animations += file
-                                    animationById[id] = ResourceAnimation(
-                                        id = id,
-                                        file = file,
-                                        segment = segment,
-                                        offsetX = line["Offset X"]?.toFloatOrNull() ?: 0f,
-                                        offsetY = line["Offset Y"]?.toFloatOrNull() ?: 0f,
-                                    )
+                                    if (file.trim().isNotEmpty() && segment.trim().isNotEmpty()) {
+                                        animations += file
+                                        animationById[id] = ResourceAnimation(
+                                            id = id,
+                                            file = file,
+                                            segment = segment,
+                                            offsetX = line["Offset X"]?.toFloatOrNull() ?: 0f,
+                                            offsetY = line["Offset Y"]?.toFloatOrNull() ?: 0f,
+                                            scale = line["Scale"]?.toFloatOrNull() ?: 1f,
+                                        )
+                                    }
                                 }
                             }
                         }

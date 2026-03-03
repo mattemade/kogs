@@ -4,6 +4,7 @@ import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.IteratingSystem
 import com.github.quillraven.fleks.World.Companion.family
 import com.github.quillraven.fleks.World.Companion.inject
+import com.github.quillraven.fleks.collection.compareEntity
 import com.littlekt.Context
 import com.littlekt.graphics.Color
 import com.littlekt.graphics.g2d.SpriteBatch
@@ -41,7 +42,9 @@ class RenderingSystem(
     private val context: Context = inject(),
     private val gameContext: PlatformerGameContext = inject(),
     val map: TiledMap = inject(),
-) : IteratingSystem(family = family { all(PositionComponent, RotationComponent, SpriteComponent) }) {
+) : IteratingSystem(
+    family = family { all(PositionComponent, RotationComponent, SpriteComponent) },
+    comparator = compareEntity { left, right ->  left[SpriteComponent].priority.compareTo(right[SpriteComponent].priority) }) {
 
     private val viewport = ScalingViewport(
         scaler = Scaler.Stretch(),
@@ -195,33 +198,37 @@ class RenderingSystem(
         )
 
         entity.getOrNull(ContextComponent)?.let { context ->
-            val physicsComponent = entity[Box2DPhysicsComponent]
-            val body = physicsComponent.body
-            spriteComponent.currentAnimation = if (context.swimming) {
-                spriteComponent.swimAnimation
-            } else if (context.standing && body.linearVelocityY == 0f) { // grounded
-                if (body.linearVelocityX == 0f) {
-                    spriteComponent.idleAnimation
+            entity.getOrNull(Box2DPhysicsComponent)?.let { physicsComponent ->
+                val body = physicsComponent.body
+                spriteComponent.currentAnimation = if (context.swimming) {
+                    spriteComponent.swimAnimation
+                } else if (context.standing && body.linearVelocityY == 0f) { // grounded
+                    if (body.linearVelocityX == 0f) {
+                        spriteComponent.idleAnimation
+                    } else {
+                        spriteComponent.walkAnimation
+                    }
+                } else if (body.linearVelocityY < 0f) {
+                    spriteComponent.jumpAnimation
+                } else if (body.linearVelocityY > 0f) {
+                    if (gameContext.gameState.airPearl && context.touchingWalls) {
+                        spriteComponent.wallSlideAnimation
+                    } else {
+                        spriteComponent.fallAnimation
+                    }
                 } else {
-                    spriteComponent.walkAnimation
+                    spriteComponent.currentAnimation
                 }
-            } else if (body.linearVelocityY < 0f) {
-                spriteComponent.jumpAnimation
-            } else if (body.linearVelocityY > 0f) {
-                if (gameContext.gameState.airPearl && context.touchingWalls) {
-                    spriteComponent.wallSlideAnimation
-                } else {
-                    spriteComponent.fallAnimation
-                }
-            } else {
-                spriteComponent.currentAnimation
             }
 
-            val (currentAnimation, offset) = spriteComponent.currentAnimation
+
+            val (currentAnimation, offset, scale) = spriteComponent.currentAnimation
 
             currentAnimation.update(deltaTime.seconds, animationEvents::add)
-            animationEvents.fastForEach {
-                spriteComponent.animationEventCallback.invoke(it, physicsComponent)
+            entity.getOrNull(Box2DPhysicsComponent)?.let { physicsComponent ->
+                animationEvents.fastForEach {
+                    spriteComponent.animationEventCallback.invoke(it, physicsComponent)
+                }
             }
             animationEvents.clear()
 
@@ -234,8 +241,8 @@ class RenderingSystem(
                     slice = it,
                     x = (position.x + tempVec2f.x).px,
                     y = (position.y + tempVec2f.y).px,
-                    width = it.width * UNITS_PER_PIXEL,
-                    height = it.height * UNITS_PER_PIXEL,
+                    width = it.width * UNITS_PER_PIXEL * scale,
+                    height = it.height * UNITS_PER_PIXEL * scale,
                     rotation = angle,
                     flipX = !context.facingRight,
                 )

@@ -16,6 +16,7 @@ import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.FloatUpComponent
 import net.mattemade.platformer.component.HealthComponent
 import net.mattemade.platformer.component.JumpComponent
+import net.mattemade.platformer.component.MascotComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PlayerComponent
@@ -32,6 +33,7 @@ import net.mattemade.platformer.system.LoadOnPlayerDeathSystem
 import net.mattemade.platformer.system.RenderingSystem
 import net.mattemade.platformer.system.RotationSystem
 import net.mattemade.platformer.system.LowStaminaDamageSystem
+import net.mattemade.platformer.system.MascotSystem
 import net.mattemade.platformer.system.StaminaBreathingSystem
 import net.mattemade.platformer.system.StaminaRestorationSystem
 import net.mattemade.platformer.system.UiControlsSystem
@@ -90,6 +92,7 @@ class Room(
             add(LoadOnPlayerDeathSystem())
             //add(FloatingSystem())
             add(RotationSystem())
+            add(MascotSystem())
             add(RenderingSystem())
             add(UiRenderingSystem(worldArea = worldArea, mapTexture = { mapTexture }))
         }
@@ -112,6 +115,7 @@ class Room(
             // baking offset into the bounds, maybe it should be a separate property?
             bounds = Rect(-0.45f.px, -0.9f.px, initialPlayerBounds.width * 0.91f, initialPlayerBounds.height * 0.91f),
             tint = Color.ORANGE.toFloatBits(),
+            priority = 1,
         )
         it += PositionComponent().also {
             it.position.set(initialPlayerBounds.cx, initialPlayerBounds.cy)
@@ -128,6 +132,19 @@ class Room(
         it += StaminaDamageComponent()
         it += PlayerComponent()
         physicsSystem.createPlayerBody(this, it, initialPlayerBounds)
+    }
+    private val mascotEntity = ecs.entity {
+        it += SpriteComponent(
+            idleAnimation = gameContext.assets.animation("Dragon idle"),
+            animationEventCallback = { it, _ -> println(it) },
+            // baking offset into the bounds, maybe it should be a separate property?
+            bounds = Rect(0f, 0f, 0f, 0f),
+            tint = Color.GRAY.toFloatBits(),
+        )
+        it += PositionComponent()
+        it += RotationComponent()
+        it += ContextComponent()
+        it += MascotComponent(playerEntity)
     }
 
     init {
@@ -324,6 +341,12 @@ class Room(
                         }
                     }
                 }
+            }
+        }
+
+        with(ecs) {
+            family { all(SpriteComponent) }.sort { left, right ->
+                left[SpriteComponent].priority.compareTo(right[SpriteComponent].priority)
             }
         }
     }
