@@ -43,10 +43,14 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
             switchRoom = ::switchRoom,
         ).releasing()
     }
-    private var currentRoom: Room = rooms.firstOrNull { it.name == gameContext.gameState.currentRoom } ?: rooms.first().also {
-        // we can't find the room that was saved as the current one! it might be that the save state is corrupted
-        gameContext.load(reset = true)
-    }
+    private var currentRoom: Room = getCurrentRoom()
+
+    private fun getCurrentRoom(): Room =
+        rooms.firstOrNull { it.name == gameContext.gameState.currentRoom } ?: rooms.first().also {
+            // we can't find the room that was saved as the current one! it might be that the save state is corrupted
+            gameContext.load(reset = true)
+        }
+
     private val sharedMapRenderer = PixelRender(
         gameContext.context,
         targetWidth = fullWorldRect.width.roundToInt(),
@@ -87,10 +91,29 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                     }
                 }
             }
+            room.tileTypeMap["fake"]?.forEachIndexed { x, row ->
+                row.forEachIndexed { y, value ->
+                    if (value) {
+                        shapeRenderer.filledRectangle(
+                            x = room.worldArea.x + x.toFloat(),
+                            y = room.worldArea.y + y.toFloat(),
+                            width = 1f,
+                            height = 1f,
+                            color = mapColor,
+                        )
+                    }
+                }
+            }
             room.addedToMap = true
         }
     }
 
+    fun reset() {
+        rooms.forEach {
+            it.reset()
+        }
+        currentRoom = getCurrentRoom()
+    }
 
     override fun update(seconds: Float) {
         currentRoom.render(seconds)
@@ -114,7 +137,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                 )
                 // TODO: is there a way to do that better than O(N)? maybe we can prepare a world graph ahead of time
                 rooms.forEach {
-                    if (it.worldArea.contains(tempVec2f)) {
+                    if (it.name != currentRoom.name && it.worldArea.contains(tempVec2f)) {
                         val worldPositionDiff =
                             Vec2(it.worldArea.x - currentRoom.worldArea.x, it.worldArea.y - currentRoom.worldArea.y)
                         // TODO: how to do that tidy, without exposing too much of Player outside of ECS?

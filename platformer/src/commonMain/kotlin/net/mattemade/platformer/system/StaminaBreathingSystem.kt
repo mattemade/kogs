@@ -18,7 +18,7 @@ class StaminaBreathingSystem(
     override fun onTickEntity(entity: Entity) {
         if (entity[FloatUpComponent].floatUpAcceleration != 0f) {
             entity[StaminaComponent].apply {
-                stamina -= 0.0025f
+                stamina -= 0.00065f
                 staminaPressure = true
                 restoreAfterTicks = 100
             }

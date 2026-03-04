@@ -134,6 +134,9 @@ class RenderingSystem(
 
     private fun renderLevelLayer(i: Int) {
         val layer = map.layers[i]
+        if (layer.name == fakeWalls) {
+            return
+        }
         val xOffset = (1f - layer.parallaxFactor.x) * (camera.position.x - minCameraPosition.x)
         val yOffset = (1f - layer.parallaxFactor.y) * (camera.position.y - minCameraPosition.y)
         layer.render(batch, camera = camera, x = xOffset.px, y = yOffset.px, scale = mapScale, displayObjects = true)
@@ -255,6 +258,7 @@ class RenderingSystem(
         private val sideBarColor = Color.BLACK.toFloatBits()
         private val topColor = Color.RED.toFloatBits()
         private val bottomColor = Color.WHITE.toMutableColor().apply{ a = 0.2f }.toFloatBits()
+        private val fakeWalls = "FAKE WALLS"
     }
 
 }

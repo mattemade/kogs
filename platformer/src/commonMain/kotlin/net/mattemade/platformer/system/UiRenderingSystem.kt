@@ -59,7 +59,7 @@ class UiRenderingSystem(
         //context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
         //context.gl.clearColor(Color.BLACK)
 
-        val uiComponent = family.first { it.getOrNull(UiComponent) != null }[UiComponent]
+        val uiComponent = family.firstOrNull() { it.getOrNull(UiComponent) != null }?.get(UiComponent) ?: return
         val player = family.first { it.getOrNull(PlayerComponent) != null }
 
         viewport.apply(context)

@@ -103,8 +103,9 @@ class PlatformerGame(
         }
 
     private fun restartScene() {
-        scene?.release()
-        scene = PlatformingScene(gameContext)
+        (scene as? PlatformingScene)?.reset()
+//        scene?.release()
+//        scene = PlatformingScene(gameContext)
     }
 
     override suspend fun Context.start() {

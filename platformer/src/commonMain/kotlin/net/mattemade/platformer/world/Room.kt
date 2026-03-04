@@ -30,10 +30,10 @@ import net.mattemade.platformer.px
 import net.mattemade.platformer.system.Box2DPhysicsSystem
 import net.mattemade.platformer.system.ControlsSystem
 import net.mattemade.platformer.system.LoadOnPlayerDeathSystem
-import net.mattemade.platformer.system.RenderingSystem
-import net.mattemade.platformer.system.RotationSystem
 import net.mattemade.platformer.system.LowStaminaDamageSystem
 import net.mattemade.platformer.system.MascotSystem
+import net.mattemade.platformer.system.RenderingSystem
+import net.mattemade.platformer.system.RotationSystem
 import net.mattemade.platformer.system.StaminaBreathingSystem
 import net.mattemade.platformer.system.StaminaRestorationSystem
 import net.mattemade.platformer.system.UiControlsSystem
@@ -54,20 +54,30 @@ class Room(
 
     private val unitSize = 1f / map.tileWidth
     private val initialPlayerBounds =
-        (map.layer("player-spawn") as? TiledObjectLayer)?.objects?.firstOrNull()?.bounds?.let {
+        (map.layerOrNull("player-spawn") as? TiledObjectLayer)?.objects?.firstOrNull()?.bounds?.let {
             Rect(
                 x = it.cx * unitSize - 0.5f,
                 y = it.cy * unitSize - 1f,
                 width = 1f,
                 height = 2f,
             )
-        } ?: Rect()
+        } ?: Rect(x = 0f, y = 0f, width = 1f, height = 2f)
 
     var mapTexture: Texture? = null
     var addedToMap: Boolean = false
-    val tileTypeMap = listOf("solid", "platform", "water").associateWith {
+    val tileTypeMap = listOf("solid", "platform", "water", "fake").associateWith {
         Array(map.width) { BooleanArray(map.height) }
     }
+    val teleports = map.layers.mapNotNull {
+        (it as? TiledObjectLayer)?.objects?.filter { it.name == "teleport" }?.map {
+            Rect(
+                it.bounds.x * unitSize,
+                it.bounds.y * unitSize,
+                it.bounds.width * unitSize,
+                it.bounds.height * unitSize
+            )
+        }
+    }.flatten()
 
     private lateinit var physicsSystem: Box2DPhysicsSystem
 
@@ -82,8 +92,13 @@ class Room(
             add(UiControlsSystem())
             add(Box2DPhysicsSystem().also {
                 physicsSystem = it
-                (map.layer("player-spawn") as? TiledObjectLayer)?.objects?.firstOrNull()?.bounds?.let {
-                    physicsSystem.createCheckpoint(it.cx * unitSize, it.cy * unitSize, it.width * unitSize, it.height * unitSize)
+                (map.layerOrNull("player-spawn") as? TiledObjectLayer)?.objects?.firstOrNull()?.bounds?.let {
+                    physicsSystem.createCheckpoint(
+                        it.cx * unitSize,
+                        it.cy * unitSize,
+                        it.width * unitSize,
+                        it.height * unitSize
+                    )
                 }
             }.releasing())
             add(StaminaBreathingSystem())
@@ -96,56 +111,11 @@ class Room(
             add(RenderingSystem())
             add(UiRenderingSystem(worldArea = worldArea, mapTexture = { mapTexture }))
         }
-    }.apply {
-        entity {
-            it += UiComponent()
-        }
     }
 
     private lateinit var playerPosition: Vec2f
-    private val playerEntity = ecs.entity {
-        it += SpriteComponent(
-            idleAnimation = gameContext.assets.animation("MC idle"),
-            walkAnimation = gameContext.assets.animation("MC walk"),
-            jumpAnimation = gameContext.assets.animation("MC jump"),
-            fallAnimation = gameContext.assets.animation("MC fall"),
-            swimAnimation = gameContext.assets.animation("MC swimming"),
-            wallSlideAnimation = gameContext.assets.animation("MC wall slide"),
-            animationEventCallback = { it, _ -> println(it) },
-            // baking offset into the bounds, maybe it should be a separate property?
-            bounds = Rect(-0.45f.px, -0.9f.px, initialPlayerBounds.width * 0.91f, initialPlayerBounds.height * 0.91f),
-            tint = Color.ORANGE.toMutableColor().apply { a = 0.2f }.toFloatBits(),
-            priority = 1,
-        )
-        it += PositionComponent().also {
-            it.position.set(initialPlayerBounds.cx, initialPlayerBounds.cy)
-            playerPosition = it.position
-        }
-        it += RotationComponent(maxRotationVelocity = 0.1f)
-        it += MoveComponent()
-        it += JumpComponent()
-        it += FloatUpComponent()
-        it += MomentaryForceComponent()
-        it += ContextComponent()
-        it += HealthComponent()
-        it += StaminaComponent()
-        it += StaminaDamageComponent()
-        it += PlayerComponent()
-        physicsSystem.createPlayerBody(this, it, initialPlayerBounds)
-    }
-    private val mascotEntity = ecs.entity {
-        it += SpriteComponent(
-            idleAnimation = gameContext.assets.animation("Dragon idle"),
-            animationEventCallback = { it, _ -> println(it) },
-            // baking offset into the bounds, maybe it should be a separate property?
-            bounds = Rect(0f, 0f, 0f, 0f),
-            tint = Color.GRAY.toMutableColor().apply { a = 0.2f }.toFloatBits(),
-        )
-        it += PositionComponent()
-        it += RotationComponent()
-        it += ContextComponent()
-        it += MascotComponent(playerEntity)
-    }
+    private lateinit var playerEntity: Entity
+    private lateinit var mascotEntity: Entity
 
     init {
         val typedTileIds = tileTypeMap.keys.associateWith { mutableSetOf<Int>() }
@@ -165,6 +135,18 @@ class Room(
                     for (y in 0 until map.height) {
                         for ((type, array) in tileTypeMap) {
                             array[x][y] = array[x][y] or (typedTileIds[type]?.contains(layer.getTileId(x, y)) == true)
+                        }
+                    }
+                }
+            }
+        }
+
+        tileTypeMap["solid"]?.let {
+            tileTypeMap["fake"]?.let { fake ->
+                for (x in 0 until map.width) {
+                    for (y in 0 until map.height) {
+                        if (fake[x][y]) {
+                            it[x][y] = false
                         }
                     }
                 }
@@ -224,14 +206,74 @@ class Room(
             }
         }
 
+        respawnEntities()
+    }
+
+    private fun respawnEntities() {
+        ecs.removeAll(clearRecycled = false)
+        ecs.entity {
+            it += UiComponent()
+        }
+        playerEntity = ecs.entity {
+            it += SpriteComponent(
+                idleAnimation = gameContext.assets.animation("MC idle"),
+                walkAnimation = gameContext.assets.animation("MC walk"),
+                jumpAnimation = gameContext.assets.animation("MC jump"),
+                fallAnimation = gameContext.assets.animation("MC fall"),
+                swimAnimation = gameContext.assets.animation("MC swimming"),
+                wallSlideAnimation = gameContext.assets.animation("MC wall slide"),
+                animationEventCallback = { it, _ -> println(it) },
+                // baking offset into the bounds, maybe it should be a separate property?
+                bounds = Rect(-0.45f.px, -0.9f.px, initialPlayerBounds.width * 0.91f, initialPlayerBounds.height * 0.91f),
+                tint = Color.ORANGE.toMutableColor().apply { a = 0.2f }.toFloatBits(),
+                priority = 1,
+            )
+            it += PositionComponent().also {
+                it.position.set(initialPlayerBounds.cx, initialPlayerBounds.cy)
+                playerPosition = it.position
+            }
+            it += RotationComponent(maxRotationVelocity = 0.1f)
+            it += MoveComponent()
+            it += JumpComponent()
+            it += FloatUpComponent()
+            it += MomentaryForceComponent()
+            it += ContextComponent()
+            it += HealthComponent()
+            it += StaminaComponent()
+            it += StaminaDamageComponent()
+            it += PlayerComponent()
+            physicsSystem.createPlayerBody(this, it, initialPlayerBounds)
+        }
+        mascotEntity = ecs.entity {
+            it += SpriteComponent(
+                idleAnimation = gameContext.assets.animation("Dragon idle"),
+                animationEventCallback = { it, _ -> println(it) },
+                // baking offset into the bounds, maybe it should be a separate property?
+                bounds = Rect(0f, 0f, 0f, 0f),
+                tint = Color.GRAY.toMutableColor().apply { a = 0.2f }.toFloatBits(),
+            )
+            it += PositionComponent()
+            it += RotationComponent()
+            it += ContextComponent()
+            it += MascotComponent(playerEntity)
+        }
         map.layers.forEach {
             if (it is TiledObjectLayer) {
                 it.objects.forEach { spawn ->
+                    gameContext.assets.resourceSheet.enemies[spawn.name]?.let { enemySpec ->
+                        ecs.entity { entity ->
+                            with(enemySpec) {
+                                createEnemy(gameContext, entity, physicsSystem, spawn.bounds.cx * unitSize, spawn.bounds.cy * unitSize)
+                            }
+                        }
+                    } ?: run {
+
+                    }
                     when (spawn.name) {
-                        "crab" -> {
+                        /*"crab" -> {
                             ecs.entity {
                                 it += SpriteComponent(
-                                    idleAnimation = gameContext.assets.animation("MC idle"),
+                                    idleAnimation = gameContext.assets.animation("Crab walk"),
                                     animationEventCallback = { it, _ -> println(it) },
                                     // baking offset into the bounds, maybe it should be a separate property?
                                     bounds = Rect(
@@ -251,7 +293,7 @@ class Room(
                                 it += FloatUpComponent()
                                 it += MomentaryForceComponent()
                                 it += ContextComponent()
-                                physicsSystem.createCrabBody(
+                                physicsSystem.createEnemyBody(
                                     this,
                                     it,
                                     spawn.bounds.cx * unitSize,
@@ -260,7 +302,8 @@ class Room(
                                     spawn.bounds.height * unitSize
                                 )
                             }
-                        }
+                        }*/
+
                         "water-pearl" -> {
                             if (!gameContext.gameState.waterPearl) {
                                 ecs.entity { entity ->
@@ -300,6 +343,7 @@ class Room(
                                 }
                             }
                         }
+
                         "air-pearl" -> {
                             if (!gameContext.gameState.airPearl) {
                                 ecs.entity { entity ->
@@ -341,12 +385,6 @@ class Room(
                         }
                     }
                 }
-            }
-        }
-
-        with(ecs) {
-            family { all(SpriteComponent) }.sort { left, right ->
-                left[SpriteComponent].priority.compareTo(right[SpriteComponent].priority)
             }
         }
     }
@@ -406,9 +444,17 @@ class Room(
     fun render(dt: Float) {
         ecs.update(dt)
 
-        if (playerPosition.x < 0f || playerPosition.y < 0f || playerPosition.x > worldArea.width || playerPosition.y > worldArea.height) {
+        if (playerPosition.x < 0f || playerPosition.y < 0f || playerPosition.x > worldArea.width || playerPosition.y > worldArea.height || teleports.any {
+                it.contains(
+                    playerPosition
+                )
+            }) {
             switchRoom(playerEntity)
         }
 
+    }
+
+    fun reset() {
+        respawnEntities()
     }
 }

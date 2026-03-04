@@ -25,7 +25,7 @@ class RotationSystem(
             target + PI2_F - current,
             target - PI2_F - current,
         ).clamp(-limit, limit)
-        entity[RotationComponent].currentRotation = current + rotation
+        entity[RotationComponent].currentRotation = (current + rotation) % PI2_F
     }
 
     private fun minOfAbs(a: Float, b: Float): Float =

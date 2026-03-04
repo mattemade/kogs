@@ -1,5 +1,6 @@
 package net.mattemade.platformer.resources
 
+import com.littlekt.math.Vec2f
 import net.mattemade.platformer.WORLD_NAME
 import net.mattemade.platformer.parameterOverride
 
@@ -17,10 +18,12 @@ class PlatformerResourceSheet(data: List<String>) {
     val animations = mutableSetOf<String>()
     val soundFiles: Set<String>
     val musicFiles: Set<String>
+    val enemies = mutableMapOf<String, ResourceEnemy>()
     //val levelFiles: Set<String>
 
     val spriteById = mutableMapOf<String, ResourceSprite>()
     val animationById = mutableMapOf<String, ResourceAnimation>()
+    val animationBySpecAndRegion = mutableMapOf<String, MutableMap<String, ResourceAnimation>>()
     val soundsById = mutableMapOf<String, MutableList<ResourceSound>>()
     val musicById = mutableMapOf<String, ResourceMusic>()
     val levelByName = mutableMapOf<String, ResourceLevel>()
@@ -56,7 +59,7 @@ class PlatformerResourceSheet(data: List<String>) {
                                 line["Spec segment"]?.let { segment ->
                                     if (file.trim().isNotEmpty() && segment.trim().isNotEmpty()) {
                                         animations += file
-                                        animationById[id] = ResourceAnimation(
+                                        val resourceAnimation = ResourceAnimation(
                                             id = id,
                                             file = file,
                                             segment = segment,
@@ -64,6 +67,9 @@ class PlatformerResourceSheet(data: List<String>) {
                                             offsetY = line["Offset Y"]?.toFloatOrNull() ?: 0f,
                                             scale = line["Scale"]?.toFloatOrNull() ?: 1f,
                                         )
+                                        animationById[id] = resourceAnimation
+                                        animationBySpecAndRegion.getOrPut(file) { mutableMapOf() }[segment] =
+                                            resourceAnimation
                                     }
                                 }
                             }
@@ -140,6 +146,26 @@ class PlatformerResourceSheet(data: List<String>) {
                             }
                         }
                     }
+
+                    "Creatures" -> {
+                        line["Name"]?.let { name ->
+                            line["Idle animation"]?.let { idleRegion ->
+                                enemies[name] = ResourceEnemy(
+                                    name,
+                                    idleName = idleRegion,
+                                    walkName = line["Walk animation"]?.takeIf(String::isNotEmpty) ?: idleRegion,
+                                    jumpName = line["Jump animation"]?.takeIf(String::isNotEmpty) ?: idleRegion,
+                                    fallName = line["Fall animation"]?.takeIf(String::isNotEmpty) ?: idleRegion,
+                                    swimName = line["Swim animation"]?.takeIf(String::isNotEmpty) ?: idleRegion,
+                                    wallSlideName = line["Slide animation"]?.takeIf(String::isNotEmpty) ?: idleRegion,
+                                    size = Vec2f(
+                                        line["Width"]?.toFloatOrNull() ?: 0.98f,
+                                        line["Height"]?.toFloatOrNull() ?: 0.98f,
+                                    ),
+                                )
+                            }
+                        }
+                    }
                 }
                 row++
             }
@@ -163,6 +189,7 @@ class PlatformerResourceSheet(data: List<String>) {
                 "Levels",
                 "Parameters",
                 "Animations",
+                "Creatures",
             )
 
         fun ranges(encode: (String) -> String) =

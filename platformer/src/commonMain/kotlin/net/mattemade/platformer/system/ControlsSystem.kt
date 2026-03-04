@@ -115,18 +115,19 @@ class ControlsSystem(
         var horizontalSpeed = 0f
         var verticalSpeed = 0f
         val dash = gameContext.gameState.waterPearl && input.isKeyPressed(Key.SHIFT_LEFT)
+        val swimSpeedMultiplier = if (gameContext.gameState.waterPearl) 1.5f else 1f
 
         if (input.isKeyPressed(Key.ARROW_RIGHT) || input.isKeyPressed(Key.D)) {
-            horizontalSpeed += SWIM_ACCELERATION
+            horizontalSpeed += SWIM_ACCELERATION * swimSpeedMultiplier
         }
         if (input.isKeyPressed(Key.ARROW_LEFT) || input.isKeyPressed(Key.A)) {
-            horizontalSpeed -= SWIM_ACCELERATION
+            horizontalSpeed -= SWIM_ACCELERATION * swimSpeedMultiplier
         }
         if (input.isKeyPressed(Key.ARROW_UP) || input.isKeyPressed(Key.W) || input.isKeyPressed(Key.SPACE)) {
-            verticalSpeed -= SWIM_ACCELERATION
+            verticalSpeed -= SWIM_ACCELERATION * swimSpeedMultiplier
         }
         if (input.isKeyPressed(Key.ARROW_DOWN) || input.isKeyPressed(Key.S)) {
-            verticalSpeed += SWIM_ACCELERATION
+            verticalSpeed += SWIM_ACCELERATION * swimSpeedMultiplier
         }
 
         entity[MoveComponent].apply {
@@ -136,13 +137,7 @@ class ControlsSystem(
                 moveDirection.setLength(SWIM_ACCELERATION)
             }
             if (dash) {
-                if (dashDirection.x != 0f || dashDirection.y != 0f) {
-                    dashDirection.set(dashDirection.x, dashDirection.y)
-                } else {
-                    val body = entity[Box2DPhysicsComponent].body
-                    tempVec2f.set(body.linearVelocityX, body.linearVelocityY).norm().setLength(SWIM_VELOCITY * 3f)
-                    dashDirection.set(tempVec2f.x, tempVec2f.y)
-                }
+                dashDirection.set(moveDirection).norm().setLength(SWIM_VELOCITY * 3f)
             } else {
                 dashDirection.set(0f, 0f)
             }

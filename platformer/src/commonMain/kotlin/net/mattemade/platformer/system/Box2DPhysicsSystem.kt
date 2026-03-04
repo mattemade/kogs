@@ -428,7 +428,7 @@ class Box2DPhysicsSystem(
         }
     }
 
-    fun createCrabBody(
+    fun createEnemyBody(
         entityCreateContext: EntityCreateContext,
         entity: Entity,
         x: Float,
@@ -439,7 +439,7 @@ class Box2DPhysicsSystem(
         with(entityCreateContext) {
             entity += Box2DPhysicsComponent(
                 body = physics.createBody(BodyDef().apply {
-                    type = BodyType.STATIC
+                    type = BodyType.DYNAMIC
                     position.set(x, y)
                     gravityScale = GRAVITY_IN_FALL
                 }).apply {
@@ -454,10 +454,7 @@ class Box2DPhysicsSystem(
                         maskBits = ENEMY_BODY_COLLISION
                     }
                     shape = PolygonShape().apply {
-                        setAsBox(
-                            width * 0.48f,
-                            height * 0.48f
-                        )
+                        setAsBox(width * 0.5f, height * 0.5f,)
                     }
                     userData = Hazard(1f, body.position)
                 })!!

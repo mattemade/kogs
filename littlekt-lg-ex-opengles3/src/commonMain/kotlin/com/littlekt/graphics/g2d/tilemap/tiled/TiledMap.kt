@@ -55,6 +55,9 @@ class TiledMap(
         }
     }
 
+    fun layerOrNull(name: String): TiledLayer? =
+        layersByName[name]
+
     fun layer(name: String): TiledLayer =
         layersByName[name] ?: error("Layer: '$name' does not exist in this map!")
 

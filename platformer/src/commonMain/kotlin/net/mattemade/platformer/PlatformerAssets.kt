@@ -98,6 +98,14 @@ class PlatformerAssets(
                 animationWithOffset.scale,
             )
         }
+    fun animation(file: String, region: String): AnimationWithOffset =
+        resourceSheet.animationBySpecAndRegion[file]!![region]!!.let { animationWithOffset ->
+            AnimationWithOffset(
+                animationFiles.map[animationWithOffset.file]!![animationWithOffset.segment]!!.copy(),
+                Vec2f(animationWithOffset.offsetX * animationWithOffset.scale, animationWithOffset.offsetY * animationWithOffset.scale),
+                animationWithOffset.scale,
+            )
+        }
 }
 
 
