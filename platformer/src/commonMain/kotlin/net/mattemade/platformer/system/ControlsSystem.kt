@@ -16,6 +16,7 @@ import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.SWIM_ACCELERATION
 import net.mattemade.platformer.SWIM_VELOCITY
 import net.mattemade.platformer.WALK_VELOCITY
+import net.mattemade.platformer.component.AttackComponent
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.Box2DPhysicsComponent
@@ -28,7 +29,7 @@ class ControlsSystem(
     private val context: Context = inject(),
     private val gameContext: PlatformerGameContext = inject(),
     interval: Interval = Fixed(1 / 200f),
-    ): IteratingSystem(family { all(Box2DPhysicsComponent, MoveComponent, JumpComponent, PlayerComponent)}, interval = interval) {
+    ): IteratingSystem(family { all(Box2DPhysicsComponent, MoveComponent, JumpComponent, AttackComponent, PlayerComponent)}, interval = interval) {
 
     private val input = gameContext.gameInput
 
@@ -52,6 +53,9 @@ class ControlsSystem(
             waterBasedControls(context, entity)
         } else {
             landBasedControls(context, entity)
+        }
+        if (input.attack.justPressed) {
+            entity[AttackComponent].activated = true
         }
     }
 

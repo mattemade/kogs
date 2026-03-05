@@ -11,6 +11,7 @@ import com.littlekt.graphics.toFloatBits
 import com.littlekt.math.Rect
 import com.littlekt.math.Vec2f
 import net.mattemade.platformer.PlatformerGameContext
+import net.mattemade.platformer.component.AttackComponent
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.FloatUpComponent
@@ -25,8 +26,10 @@ import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.component.StaminaComponent
 import net.mattemade.platformer.component.StaminaDamageComponent
+import net.mattemade.platformer.component.TimeToLiveComponent
 import net.mattemade.platformer.component.UiComponent
 import net.mattemade.platformer.px
+import net.mattemade.platformer.system.AttackSystem
 import net.mattemade.platformer.system.Box2DPhysicsSystem
 import net.mattemade.platformer.system.ControlsSystem
 import net.mattemade.platformer.system.LoadOnPlayerDeathSystem
@@ -36,6 +39,7 @@ import net.mattemade.platformer.system.RenderingSystem
 import net.mattemade.platformer.system.RotationSystem
 import net.mattemade.platformer.system.StaminaBreathingSystem
 import net.mattemade.platformer.system.StaminaRestorationSystem
+import net.mattemade.platformer.system.TimeToLiveSystem
 import net.mattemade.platformer.system.UiControlsSystem
 import net.mattemade.platformer.system.UiRenderingSystem
 import net.mattemade.utils.releasing.Releasing
@@ -88,9 +92,11 @@ class Room(
             add(map)
         }
         systems {
+            add(TimeToLiveSystem())
             add(ControlsSystem())
             add(UiControlsSystem())
-            add(Box2DPhysicsSystem().also {
+            add(AttackSystem())
+            add(Box2DPhysicsSystem(::spawnPlayerAttack).also {
                 physicsSystem = it
                 (map.layerOrNull("player-spawn") as? TiledObjectLayer)?.objects?.firstOrNull()?.bounds?.let {
                     physicsSystem.createCheckpoint(
@@ -235,6 +241,11 @@ class Room(
             it += RotationComponent(maxRotationVelocity = 0.1f)
             it += MoveComponent()
             it += JumpComponent()
+            it += AttackComponent(specs = listOf(
+                AttackComponent.AttackSpec(shortCooldown = 0.5f, longCooldown = 0.75f, damage = 1f),
+                AttackComponent.AttackSpec(shortCooldown = 0.5f, longCooldown = 0.75f, damage = 1f),
+                AttackComponent.AttackSpec(shortCooldown = 1f, longCooldown = 1.5f, damage = 2f),
+                ))
             it += FloatUpComponent()
             it += MomentaryForceComponent()
             it += ContextComponent()
@@ -270,40 +281,6 @@ class Room(
 
                     }
                     when (spawn.name) {
-                        /*"crab" -> {
-                            ecs.entity {
-                                it += SpriteComponent(
-                                    idleAnimation = gameContext.assets.animation("Crab walk"),
-                                    animationEventCallback = { it, _ -> println(it) },
-                                    // baking offset into the bounds, maybe it should be a separate property?
-                                    bounds = Rect(
-                                        spawn.bounds.width * unitSize * -0.48f,
-                                        spawn.bounds.height * unitSize * -0.48f,
-                                        spawn.bounds.width * unitSize,
-                                        spawn.bounds.height * unitSize
-                                    ),
-                                    tint = Color.RED.toMutableColor().apply { a = 0.2f }.toFloatBits(),
-                                )
-                                it += PositionComponent().also {
-                                    it.position.set(spawn.bounds.cx * unitSize, spawn.bounds.cy * unitSize)
-                                }
-                                it += RotationComponent(maxRotationVelocity = 0.1f)
-                                it += MoveComponent()
-                                it += JumpComponent()
-                                it += FloatUpComponent()
-                                it += MomentaryForceComponent()
-                                it += ContextComponent()
-                                physicsSystem.createEnemyBody(
-                                    this,
-                                    it,
-                                    spawn.bounds.cx * unitSize,
-                                    spawn.bounds.cy * unitSize,
-                                    spawn.bounds.width * unitSize,
-                                    spawn.bounds.height * unitSize
-                                )
-                            }
-                        }*/
-
                         "water-pearl" -> {
                             if (!gameContext.gameState.waterPearl) {
                                 ecs.entity { entity ->
@@ -389,6 +366,39 @@ class Room(
         }
     }
 
+    private fun spawnPlayerAttack(x: Float, y: Float, vx: Float, vy: Float, damage: Float) {
+        ecs.entity { entity ->
+            val radius = 1f
+            entity += SpriteComponent(
+                idleAnimation = gameContext.assets.animation("MC idle"),
+                animationEventCallback = { it, _ -> println(it) },
+                // baking offset into the bounds, maybe it should be a separate property?
+                bounds = Rect(
+                    -radius,
+                    -radius,
+                    radius * 2f,
+                    radius * 2f
+                ),
+                tint = Color.Companion.YELLOW.toMutableColor().apply { a = 0.5f }.toFloatBits(),
+                priority = 0,
+            )
+            entity += PositionComponent().also { it.position.set(x, y) }
+            entity += RotationComponent(maxRotationVelocity = 0.1f)
+            entity += MomentaryForceComponent().apply { forces.add(Vec2f(vx, vy)) }
+            entity += ContextComponent()
+            entity += TimeToLiveComponent(0.2f)
+            physicsSystem.createPlayerAttackBody(
+                this,
+                entity,
+                x,
+                y,
+                radius,
+                damage,
+            )
+        }
+
+    }
+
     private fun placeSwimmableWaterBlock(fromY: Int, toY: Int, x: Int) {
         if (toY - fromY == 1) {
             // if that's a single tile with a ground below it - don't make it swimmable
@@ -413,6 +423,7 @@ class Room(
         rotationComponent: RotationComponent,
         moveComponent: MoveComponent,
         jumpComponent: JumpComponent,
+        attackComponent: AttackComponent,
         floatUpComponent: FloatUpComponent,
         contextComponent: ContextComponent,
         healthComponent: HealthComponent,
@@ -430,6 +441,7 @@ class Room(
                 it += rotationComponent
                 it += moveComponent
                 it += jumpComponent
+                it += attackComponent
                 it += floatUpComponent
                 it += contextComponent
                 it += healthComponent

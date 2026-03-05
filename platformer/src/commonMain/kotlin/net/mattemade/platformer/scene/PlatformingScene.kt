@@ -9,6 +9,7 @@ import com.littlekt.math.MutableVec2f
 import com.littlekt.util.seconds
 import net.mattemade.platformer.FIRST_LEVEL_NAME
 import net.mattemade.platformer.PlatformerGameContext
+import net.mattemade.platformer.component.AttackComponent
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.FloatUpComponent
@@ -153,6 +154,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                             player[RotationComponent],
                             player[MoveComponent],
                             player[JumpComponent],
+                            player[AttackComponent],
                             player[FloatUpComponent],
                             player[ContextComponent],
                             player[HealthComponent],

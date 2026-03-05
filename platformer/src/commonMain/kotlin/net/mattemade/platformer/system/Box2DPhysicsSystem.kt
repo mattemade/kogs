@@ -12,6 +12,7 @@ import com.littlekt.math.MutableVec2f
 import com.littlekt.math.PI2_F
 import com.littlekt.math.Rect
 import com.littlekt.math.Vec2f
+import com.littlekt.math.geom.radians
 import com.soywiz.korma.geom.Angle
 import net.mattemade.fmod.FMOD
 import net.mattemade.platformer.GRAVITY_IN_FALL
@@ -21,6 +22,7 @@ import net.mattemade.platformer.JUMP_VELOCITY
 import net.mattemade.platformer.MAX_FALL_VELOCITY
 import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.WALK_VELOCITY
+import net.mattemade.platformer.component.AttackComponent
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.FloatUpComponent
@@ -56,6 +58,7 @@ import org.jbox2d.dynamics.World as B2dWorld
 
 class Box2DPhysicsSystem(
     //private val physics: B2dWorld = inject(),
+    private val spawnPlayerAttack: (x: Float, y: Float, vx: Float, vy: Float, damage: Float) -> Unit,
     private val gameContext: PlatformerGameContext = inject(),
     interval: Interval = Fixed(1 / 100f)
 ) : IteratingSystem(
@@ -186,6 +189,28 @@ class Box2DPhysicsSystem(
             context.facingRight = true
         } else if (horizontalVelocity < 0f) {
             context.facingRight = false
+        }
+
+        entity.getOrNull(AttackComponent)?.let {
+            if (it.requestingPhysicsToSpawnAttack > 0f) {
+                val angle = entity[RotationComponent].currentRotation.radians
+                if (context.swimming) {
+                    tempVec2f.set(0f, -1.5f).rotate(angle)
+                } else if (context.facingRight) {
+                    tempVec2f.set(1f, 0f)
+                } else {
+                    tempVec2f.set(-1f, 0f)
+                }
+                tempVec2f.add(physicsComponent.body.position.x, physicsComponent.body.position.y)
+                spawnPlayerAttack(
+                    tempVec2f.x,
+                    tempVec2f.y,
+                    physicsComponent.body.linearVelocityX,
+                    if (context.swimming) physicsComponent.body.linearVelocityY else 0f,
+                    it.requestingPhysicsToSpawnAttack
+                )
+                it.requestingPhysicsToSpawnAttack = 0f
+            }
         }
 
     }
@@ -428,6 +453,38 @@ class Box2DPhysicsSystem(
         }
     }
 
+    fun createPlayerAttackBody(
+        entityCreateContext: EntityCreateContext,
+        entity: Entity,
+        x: Float,
+        y: Float,
+        radius: Float,
+        damage: Float,
+    ) {
+        with(entityCreateContext) {
+            entity += Box2DPhysicsComponent(
+                body = physics.createBody(BodyDef().apply {
+                    type = BodyType.DYNAMIC
+                    position.set(x, y)
+                    gravityScale = 0f
+                }),
+            ).apply {
+                // land body
+                landBodyFixture = body.createFixture(FixtureDef().apply {
+                    isSensor = true
+                    friction = 0f
+                    filter = Filter().apply {
+                        categoryBits = PLAYER_ATTACK_MASK
+                        maskBits = PLAYER_ATTACK_COLLISIONS
+                    }
+                    shape = CircleShape(radius = radius)
+                    userData = PlayerAttack(damage, x, y)
+                })!!
+                waterBodyFixture = landBodyFixture
+            }
+        }
+    }
+
     fun createEnemyBody(
         entityCreateContext: EntityCreateContext,
         entity: Entity,
@@ -454,9 +511,9 @@ class Box2DPhysicsSystem(
                         maskBits = ENEMY_BODY_COLLISION
                     }
                     shape = PolygonShape().apply {
-                        setAsBox(width * 0.5f, height * 0.5f,)
+                        setAsBox(width * 0.5f, height * 0.5f)
                     }
-                    userData = Hazard(1f, body.position)
+                    userData = EnemyHazard(1f, body.position, entity)
                 })!!
                 waterBodyFixture = landBodyFixture
             }
@@ -601,6 +658,34 @@ class Box2DPhysicsSystem(
     }
 
     override fun beginContact(contact: Contact) {
+        contact.with<PlayerAttack> { other ->
+            if (contact.isTouching) {
+                when (other) {
+                    is EnemyHazard -> {
+                        other.entity.configure {
+                            it += KnockbackComponent(atLeastForTicks = 0, ticksToWearOff = 5)
+                        }
+                        val body = other.entity[Box2DPhysicsComponent].body
+                        body.linearVelocityY = 0f
+                        body.linearVelocityX = 0f
+                        val position = body.position
+                        if (other.entity[ContextComponent].swimming) {
+                            tempVec2f.set(position.x - other.bodyPosition.x, position.y - other.bodyPosition.y)
+                                .setLength(5f)
+                            other.entity[MomentaryForceComponent].forces += Vec2f(
+                                tempVec2f.x,
+                                tempVec2f.y,
+                            )
+                        } else {
+                            other.entity[MomentaryForceComponent].forces += Vec2f(
+                                5f * sign(position.x - this.x),
+                                -5f
+                            )
+                        }
+                    }
+                }
+            }
+        }
         contact.with<Entity> { other ->
             if (contact.isTouching) {
                 when (other) {
@@ -610,8 +695,9 @@ class Box2DPhysicsSystem(
                         }
                         gameContext.save()
                     }
+
                     is Action -> other.onTouch()
-                    is Hazard -> {
+                    is EnemyHazard -> {
                         this.configure {
                             it += KnockbackComponent()
                         }
@@ -669,7 +755,8 @@ class Box2DPhysicsSystem(
     private class Feet(val entity: Entity)
     private class Torso(val bodyPosition: Vec2)
     private class Hands(val entity: Entity)
-    private class Hazard(val damage: Float, val bodyPosition: Vec2)
+    private class EnemyHazard(val damage: Float, val bodyPosition: Vec2, val entity: Entity)
+    private class PlayerAttack(val damage: Float, val x: Float, val y: Float)
     private object Checkpoint
     private class Action(val onTouch: () -> Unit)
 
@@ -690,6 +777,7 @@ class Box2DPhysicsSystem(
         private val PLAYER_HANDS_MASK = NEXT_MASK
 
         private val ENEMY_BODY_MASK = NEXT_MASK
+        private val PLAYER_ATTACK_MASK = NEXT_MASK
 
         private val CHECKPOINT_MASK = NEXT_MASK
 
@@ -697,9 +785,10 @@ class Box2DPhysicsSystem(
 
         private val PLAYER_BODY_COLLISIONS = WALL_MASK or ENEMY_BODY_MASK or CHECKPOINT_MASK or PEARL_MASK
         private val PLAYER_LIMB_COLLISIONS = WALL_MASK or WATER_MASK
-        private val ENEMY_BODY_COLLISION = WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK
+        private val ENEMY_BODY_COLLISION = WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK or PLAYER_ATTACK_MASK
         private val CHECKPOINT_COLLISIONS = PLAYER_BODY_MASK
         private val PEARL_COLLISIONS = PLAYER_BODY_MASK
+        private val PLAYER_ATTACK_COLLISIONS = ENEMY_BODY_MASK
 
         private inline fun <reified T> Contact.with(crossinline action: T.(Any?) -> Unit) =
             (getFixtureA()?.userData as? T)?.action(getFixtureB()?.userData) ?: (getFixtureB()?.userData as? T)?.action(
