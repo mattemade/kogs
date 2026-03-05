@@ -30,14 +30,18 @@ class ControlsSystem(
     interval: Interval = Fixed(1 / 200f),
     ): IteratingSystem(family { all(Box2DPhysicsComponent, MoveComponent, JumpComponent, PlayerComponent)}, interval = interval) {
 
-    private val input = context.input
-    private var jumpPressed = false
+    private val input = gameContext.gameInput
+
+    override fun onTick() {
+        gameContext.updateInputs() // TODO: how to ensure it's never called more than once?
+        super.onTick()
+    }
 
     override fun onTickEntity(entity: Entity) {
-        if (input.isKeyPressed(Key.R)) {
+        if (input.restart.justPressed) {
             gameContext.load(reset = true)
             return
-        } else if (input.isKeyPressed(Key.L)) {
+        } else if (input.respawn.justPressed) {
             gameContext.load(forceRestart = true)
             return
         }
@@ -55,33 +59,21 @@ class ControlsSystem(
         context: ContextComponent,
         entity: Entity
     ) {
-        var horizontalSpeed = 0f
-        var verticalSpeed = 0f
-        val dash = gameContext.gameState.airPearl && input.isKeyPressed(Key.SHIFT_LEFT) && !context.touchingWalls
-
-        if (input.isKeyPressed(Key.ARROW_RIGHT) || input.isKeyPressed(Key.D)) {
-            horizontalSpeed += WALK_VELOCITY
-        }
-        if (input.isKeyPressed(Key.ARROW_LEFT) || input.isKeyPressed(Key.A)) {
-            horizontalSpeed -= WALK_VELOCITY
-        }
-
+        val horizontalSpeed = input.movement.x * WALK_VELOCITY
+        val dash = gameContext.gameState.airPearl && input.dash.pressed && !context.touchingWalls
 
         entity[JumpComponent].apply {
-            val jumpCurrentlyPressed = input.isKeyPressed(Key.SPACE) || input.isTouching
-            val jumpJustPressed = jumpCurrentlyPressed && !jumpPressed
-            jumpPressed = jumpCurrentlyPressed
-            if (jumpJustPressed && (canJumpFromGround || canJumpInAir > 0 || (gameContext.gameState.airPearl && context.touchingWalls)) && !jumping) {
-                if (input.isKeyPressed(Key.ARROW_DOWN) || input.isKeyPressed(Key.S)) {
+            if (input.jump.justPressed && (canJumpFromGround || canJumpInAir > 0 || (gameContext.gameState.airPearl && context.touchingWalls)) && !jumping) {
+                if (input.movement.y > 0f) {
                     entity[MoveComponent].fallThrough = true
                 } else {
                     executeJump(entity, wallJump = context.touchingWalls)
                 }
-            } else if (!jumpCurrentlyPressed) {
+            } else if (!input.jump.pressed) {
                 jumping = false
                 jumpBuffer = 0
             } else { // jump is still pressed, do not double-jump automatically in this case, but jump when landed within buffered time
-                if (input.isKeyPressed(Key.ARROW_DOWN) || input.isKeyPressed(Key.S)) {
+                if (input.movement.y > 0f) {
                     // no-op
                 } else if (canJumpFromGround) {
                     if (!jumping && jumpBuffer < JumpComponent.BUFFER_TICKS) {
@@ -95,7 +87,7 @@ class ControlsSystem(
 
         entity[MoveComponent].apply {
             speed = 1f
-            moveDirection.set(horizontalSpeed, verticalSpeed)
+            moveDirection.set(horizontalSpeed, 0f)
             if (dash) {
                 if (dashDirection.x != 0f) {
                     dashDirection.set(dashDirection.x, 0f)
@@ -112,23 +104,10 @@ class ControlsSystem(
         context: ContextComponent,
         entity: Entity
     ) {
-        var horizontalSpeed = 0f
-        var verticalSpeed = 0f
-        val dash = gameContext.gameState.waterPearl && input.isKeyPressed(Key.SHIFT_LEFT)
         val swimSpeedMultiplier = if (gameContext.gameState.waterPearl) 1.5f else 1f
-
-        if (input.isKeyPressed(Key.ARROW_RIGHT) || input.isKeyPressed(Key.D)) {
-            horizontalSpeed += SWIM_ACCELERATION * swimSpeedMultiplier
-        }
-        if (input.isKeyPressed(Key.ARROW_LEFT) || input.isKeyPressed(Key.A)) {
-            horizontalSpeed -= SWIM_ACCELERATION * swimSpeedMultiplier
-        }
-        if (input.isKeyPressed(Key.ARROW_UP) || input.isKeyPressed(Key.W) || input.isKeyPressed(Key.SPACE)) {
-            verticalSpeed -= SWIM_ACCELERATION * swimSpeedMultiplier
-        }
-        if (input.isKeyPressed(Key.ARROW_DOWN) || input.isKeyPressed(Key.S)) {
-            verticalSpeed += SWIM_ACCELERATION * swimSpeedMultiplier
-        }
+        val horizontalSpeed = input.movement.x * SWIM_ACCELERATION * swimSpeedMultiplier
+        val verticalSpeed = (input.movement.y - if (input.jump.pressed) 1f else 0f) * SWIM_ACCELERATION * swimSpeedMultiplier
+        val dash = gameContext.gameState.waterPearl && input.dash.pressed
 
         entity[MoveComponent].apply {
             speed = 1f

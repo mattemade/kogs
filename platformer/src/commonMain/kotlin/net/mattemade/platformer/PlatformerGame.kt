@@ -170,7 +170,7 @@ class PlatformerGame(
             }
 
             if (focused && assetsReady && fmodAssetsReady) {
-                gameContext.update(dt.seconds)
+                gameContext.update(dt)
                 pixelRender.render(dt)
                 directRender.render(dt)
             }

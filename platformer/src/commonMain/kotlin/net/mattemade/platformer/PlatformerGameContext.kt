@@ -2,10 +2,14 @@ package net.mattemade.platformer
 
 import com.littlekt.Context
 import com.littlekt.math.Rect
+import com.littlekt.util.seconds
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import net.mattemade.platformer.input.GameInput
+import net.mattemade.platformer.input.bindInputs
 import net.mattemade.utils.Scheduler
 import kotlin.random.Random
+import kotlin.time.Duration
 
 class PlatformerGameContext(
     val context: Context,
@@ -29,7 +33,8 @@ class PlatformerGameContext(
     }
     private var previousSavedState: String? = null
     lateinit var gameState: GameState
-
+    var gameInput = GameInput(context, context.bindInputs())
+    var controlsActive = true
 
     private var tag =
         context.vfs.loadString("tag") ?: Random.nextInt().toString().also {
@@ -41,8 +46,15 @@ class PlatformerGameContext(
         sendLog("$LOG_TAG|$tag|$run|$log")
     }
 
-    fun update(seconds: Float) {
-        scheduler.update(seconds)
+    fun update(dt: Duration) {
+        scheduler.update(dt.seconds)
+    }
+
+    // TODO: oooh, it shouldn't be like that, but well
+    // make inputs push-based rather than pull-based, otherwise we lose input fidelity
+    // calling it frequent enough would work, though, but it really should be fixed!!!
+    fun updateInputs() {
+        gameInput.update(controlsActive)
     }
 
     fun save() {
