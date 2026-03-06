@@ -8,7 +8,9 @@ import com.littlekt.math.Rect
 import com.littlekt.math.Vec2f
 import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.component.ContextComponent
+import net.mattemade.platformer.component.EnemyComponent
 import net.mattemade.platformer.component.FloatUpComponent
+import net.mattemade.platformer.component.HealthComponent
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
 import net.mattemade.platformer.component.MoveComponent
@@ -64,6 +66,8 @@ class ResourceEnemy(
         entity += FloatUpComponent()
         entity += MomentaryForceComponent()
         entity += ContextComponent()
+        entity += HealthComponent(health = 2f, maxHealth = 2f)
+        entity += EnemyComponent()
         physicsSystem.createEnemyBody(
             this,
             entity,

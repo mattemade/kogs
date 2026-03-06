@@ -32,6 +32,7 @@ import net.mattemade.platformer.px
 import net.mattemade.platformer.system.AttackSystem
 import net.mattemade.platformer.system.Box2DPhysicsSystem
 import net.mattemade.platformer.system.ControlsSystem
+import net.mattemade.platformer.system.EnemyDeathSystem
 import net.mattemade.platformer.system.LoadOnPlayerDeathSystem
 import net.mattemade.platformer.system.LowStaminaDamageSystem
 import net.mattemade.platformer.system.MascotSystem
@@ -124,6 +125,7 @@ class Room(
             add(LowStaminaDamageSystem())
             add(StaminaRestorationSystem())
             add(LoadOnPlayerDeathSystem())
+            add(EnemyDeathSystem())
             //add(FloatingSystem())
             add(RotationSystem())
             add(MascotSystem())

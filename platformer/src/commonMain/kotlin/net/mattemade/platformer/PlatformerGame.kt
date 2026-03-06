@@ -139,7 +139,7 @@ class PlatformerGame(
                 movementX: Float,
                 movementY: Float
             ): Boolean {
-                //gameContext.gameInput.mouseDetected = true
+                gameContext.gameInput.mouseDetected = true
                 return false
             }
 

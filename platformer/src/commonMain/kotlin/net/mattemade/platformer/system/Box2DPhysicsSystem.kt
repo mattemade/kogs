@@ -98,11 +98,7 @@ class Box2DPhysicsSystem(
                 standing = body.getContactList()
                     .let { it.isTouching<Feet, Wall>() || it.isTouching<Feet, Platform>() } && body.linearVelocityY == 0f
                 touchingLeftWall = body.getContactList().isTouching<LeftHand, Wall>()
-                touchingRightWall = body.getContactList().isTouching<RightHand, Wall>().also {
-                    if (touchingRightWall != it) {
-                        println("touching right wall now: $it")
-                    }
-                }
+                touchingRightWall = body.getContactList().isTouching<RightHand, Wall>()
 
                 if (standing && physicsComponent.previousVelocity.y != 0f) {
                     physicsComponent.playSound(gameContext.fmodAssets.land)
@@ -137,6 +133,11 @@ class Box2DPhysicsSystem(
                         if (direction.y < 0f && abs(direction.y) >= abs(direction.x)) {
                             entity.getOrNull(MomentaryForceComponent)?.let {
                                 it.forces += Vec2f(0f, -15f)
+                            }
+                        }
+                        if (direction.x != 0f) {
+                            entity[JumpComponent].apply { // do not allow to jump up the waterfall!!
+                                coyoteTimeInTicks = 0
                             }
                         }
                     }
@@ -707,6 +708,9 @@ class Box2DPhysicsSystem(
                     is EnemyHazard -> {
                         other.entity.configure {
                             it += KnockbackComponent(atLeastForTicks = 0, ticksToWearOff = 5)
+                        }
+                        other.entity.getOrNull(HealthComponent)?.let {
+                            it.health -= this.damage
                         }
                         val body = other.entity[Box2DPhysicsComponent].body
                         body.linearVelocityY = 0f

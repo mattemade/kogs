@@ -14,9 +14,9 @@ class JumpComponent(
 ): Component<JumpComponent> {
     override fun type() = JumpComponent
     companion object: ComponentType<JumpComponent>() {
-        const val MAX_JUMP_TICKS = 23
-        const val COYOTE_TICKS = 10
-        const val BUFFER_TICKS = 10
+        const val MAX_JUMP_TICKS = 46
+        const val COYOTE_TICKS = 20
+        const val BUFFER_TICKS = 20
         const val MAX_AIR_JUMPS = 1
     }
 }
