@@ -13,7 +13,7 @@ import net.mattemade.utils.network.SocketMessage
 fun main() {
     createLittleKtApp {
         width = 1280
-        height = 960
+        height = 720
         title = PlatformerGame.TITLE
         //vSync = false
     }.start {

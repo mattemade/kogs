@@ -15,6 +15,8 @@ class GameInput(
 
     private var states = mutableListOf<State>()
 
+    val touchButtonStates = Array(ControllerInput.entries.size) { false }
+
     val jump = stateOf(ControllerInput.JUMP)
     val attack = stateOf(ControllerInput.ATTACK)
     val dash = stateOf(ControllerInput.DASH)
@@ -23,9 +25,10 @@ class GameInput(
     val restart = stateOf(ControllerInput.RESTART)
     val respawn = stateOf(ControllerInput.RESPAWN)
 
-    private fun stateOf(type: ControllerInput): State = State(input, type).also { states += it }
 
-    var clicked: Boolean = false
+    private fun stateOf(type: ControllerInput): State = State(input, touchButtonStates, type).also { states += it }
+
+    var mouseDetected: Boolean = false
     var keyboardInput: Boolean = false
     var touchInput: Boolean = false
     var deadzone = 0.25f
@@ -44,32 +47,37 @@ class GameInput(
         if (!keyboardInput && input.down(ControllerInput.ANY_KEYBOARD)) {
             keyboardInput = true
             gamepadInput = false
+            touchInput = false
         } else if (!gamepadInput && (input.down(ControllerInput.ANY_GAMEPAD) || gamepadMoveHorizontal != 0f || gamepadMoveVertical != 0f)) {
             gamepadInput = true
             keyboardInput = false
+            touchInput = false
         }
 
-        previousMovement.set(movement)
-        movement
-            .set(
-                input.axis(ControllerInput.MOVE_HORIZONTAL),
-                input.axis(ControllerInput.MOVE_VERTICAL)
-            )
-            .limit(1f)
+        if (!touchInput) {
+            previousMovement.set(movement)
+            movement
+                .set(
+                    input.axis(ControllerInput.MOVE_HORIZONTAL),
+                    input.axis(ControllerInput.MOVE_VERTICAL)
+                )
+                .limit(1f)
 
-        if (!controlsActive || movement.length() < deadzone) {
-            movement.set(0f, 0f)
+            if (!controlsActive || movement.length() < deadzone) {
+                movement.set(0f, 0f)
+            }
         }
+
         states.forEach { it.update(controlsActive) }
     }
 
-    class State(private val input: InputMapController<ControllerInput>, val type: ControllerInput, private val tag: String? = null) {
+    class State(private val input: InputMapController<ControllerInput>, private val touchStates: Array<Boolean>, val type: ControllerInput, private val tag: String? = null) {
         var pressed = false
         var justPressed = false
         var justReleased = false
 
         fun update(isActive: Boolean) {
-            if (isActive && input.down(type)) {
+            if (isActive && (input.down(type) || touchStates[type.ordinal])) {
                 if (justPressed) {
                     justPressed = false
                 } else if (!pressed) {

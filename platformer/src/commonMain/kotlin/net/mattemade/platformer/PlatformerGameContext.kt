@@ -26,6 +26,7 @@ class PlatformerGameContext(
     val fmodAssets by lazy { FmodAssets(context, fmodFolderPrefix, this) }
     val scheduler = Scheduler()
     var canvasZoom: Float = 1f
+    var canvasInverseZoom: Float = 1f
     val worldSize = Rect()
     private val json = Json {
         ignoreUnknownKeys = true
