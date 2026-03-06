@@ -60,7 +60,7 @@ class Box2DPhysicsSystem(
     //private val physics: B2dWorld = inject(),
     private val spawnPlayerAttack: (x: Float, y: Float, vx: Float, vy: Float, damage: Float) -> Unit,
     private val gameContext: PlatformerGameContext = inject(),
-    interval: Interval = Fixed(1 / 100f)
+    interval: Interval = Fixed(1 / 200f)
 ) : IteratingSystem(
     family { all(Box2DPhysicsComponent, PositionComponent, RotationComponent, ContextComponent) },
     interval = interval
@@ -97,7 +97,12 @@ class Box2DPhysicsSystem(
                 val wasStanding = standing
                 standing = body.getContactList()
                     .let { it.isTouching<Feet, Wall>() || it.isTouching<Feet, Platform>() } && body.linearVelocityY == 0f
-                touchingWalls = body.getContactList().isTouching<Hands, Wall>()
+                touchingLeftWall = body.getContactList().isTouching<LeftHand, Wall>()
+                touchingRightWall = body.getContactList().isTouching<RightHand, Wall>().also {
+                    if (touchingRightWall != it) {
+                        println("touching right wall now: $it")
+                    }
+                }
 
                 if (standing && physicsComponent.previousVelocity.y != 0f) {
                     physicsComponent.playSound(gameContext.fmodAssets.land)
@@ -185,10 +190,12 @@ class Box2DPhysicsSystem(
         }
 
         val horizontalVelocity = physicsComponent.body.linearVelocityX
-        if (horizontalVelocity > 0f) {
-            context.facingRight = true
-        } else if (horizontalVelocity < 0f) {
-            context.facingRight = false
+        if (!context.swimming) {
+            if (horizontalVelocity > 0f) {
+                context.facingRight = true
+            } else if (horizontalVelocity < 0f) {
+                context.facingRight = false
+            }
         }
 
         entity.getOrNull(AttackComponent)?.let {
@@ -219,13 +226,8 @@ class Box2DPhysicsSystem(
         physicsComponent: Box2DPhysicsComponent,
         entity: Entity
     ) {
-        entity.getOrNull(MomentaryForceComponent)?.let {
-            it.forces.forEach { force ->
-                physicsComponent.body.applyImpulse(force.x, force.y)
-            }
-            it.forces.clear()
-        }
         if (entity.getOrNull(KnockbackComponent) != null) {
+            applyMomentaryForces(entity, physicsComponent) // they are also applied in the end of normal routine!
             return
         }
 
@@ -266,6 +268,7 @@ class Box2DPhysicsSystem(
         entity.getOrNull(FloatUpComponent)?.let { (speed, _) ->
             physicsComponent.body.applyImpulse(0f, speed)
         }
+        applyMomentaryForces(entity, physicsComponent)
     }
 
     private fun landBasedMovement(
@@ -273,32 +276,33 @@ class Box2DPhysicsSystem(
         context: ContextComponent,
         entity: Entity
     ) {
-        entity.getOrNull(MomentaryForceComponent)?.let {
-            it.forces.forEach { force ->
-                physicsComponent.body.applyImpulse(force.x, force.y)
-            }
-            it.forces.clear()
-        }
         if (entity.getOrNull(KnockbackComponent) != null) {
+            applyMomentaryForces(entity, physicsComponent) // they are also applied in the end of normal routine!
             return
         }
 
-        physicsComponent.apply {
-            if (context.touchingWalls && (body.linearVelocityY > 0f || context.wallSlide) && body.linearVelocityX == 0f) {
-                if (gameContext.gameState.airPearl) {
-                    body.linearVelocityY = 1f
-                    context.wallSlide = true
+        entity.getOrNull(MoveComponent)?.let {
+            physicsComponent.apply {
+                //println("left wall ${context.touchingLeftWall} ${context.touchingRightWall}")
+                val movingToWall = (context.touchingLeftWall && (it.dashDirection.x < 0f || it.moveDirection.x < 0f || context.wallSlide)) || (context.touchingRightWall && (it.dashDirection.x > 0f || it.moveDirection.x > 0f || context.wallSlide))
+                val dashingToWall = (context.touchingLeftWall && it.dashDirection.x < 0f) || (context.touchingRightWall && it.dashDirection.x > 0f)
+                if (movingToWall && (body.linearVelocityY > 0f || dashingToWall) && body.linearVelocityX == 0f) {
+                    if (gameContext.gameState.airPearl) {
+                        body.linearVelocityY = 1f
+                        context.wallSlide = true
+                    }
+                } else if (context.wallSlide) {
+                    entity[JumpComponent].apply {
+                        coyoteTimeInTicks =
+                            JumpComponent.COYOTE_TICKS // just to allow jump off the wall without using double jump
+                        wasJumping = true // just to force applying lower gravity
+                    }
+                    context.wallSlide = false
+                    body.isAwake = true
                 }
-            } else if (context.wallSlide) {
-                entity[JumpComponent].apply {
-                    coyoteTimeInTicks =
-                        JumpComponent.COYOTE_TICKS // just to allow jump off the wall without using double jump
-                    wasJumping = true // just to force applying lower gravity
-                }
-                context.wallSlide = false
-                body.isAwake = true
             }
         }
+
 
 
         entity.getOrNull(JumpComponent)?.apply {
@@ -341,7 +345,7 @@ class Box2DPhysicsSystem(
                 entity[JumpComponent].coyoteTimeInTicks = 0 // to prevent coyote jump right after falling
             }
 
-            if (move.dashDirection.x != 0f || move.dashDirection.y != 0f) {
+            if (!context.wallSlide && (move.dashDirection.x != 0f || move.dashDirection.y != 0f)) {
                 // override everything we calculated so far!!
                 physicsComponent.body.gravityScale = 0f
                 physicsComponent.body.linearVelocityX = move.dashDirection.x
@@ -351,6 +355,19 @@ class Box2DPhysicsSystem(
 
         if (physicsComponent.body.linearVelocityY > MAX_FALL_VELOCITY) {
             physicsComponent.body.applyImpulse(0f, MAX_FALL_VELOCITY - physicsComponent.body.linearVelocityY)
+        }
+        applyMomentaryForces(entity, physicsComponent) // they are also applied in the end of normal routine!
+    }
+
+    private fun applyMomentaryForces(
+        entity: Entity,
+        physicsComponent: Box2DPhysicsComponent
+    ) {
+        entity.getOrNull(MomentaryForceComponent)?.let {
+            it.forces.forEach { force ->
+                physicsComponent.body.applyImpulse(force.x, force.y)
+            }
+            it.forces.clear()
         }
     }
 
@@ -385,15 +402,17 @@ class Box2DPhysicsSystem(
                             categoryBits = PLAYER_HANDS_MASK
                             maskBits = PLAYER_LIMB_COLLISIONS
                         }
-                        shape = PolygonShape().apply {
-                            setAsBox(
-                                initialPlayerBounds.width * 0.5f * 1f, // a bit longer that body width
-                                initialPlayerBounds.height * 0.15f, // little portion of the body
-                                center = Vec2(0f, -initialPlayerBounds.height * 0.25f), // closer to the top
-                                angle = Angle.ZERO
-                            )
+                        shape = CircleShape(0.25f).apply { p.set(-0.5f, 0f) }
+                        userData = LeftHand(entity)
+                    })
+                    createFixture(FixtureDef().apply {
+                        isSensor = true
+                        filter = Filter().apply {
+                            categoryBits = PLAYER_HANDS_MASK
+                            maskBits = PLAYER_LIMB_COLLISIONS
                         }
-                        userData = Hands(entity)
+                        shape = CircleShape(0.25f).apply { p.set(0.5f, 0f) }
+                        userData = RightHand(entity)
                     })
                 },
             ).apply {
@@ -501,6 +520,32 @@ class Box2DPhysicsSystem(
                     gravityScale = GRAVITY_IN_FALL
                 }).apply {
                     isFixedRotation = false
+
+                    /*createFixture(FixtureDef().apply {
+                        isSensor = true
+                        filter = Filter().apply {
+                            categoryBits = ENEMY_FOOT_MASK
+                            maskBits = PLAYER_LIMB_COLLISIONS
+                        }
+                        shape = PolygonShape().apply {
+                            setAsBox(
+                                width * 0.5f * 0.8f, // a bit shorter that body width
+                                0.1f, // just a tiny block at the bottom
+                                center = Vec2(0f, height * 0.5f),
+                                angle = Angle.ZERO
+                            )
+                        }
+                        userData = Feet(entity)
+                    })
+                    createFixture(FixtureDef().apply {
+                        isSensor = true
+                        filter = Filter().apply {
+                            categoryBits = PLAYER_TORSO_MASK
+                            maskBits = PLAYER_LIMB_COLLISIONS
+                        }
+                        shape = CircleShape(radius = initialPlayerBounds.width * 0.3f)
+                        userData = Torso(body.position)
+                    })*/
                 },
             ).apply {
                 // land body
@@ -510,9 +555,7 @@ class Box2DPhysicsSystem(
                         categoryBits = ENEMY_BODY_MASK
                         maskBits = ENEMY_BODY_COLLISION
                     }
-                    shape = PolygonShape().apply {
-                        setAsBox(width * 0.5f, height * 0.5f)
-                    }
+                    shape = PolygonShape().apply { setAsBox(width * 0.5f, height * 0.5f) }
                     userData = EnemyHazard(1f, body.position, entity)
                 })!!
                 waterBodyFixture = landBodyFixture
@@ -754,7 +797,8 @@ class Box2DPhysicsSystem(
     private object Wall
     private class Feet(val entity: Entity)
     private class Torso(val bodyPosition: Vec2)
-    private class Hands(val entity: Entity)
+    private class LeftHand(val entity: Entity)
+    private class RightHand(val entity: Entity)
     private class EnemyHazard(val damage: Float, val bodyPosition: Vec2, val entity: Entity)
     private class PlayerAttack(val damage: Float, val x: Float, val y: Float)
     private object Checkpoint
@@ -777,6 +821,7 @@ class Box2DPhysicsSystem(
         private val PLAYER_HANDS_MASK = NEXT_MASK
 
         private val ENEMY_BODY_MASK = NEXT_MASK
+        private val ENEMY_FOOT_MASK = NEXT_MASK
         private val PLAYER_ATTACK_MASK = NEXT_MASK
 
         private val CHECKPOINT_MASK = NEXT_MASK

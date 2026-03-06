@@ -12,13 +12,13 @@ import net.mattemade.platformer.component.StaminaComponent
 import net.mattemade.platformer.component.StaminaDamageComponent
 
 class StaminaBreathingSystem(
-    interval: Interval = Fixed(1 / 100f)
+    interval: Interval = Fixed(1 / 200f)
 ) : IteratingSystem(family { all(StaminaComponent, FloatUpComponent) }, interval = interval) {
 
     override fun onTickEntity(entity: Entity) {
         if (entity[FloatUpComponent].floatUpAcceleration != 0f) {
             entity[StaminaComponent].apply {
-                stamina -= 0.00065f
+                stamina -= 0.000325f
                 staminaPressure = true
                 restoreAfterTicks = 100
             }

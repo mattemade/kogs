@@ -9,7 +9,7 @@ import com.littlekt.math.clamp
 import net.mattemade.platformer.component.FloatUpComponent
 
 class FloatingSystem(
-    interval: Interval = Fixed(1 / 100f)
+    interval: Interval = Fixed(1 / 200f)
 ) : IteratingSystem(family { all(FloatUpComponent) }, interval = interval) {
 
     override fun onTickEntity(entity: Entity) {

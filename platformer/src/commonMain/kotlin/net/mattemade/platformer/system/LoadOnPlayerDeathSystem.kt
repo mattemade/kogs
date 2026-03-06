@@ -12,7 +12,7 @@ import net.mattemade.platformer.component.PlayerComponent
 
 class LoadOnPlayerDeathSystem(
     private val gameContext: PlatformerGameContext = inject(),
-    interval: Interval = Fixed(1 / 100f)
+    interval: Interval = Fixed(1 / 200f)
 ) : IteratingSystem(family { all(HealthComponent, PlayerComponent) }, interval = interval) {
 
     override fun onTickEntity(entity: Entity) {

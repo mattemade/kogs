@@ -35,6 +35,7 @@ import net.mattemade.platformer.system.ControlsSystem
 import net.mattemade.platformer.system.LoadOnPlayerDeathSystem
 import net.mattemade.platformer.system.LowStaminaDamageSystem
 import net.mattemade.platformer.system.MascotSystem
+import net.mattemade.platformer.system.PushingSystem
 import net.mattemade.platformer.system.RenderingSystem
 import net.mattemade.platformer.system.RotationSystem
 import net.mattemade.platformer.system.StaminaBreathingSystem
@@ -69,9 +70,10 @@ class Room(
 
     var mapTexture: Texture? = null
     var addedToMap: Boolean = false
-    val tileTypeMap = listOf("solid", "platform", "water", "fake").associateWith {
-        Array(map.width) { BooleanArray(map.height) }
-    }
+    val tileTypeMap =
+        listOf("solid", "platform", "water", "fake", "push-up", "push-down", "push-left", "push-right").associateWith {
+            Array(map.width) { BooleanArray(map.height) }
+        }
     val teleports = map.layers.mapNotNull {
         (it as? TiledObjectLayer)?.objects?.filter { it.name == "teleport" }?.map {
             Rect(
@@ -96,6 +98,17 @@ class Room(
             add(ControlsSystem())
             add(UiControlsSystem())
             add(AttackSystem())
+            add(
+                PushingSystem(
+                    arrayOf(
+                        tileTypeMap["push-left"]!!,
+                        tileTypeMap["push-right"]!!,
+                        tileTypeMap["push-up"]!!,
+                        tileTypeMap["push-down"]!!,
+                    ),
+                    tileTypeMap["water"]!!,
+                )
+            )
             add(Box2DPhysicsSystem(::spawnPlayerAttack).also {
                 physicsSystem = it
                 (map.layerOrNull("player-spawn") as? TiledObjectLayer)?.objects?.firstOrNull()?.bounds?.let {
@@ -230,7 +243,12 @@ class Room(
                 wallSlideAnimation = gameContext.assets.animation("MC wall slide"),
                 animationEventCallback = { it, _ -> println(it) },
                 // baking offset into the bounds, maybe it should be a separate property?
-                bounds = Rect(-0.45f.px, -0.9f.px, initialPlayerBounds.width * 0.91f, initialPlayerBounds.height * 0.91f),
+                bounds = Rect(
+                    -0.45f.px,
+                    -0.9f.px,
+                    initialPlayerBounds.width * 0.91f,
+                    initialPlayerBounds.height * 0.91f
+                ),
                 tint = Color.ORANGE.toMutableColor().apply { a = 0.2f }.toFloatBits(),
                 priority = 1,
             )
@@ -241,11 +259,13 @@ class Room(
             it += RotationComponent(maxRotationVelocity = 0.1f)
             it += MoveComponent()
             it += JumpComponent()
-            it += AttackComponent(specs = listOf(
-                AttackComponent.AttackSpec(shortCooldown = 0.5f, longCooldown = 0.75f, damage = 1f),
-                AttackComponent.AttackSpec(shortCooldown = 0.5f, longCooldown = 0.75f, damage = 1f),
-                AttackComponent.AttackSpec(shortCooldown = 1f, longCooldown = 1.5f, damage = 2f),
-                ))
+            it += AttackComponent(
+                specs = listOf(
+                    AttackComponent.AttackSpec(shortCooldown = 0.5f, longCooldown = 0.75f, damage = 1f),
+                    AttackComponent.AttackSpec(shortCooldown = 0.5f, longCooldown = 0.75f, damage = 1f),
+                    AttackComponent.AttackSpec(shortCooldown = 1f, longCooldown = 1.5f, damage = 2f),
+                )
+            )
             it += FloatUpComponent()
             it += MomentaryForceComponent()
             it += ContextComponent()
@@ -274,7 +294,13 @@ class Room(
                     gameContext.assets.resourceSheet.enemies[spawn.name]?.let { enemySpec ->
                         ecs.entity { entity ->
                             with(enemySpec) {
-                                createEnemy(gameContext, entity, physicsSystem, spawn.bounds.cx * unitSize, spawn.bounds.cy * unitSize)
+                                createEnemy(
+                                    gameContext,
+                                    entity,
+                                    physicsSystem,
+                                    spawn.bounds.cx * unitSize,
+                                    spawn.bounds.cy * unitSize
+                                )
                             }
                         }
                     } ?: run {

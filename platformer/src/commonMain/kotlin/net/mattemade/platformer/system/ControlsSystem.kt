@@ -7,29 +7,32 @@ import com.github.quillraven.fleks.IteratingSystem
 import com.github.quillraven.fleks.World.Companion.family
 import com.github.quillraven.fleks.World.Companion.inject
 import com.littlekt.Context
-import com.littlekt.input.Key
 import com.littlekt.math.MutableVec2f
-import net.mattemade.fmod.FMOD
-import net.mattemade.fmod.FMOD.STUDIO_EVENT_CALLBACK_SOUND_STOPPED
-import net.mattemade.fmod.FmodCallback
 import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.SWIM_ACCELERATION
 import net.mattemade.platformer.SWIM_VELOCITY
 import net.mattemade.platformer.WALK_VELOCITY
 import net.mattemade.platformer.component.AttackComponent
-import net.mattemade.platformer.component.JumpComponent
-import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
+import net.mattemade.platformer.component.JumpComponent
+import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PlayerComponent
 import kotlin.math.sign
-import kotlin.random.Random
 
 class ControlsSystem(
     private val context: Context = inject(),
     private val gameContext: PlatformerGameContext = inject(),
     interval: Interval = Fixed(1 / 200f),
-    ): IteratingSystem(family { all(Box2DPhysicsComponent, MoveComponent, JumpComponent, AttackComponent, PlayerComponent)}, interval = interval) {
+) : IteratingSystem(family {
+    all(
+        Box2DPhysicsComponent,
+        MoveComponent,
+        JumpComponent,
+        AttackComponent,
+        PlayerComponent
+    )
+}, interval = interval) {
 
     private val input = gameContext.gameInput
 
@@ -64,14 +67,14 @@ class ControlsSystem(
         entity: Entity
     ) {
         val horizontalSpeed = input.movement.x * WALK_VELOCITY
-        val dash = gameContext.gameState.airPearl && input.dash.pressed && !context.touchingWalls
+        val dash = gameContext.gameState.airPearl && input.dash.pressed
 
         entity[JumpComponent].apply {
-            if (input.jump.justPressed && (canJumpFromGround || canJumpInAir > 0 || (gameContext.gameState.airPearl && context.touchingWalls)) && !jumping) {
+            if (input.jump.justPressed && (canJumpFromGround || canJumpInAir > 0 || (gameContext.gameState.airPearl && context.wallSlide)) && !jumping) {
                 if (input.movement.y > 0f) {
                     entity[MoveComponent].fallThrough = true
                 } else {
-                    executeJump(entity, wallJump = context.touchingWalls)
+                    executeJump(entity, wallJump = context.wallSlide)
                 }
             } else if (!input.jump.pressed) {
                 jumping = false
@@ -89,14 +92,35 @@ class ControlsSystem(
             }
         }
 
+
         entity[MoveComponent].apply {
             speed = 1f
             moveDirection.set(horizontalSpeed, 0f)
+            context.dashing = dash
             if (dash) {
-                if (dashDirection.x != 0f) {
-                    dashDirection.set(dashDirection.x, 0f)
+                if (dashDirection.x != 0f && dashDirection.y == 0f) {
+                    dashDirection.set(dashDirection.x.sign * WALK_VELOCITY * 3f, 0f)
                 } else {
-                    dashDirection.set(horizontalSpeed.sign * WALK_VELOCITY * 3f, 0f)
+                    dashDirection.set(
+                        if (context.wallSlide) {
+                            if (context.touchingLeftWall) {
+                                WALK_VELOCITY * 3f
+                            } else if (context.touchingRightWall) {
+                                -WALK_VELOCITY * 3f
+                            } else {
+                                0f
+                            }
+                        } else {
+                            if (horizontalSpeed != 0f) {
+                                horizontalSpeed.sign * WALK_VELOCITY * 3f
+                            } else if (context.facingRight) {
+                                WALK_VELOCITY * 3f
+                            } else {
+                                -WALK_VELOCITY * 3f
+                            }
+                        }, 0f
+                    )
+                    context.wallSlide = false
                 }
             } else {
                 dashDirection.set(0f, 0f)
@@ -110,7 +134,8 @@ class ControlsSystem(
     ) {
         val swimSpeedMultiplier = if (gameContext.gameState.waterPearl) 1.5f else 1f
         val horizontalSpeed = input.movement.x * SWIM_ACCELERATION * swimSpeedMultiplier
-        val verticalSpeed = (input.movement.y - if (input.jump.pressed) 1f else 0f) * SWIM_ACCELERATION * swimSpeedMultiplier
+        val verticalSpeed =
+            (input.movement.y - if (input.jump.pressed) 1f else 0f) * SWIM_ACCELERATION * swimSpeedMultiplier
         val dash = gameContext.gameState.waterPearl && input.dash.pressed
 
         entity[MoveComponent].apply {

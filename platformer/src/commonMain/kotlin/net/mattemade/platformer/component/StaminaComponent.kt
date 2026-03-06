@@ -7,7 +7,7 @@ class StaminaComponent(
     var stamina: Float = 1f,
     var maxStamina: Float = 1f,
     var restoreAfterTicks: Int = 0,
-    var restorationRate: Float = 0.01f,
+    var restorationRate: Float = 0.005f,
     var staminaPressure: Boolean = false,
 ): Component<StaminaComponent> {
     override fun type() = StaminaComponent

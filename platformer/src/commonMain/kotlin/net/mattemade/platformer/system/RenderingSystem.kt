@@ -44,7 +44,7 @@ class RenderingSystem(
     val map: TiledMap = inject(),
 ) : IteratingSystem(
     family = family { all(PositionComponent, RotationComponent, SpriteComponent) },
-    comparator = compareEntity { left, right ->  left[SpriteComponent].priority.compareTo(right[SpriteComponent].priority) }) {
+    comparator = compareEntity { left, right -> left[SpriteComponent].priority.compareTo(right[SpriteComponent].priority) }) {
 
     private val viewport = ScalingViewport(
         scaler = Scaler.Stretch(),
@@ -208,17 +208,21 @@ class RenderingSystem(
                 } else if (context.standing && body.linearVelocityY == 0f) { // grounded
                     if (body.linearVelocityX == 0f) {
                         spriteComponent.idleAnimation
+                    } else if (context.dashing) {
+                        spriteComponent.fallAnimation
                     } else {
                         spriteComponent.walkAnimation
                     }
                 } else if (body.linearVelocityY < 0f) {
                     spriteComponent.jumpAnimation
                 } else if (body.linearVelocityY > 0f) {
-                    if (gameContext.gameState.airPearl && context.touchingWalls) {
+                    if (gameContext.gameState.airPearl && context.wallSlide) {
                         spriteComponent.wallSlideAnimation
                     } else {
                         spriteComponent.fallAnimation
                     }
+                } else if (context.dashing) {
+                    spriteComponent.fallAnimation
                 } else {
                     spriteComponent.currentAnimation
                 }
@@ -257,7 +261,7 @@ class RenderingSystem(
         private val tempVec2f = MutableVec2f()
         private val sideBarColor = Color.BLACK.toFloatBits()
         private val topColor = Color.RED.toFloatBits()
-        private val bottomColor = Color.WHITE.toMutableColor().apply{ a = 0.2f }.toFloatBits()
+        private val bottomColor = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits()
         private val fakeWalls = "FAKE WALLS"
     }
 

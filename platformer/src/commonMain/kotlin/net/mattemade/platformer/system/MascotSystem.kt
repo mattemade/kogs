@@ -17,7 +17,7 @@ import kotlin.math.abs
 import kotlin.math.sqrt
 
 class MascotSystem(
-    interval: Interval = Fixed(1 / 100f)
+    interval: Interval = Fixed(1 / 200f)
 ) : IteratingSystem(family { all(MascotComponent) }, interval = interval) {
 
     override fun onTickEntity(entity: Entity) {

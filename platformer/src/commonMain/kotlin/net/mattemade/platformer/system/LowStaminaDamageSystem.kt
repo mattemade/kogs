@@ -10,7 +10,7 @@ import net.mattemade.platformer.component.StaminaComponent
 import net.mattemade.platformer.component.StaminaDamageComponent
 
 class LowStaminaDamageSystem(
-    interval: Interval = Fixed(1 / 100f)
+    interval: Interval = Fixed(1 / 200f)
 ) : IteratingSystem(family { all(StaminaComponent, HealthComponent, StaminaDamageComponent) }, interval = interval) {
 
     override fun onTickEntity(entity: Entity) {

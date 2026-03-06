@@ -8,7 +8,7 @@ import com.github.quillraven.fleks.World.Companion.family
 import net.mattemade.platformer.component.TimeToLiveComponent
 
 class TimeToLiveSystem(
-    interval: Interval = Fixed(1 / 100f)
+    interval: Interval = Fixed(1 / 200f)
 ) : IteratingSystem(family { all(TimeToLiveComponent) }, interval = interval) {
 
     override fun onTickEntity(entity: Entity) {

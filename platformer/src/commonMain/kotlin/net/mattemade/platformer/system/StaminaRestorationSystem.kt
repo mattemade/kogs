@@ -13,7 +13,7 @@ import net.mattemade.platformer.component.StaminaComponent
 
 class StaminaRestorationSystem(
     private val gameContext: PlatformerGameContext = inject(),
-    interval: Interval = Fixed(1 / 100f)
+    interval: Interval = Fixed(1 / 200f)
 ) : IteratingSystem(family { all(StaminaComponent) }, interval = interval) {
 
     override fun onTickEntity(entity: Entity) {

@@ -11,7 +11,7 @@ import net.mattemade.platformer.component.RotationComponent
 import kotlin.math.abs
 
 class RotationSystem(
-    interval: Interval = Fixed(1 / 100f)
+    interval: Interval = Fixed(1 / 200f)
 ) : IteratingSystem(family { all(RotationComponent) }, interval = interval) {
 
     override fun onTickEntity(entity: Entity) {
