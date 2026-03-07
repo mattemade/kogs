@@ -135,6 +135,8 @@ class Box2DPhysicsSystem(
                             entity.getOrNull(MomentaryForceComponent)?.let {
                                 it.forces += Vec2f(0f, -15f)
                             }
+                            //tempVec2f.set(body.position.x, body.position.y - 3f)
+                            //teleport(entity, tempVec2f, physicsComponent)
                         }
                         if (direction.x != 0f) {
                             entity[JumpComponent].apply { // do not allow to jump up the waterfall!!
@@ -354,7 +356,7 @@ class Box2DPhysicsSystem(
         entity.getOrNull(MoveComponent)?.let { move ->
             physicsComponent.body.applyImpulse(
                 move.moveDirection.x * move.speed - physicsComponent.body.linearVelocityX,
-                if (move.moveDirection.y != 0f) move.moveDirection.y * move.speed - physicsComponent.body.linearVelocityY else 0f
+                0f//if (move.moveDirection.y != 0f) move.moveDirection.y * move.speed - physicsComponent.body.linearVelocityY else 0f
             )
             if (move.fallThrough) {
                 physicsComponent.body.applyImpulse(0f, WALK_VELOCITY)
