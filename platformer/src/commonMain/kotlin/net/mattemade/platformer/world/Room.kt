@@ -16,6 +16,7 @@ import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.FloatUpComponent
 import net.mattemade.platformer.component.HealthComponent
+import net.mattemade.platformer.component.InvincibilityComponent
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MascotComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
@@ -280,7 +281,7 @@ class Room(
                 it.position.set(initialPlayerBounds.cx, initialPlayerBounds.cy)
                 playerPosition = it.position
             }
-            it += RotationComponent(maxRotationVelocity = 0.1f)
+            it += RotationComponent(maxRotationVelocity = 0.05f)
             it += MoveComponent()
             it += JumpComponent()
             it += AttackComponent(
@@ -509,6 +510,7 @@ class Room(
         healthComponent: HealthComponent,
         staminaComponent: StaminaComponent,
         staminaDamageComponent: StaminaDamageComponent,
+        invincibilityComponent: InvincibilityComponent?,
         physicsComponent: Box2DPhysicsComponent
     ) {
         ecs.apply {
@@ -527,6 +529,11 @@ class Room(
                 it += healthComponent
                 it += staminaComponent
                 it += staminaDamageComponent
+                if (invincibilityComponent != null) {
+                    it += invincibilityComponent
+                } else {
+                    it -= InvincibilityComponent
+                }
             }
             physicsSystem.teleport(playerEntity, playerPosition, physicsComponent)
             contextComponent.swimming = false // next room should switch body parameters for swimming if needed

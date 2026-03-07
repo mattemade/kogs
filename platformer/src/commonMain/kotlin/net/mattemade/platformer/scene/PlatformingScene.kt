@@ -14,6 +14,7 @@ import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.FloatUpComponent
 import net.mattemade.platformer.component.HealthComponent
+import net.mattemade.platformer.component.InvincibilityComponent
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PositionComponent
@@ -174,6 +175,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                             player[HealthComponent],
                             player[StaminaComponent],
                             player[StaminaDamageComponent],
+                            player.getOrNull(InvincibilityComponent),
                             player[Box2DPhysicsComponent], // just to copy velocity and stuff, SHOULD NOT BE REUSED THERE as it's connected to the Room's B2D World
                         )
                         currentRoom = it
