@@ -30,6 +30,7 @@ import net.mattemade.platformer.component.StaminaDamageComponent
 import net.mattemade.platformer.component.TimeToLiveComponent
 import net.mattemade.platformer.component.UiComponent
 import net.mattemade.platformer.px
+import net.mattemade.platformer.scene.PlatformingScene
 import net.mattemade.platformer.system.AttackSystem
 import net.mattemade.platformer.system.Box2DPhysicsSystem
 import net.mattemade.platformer.system.ControlsSystem
@@ -137,6 +138,7 @@ class Room(
         }
     }
 
+    private lateinit var uiEntity: Entity
     private lateinit var playerPosition: Vec2f
     private lateinit var playerEntity: Entity
     private lateinit var mascotEntity: Entity
@@ -235,7 +237,7 @@ class Room(
 
     private fun respawnEntities() {
         ecs.removeAll(clearRecycled = false)
-        ecs.entity {
+        uiEntity = ecs.entity {
             it += UiComponent()
         }
         playerEntity = ecs.entity {
@@ -315,84 +317,113 @@ class Room(
                     when (spawn.name) {
                         "water-pearl" -> {
                             if (!gameContext.gameState.waterPearl) {
-                                ecs.entity { entity ->
-                                    entity += SpriteComponent(
-                                        idleAnimation = gameContext.assets.animation("MC idle"),
-                                        animationEventCallback = { it, _ -> println(it) },
-                                        // baking offset into the bounds, maybe it should be a separate property?
-                                        bounds = Rect(
-                                            spawn.bounds.width * unitSize * -0.48f,
-                                            spawn.bounds.height * unitSize * -0.48f,
-                                            spawn.bounds.width * unitSize,
-                                            spawn.bounds.height * unitSize
-                                        ),
-                                        tint = Color.BLUE.toFloatBits(),
-                                    )
-                                    entity += PositionComponent().also {
-                                        it.position.set(
-                                            spawn.bounds.cx * unitSize,
-                                            spawn.bounds.cy * unitSize
-                                        )
-                                    }
-                                    entity += RotationComponent()
-                                    physicsSystem.createPearl(
-                                        this,
-                                        entity,
-                                        spawn.bounds.cx * unitSize,
-                                        spawn.bounds.cy * unitSize,
-                                        spawn.bounds.width * unitSize,
-                                        spawn.bounds.height * unitSize,
-                                    ) {
-                                        gameContext.gameState.waterPearl = true
-                                        gameContext.save()
-                                        gameContext.scheduler.schedule().then {
-                                            entity.remove()
-                                        }
-                                    }
+                                createPickup(spawn, tint = Color.BLUE.toFloatBits()) {
+                                    gameContext.gameState.waterPearl = true
+                                    gameContext.save()
                                 }
                             }
                         }
 
                         "air-pearl" -> {
                             if (!gameContext.gameState.airPearl) {
-                                ecs.entity { entity ->
-                                    entity += SpriteComponent(
-                                        idleAnimation = gameContext.assets.animation("MC idle"),
-                                        animationEventCallback = { it, _ -> println(it) },
-                                        // baking offset into the bounds, maybe it should be a separate property?
-                                        bounds = Rect(
-                                            spawn.bounds.width * unitSize * -0.48f,
-                                            spawn.bounds.height * unitSize * -0.48f,
-                                            spawn.bounds.width * unitSize,
-                                            spawn.bounds.height * unitSize
-                                        ),
-                                        tint = Color.GREEN.toFloatBits(),
-                                    )
-                                    entity += PositionComponent().also {
-                                        it.position.set(
-                                            spawn.bounds.cx * unitSize,
-                                            spawn.bounds.cy * unitSize
-                                        )
+                                createPickup(spawn, tint = Color.GREEN.toFloatBits()) {
+                                    gameContext.gameState.airPearl = true
+                                    gameContext.save()
+                                }
+                            }
+                        }
+
+                        "sword" -> {
+                            if (!gameContext.gameState.sword) {
+                                createPickup(spawn, tint = Color.YELLOW.toFloatBits()) {
+                                    gameContext.gameState.sword = true
+                                    gameContext.save()
+                                }
+                            }
+                        }
+
+                        "pearl" -> {
+                            val pearlId = PlatformingScene.nextPearlId++
+                            while (gameContext.gameState.pearls.size <= pearlId) {
+                                gameContext.gameState.pearls.add(false)
+                            }
+                            if (!gameContext.gameState.pearls[pearlId]) {
+                                createPickup(spawn, tint = Color.WHITE.toFloatBits()) {
+                                    gameContext.gameState.pearls[pearlId] = true
+                                    gameContext.save()
+                                }
+                            }
+                        }
+
+                        "tutorial" -> {
+                            val id = spawn.properties["id"]?.string
+                            val text = spawn.properties["text"]?.string
+                            if (id != null && text != null && gameContext.gameState.tutorials[id] != true) {
+                                createPickup(
+                                    spawn,
+                                    tint = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits()
+                                ) {
+                                    gameContext.gameState.tutorials[id] = false
+                                    ecs.apply {
+                                        uiEntity[UiComponent].showTutorial = text
                                     }
-                                    entity += RotationComponent()
-                                    physicsSystem.createPearl(
-                                        this,
-                                        entity,
-                                        spawn.bounds.cx * unitSize,
-                                        spawn.bounds.cy * unitSize,
-                                        spawn.bounds.width * unitSize,
-                                        spawn.bounds.height * unitSize,
+                                }
+                            }
+                        }
+
+                        "tutorial-end" -> {
+                            spawn.properties["id"]?.string?.let { id ->
+                                if (gameContext.gameState.tutorials[id] != true) {
+                                    createPickup(
+                                        spawn,
+                                        tint = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits()
                                     ) {
-                                        gameContext.gameState.airPearl = true
-                                        gameContext.save()
-                                        gameContext.scheduler.schedule().then {
-                                            entity.remove()
+                                        gameContext.gameState.tutorials[id] = true
+                                        ecs.apply {
+                                            uiEntity[UiComponent].showTutorial = null
                                         }
                                     }
                                 }
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+
+    private fun createPickup(spawn: TiledMap.Object, tint: Float, collect: () -> Unit) {
+        ecs.entity { entity ->
+            entity += SpriteComponent(
+                idleAnimation = gameContext.assets.animation("MC idle"),
+                animationEventCallback = { it, _ -> println(it) },
+                // baking offset into the bounds, maybe it should be a separate property?
+                bounds = Rect(
+                    spawn.bounds.width * unitSize * -0.48f,
+                    spawn.bounds.height * unitSize * -0.48f,
+                    spawn.bounds.width * unitSize,
+                    spawn.bounds.height * unitSize
+                ),
+                tint = tint,
+            )
+            entity += PositionComponent().also {
+                it.position.set(
+                    spawn.bounds.cx * unitSize,
+                    spawn.bounds.cy * unitSize
+                )
+            }
+            entity += RotationComponent()
+            physicsSystem.createPickupBody(
+                this,
+                entity,
+                spawn.bounds.cx * unitSize,
+                spawn.bounds.cy * unitSize,
+                spawn.bounds.width * unitSize,
+                spawn.bounds.height * unitSize,
+            ) {
+                collect()
+                gameContext.scheduler.schedule().then {
+                    entity.remove()
                 }
             }
         }

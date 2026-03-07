@@ -57,7 +57,7 @@ class ControlsSystem(
         } else {
             landBasedControls(context, entity)
         }
-        if (input.attack.justPressed) {
+        if (gameContext.gameState.sword && input.attack.justPressed) {
             entity[AttackComponent].activated = true
         }
     }

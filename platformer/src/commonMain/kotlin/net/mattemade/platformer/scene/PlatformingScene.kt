@@ -121,6 +121,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
     }
 
     fun reset() {
+        nextPearlId = 0
         rooms.forEach {
             it.reset()
         }
@@ -190,5 +191,6 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
     companion object {
         private val tempVec2f = MutableVec2f()
         private val mapColor = Color.WHITE.toMutableColor().apply { a = 1f }.toFloatBits()
+        var nextPearlId = 0
     }
 }

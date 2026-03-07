@@ -583,7 +583,7 @@ class Box2DPhysicsSystem(
         }
     }
 
-    fun createPearl(
+    fun createPickupBody(
         entityCreateContext: EntityCreateContext,
         entity: Entity,
         x: Float,
@@ -832,7 +832,7 @@ class Box2DPhysicsSystem(
 
         private val PLAYER_BODY_COLLISIONS = WALL_MASK or ENEMY_BODY_MASK or CHECKPOINT_MASK or PEARL_MASK
         private val PLAYER_LIMB_COLLISIONS = WALL_MASK or WATER_MASK
-        private val ENEMY_BODY_COLLISION = WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK or PLAYER_ATTACK_MASK
+        private val ENEMY_BODY_COLLISION = WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK or PLAYER_ATTACK_MASK or ENEMY_BODY_MASK
         private val ENEMY_LIBS_COLLISIONS = WALL_MASK or WATER_MASK
         private val CHECKPOINT_COLLISIONS = PLAYER_BODY_MASK
         private val PEARL_COLLISIONS = PLAYER_BODY_MASK

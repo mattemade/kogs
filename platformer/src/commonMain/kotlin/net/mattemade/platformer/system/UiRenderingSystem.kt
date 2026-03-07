@@ -30,6 +30,7 @@ import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.StaminaComponent
 import net.mattemade.platformer.component.UiComponent
 import net.mattemade.platformer.px
+import net.mattemade.utils.msdf.MsdfFontRenderer
 
 class UiRenderingSystem(
     private val context: Context = inject(),
@@ -55,6 +56,7 @@ class UiRenderingSystem(
     }
     private val batch = SpriteBatch(context)
     private val shapeRenderer = ShapeRenderer(batch, slice = gameContext.assets.textureFiles.whitePixel)
+    private val fontRenderer = MsdfFontRenderer(gameContext.assets.font.fredokaMsdf)
 
     override fun onTick() {
         //context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
@@ -65,19 +67,25 @@ class UiRenderingSystem(
 
         viewport.apply(context)
         batch.begin(camera.viewProjection)
-        renderUi(player)
+        renderUi(player, uiComponent)
         if (uiComponent.showMap) {
             renderMap(player)
         }
         batch.end()
     }
 
-    private fun renderUi(player: Entity) {
+    private fun renderUi(player: Entity, uiComponent: UiComponent) {
         for (i in 0 until player[HealthComponent].health.floorToInt()) {
             shapeRenderer.filledRectangle(x = 0.25f + i * 0.6f, y = 0.25f, width = 0.5f, height = 0.5f, color = Color.RED.toFloatBits())
         }
         shapeRenderer.filledRectangle(x = 0.25f, y = 0.85f, width = 1.7f, height = 0.25f, color = Color.LIGHT_GRAY.toFloatBits())
         shapeRenderer.filledRectangle(x = 0.25f, y = 0.85f, width = 1.7f * player[StaminaComponent].stamina, height = 0.25f, color = Color.BLUE.toFloatBits())
+
+        uiComponent.showTutorial?.let {
+            fontRenderer.drawAllTextAtOnce(batch) {
+                draw(it, 1f, 1f, 1f, batch)
+            }
+        }
     }
 
     override fun onTickEntity(entity: Entity) {

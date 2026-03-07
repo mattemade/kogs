@@ -94,6 +94,9 @@ class PlatformerGameContext(
         var roomStates: MutableMap<String, RoomState> = mutableMapOf(),
         var waterPearl: Boolean = false,
         var airPearl: Boolean = false,
+        var sword: Boolean = false,
+        var pearls: MutableList<Boolean> = mutableListOf(),
+        var tutorials: MutableMap<String, Boolean> = mutableMapOf(),
         var currentRoom: String = FIRST_LEVEL_NAME,
     )
 
