@@ -35,6 +35,7 @@ import net.mattemade.platformer.system.AttackSystem
 import net.mattemade.platformer.system.Box2DPhysicsSystem
 import net.mattemade.platformer.system.ControlsSystem
 import net.mattemade.platformer.system.EnemyDeathSystem
+import net.mattemade.platformer.system.InvincibilitySystem
 import net.mattemade.platformer.system.LoadOnPlayerDeathSystem
 import net.mattemade.platformer.system.LowStaminaDamageSystem
 import net.mattemade.platformer.system.MascotSystem
@@ -76,7 +77,7 @@ class Room(
     var mapTexture: Texture? = null
     var addedToMap: Boolean = false
     val tileTypeMap =
-        listOf("solid", "platform", "water", "fake", "push-up", "push-down", "push-left", "push-right").associateWith {
+        listOf("solid", "platform", "water", "fake", "push-up", "push-down", "push-left", "push-right", "spike").associateWith {
             Array(map.width) { BooleanArray(map.height) }
         }
     val teleports = map.layers.mapNotNull {
@@ -114,6 +115,7 @@ class Room(
                     tileTypeMap["water"]!!,
                 )
             )
+            add(InvincibilitySystem())
             add(Box2DPhysicsSystem(::spawnPlayerAttack).also {
                 physicsSystem = it
                 (map.layerOrNull("player-spawn") as? TiledObjectLayer)?.objects?.firstOrNull()?.bounds?.let {
@@ -191,6 +193,21 @@ class Room(
 
             override fun endPath() {
                 physicsSystem.createWall(accumulatedVertices.toTypedArray())
+            }
+        })
+
+        tileTypeMap["spike"]?.findBounds(object : BoundsListener {
+            val accumulatedVertices = mutableListOf<Vec2>()
+
+            override fun startPath() = accumulatedVertices.clear()
+
+
+            override fun addPoint(x: Float, y: Float) {
+                accumulatedVertices += Vec2(x, y)
+            }
+
+            override fun endPath() {
+                physicsSystem.createSpike(accumulatedVertices.toTypedArray())
             }
         })
 

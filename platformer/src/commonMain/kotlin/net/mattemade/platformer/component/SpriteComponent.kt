@@ -19,6 +19,7 @@ data class SpriteComponent(
     val bounds: Rect,
     val tint: Float = Color.RED.toFloatBits(),
     val priority: Int = 0,
+    var visible: Boolean = true,
 ): Component<SpriteComponent> {
 
     var currentAnimation = idleAnimation

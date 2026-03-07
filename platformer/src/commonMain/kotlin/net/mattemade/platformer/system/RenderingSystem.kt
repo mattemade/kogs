@@ -245,20 +245,22 @@ class RenderingSystem(
             }
             animationEvents.clear()
 
-            tempVec2f.set(
-                -offset.x * UNITS_PER_PIXEL,
-                -offset.y * UNITS_PER_PIXEL + bounds.height * 0.5f, // to put the sprite on the ground
-            ).rotate(angle)
-            currentAnimation.currentKeyFrame?.let {
-                batch.draw(
-                    slice = it,
-                    x = (position.x + tempVec2f.x).px,
-                    y = (position.y + tempVec2f.y).px,
-                    width = it.width * UNITS_PER_PIXEL * scale,
-                    height = it.height * UNITS_PER_PIXEL * scale,
-                    rotation = angle,
-                    flipX = !context.facingRight,
-                )
+            if (spriteComponent.visible) {
+                tempVec2f.set(
+                    -offset.x * UNITS_PER_PIXEL,
+                    -offset.y * UNITS_PER_PIXEL + bounds.height * 0.5f, // to put the sprite on the ground
+                ).rotate(angle)
+                currentAnimation.currentKeyFrame?.let {
+                    batch.draw(
+                        slice = it,
+                        x = (position.x + tempVec2f.x).px,
+                        y = (position.y + tempVec2f.y).px,
+                        width = it.width * UNITS_PER_PIXEL * scale,
+                        height = it.height * UNITS_PER_PIXEL * scale,
+                        rotation = angle,
+                        flipX = !context.facingRight,
+                    )
+                }
             }
         }
     }

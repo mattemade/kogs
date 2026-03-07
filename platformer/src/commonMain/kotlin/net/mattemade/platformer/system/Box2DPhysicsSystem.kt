@@ -27,6 +27,7 @@ import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.FloatUpComponent
 import net.mattemade.platformer.component.HealthComponent
+import net.mattemade.platformer.component.InvincibilityComponent
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.KnockbackComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
@@ -96,7 +97,7 @@ class Box2DPhysicsSystem(
             entity[ContextComponent].apply {
                 val wasStanding = standing
                 standing = body.getContactList()
-                    .let { it.isTouching<Feet, Wall>() || it.isTouching<Feet, Platform>() } && body.linearVelocityY == 0f
+                    .let { it.isTouching<Feet, Wall>() || it.isTouching<Feet, Platform>() || it.isTouching<Feet, Spike>() } && body.linearVelocityY == 0f
                 touchingLeftWall = body.getContactList().isTouching<LeftHand, Wall>()
                 touchingRightWall = body.getContactList().isTouching<RightHand, Wall>()
 
@@ -114,7 +115,7 @@ class Box2DPhysicsSystem(
 
                 if (!swimming && currentlySwimming) { // started swimming
                     physicsComponent.landBodyFixture.filterData.maskBits = 0
-                    physicsComponent.waterBodyFixture.filterData.maskBits = PLAYER_BODY_COLLISIONS
+                    physicsComponent.waterBodyFixture.filterData.maskBits = physicsComponent.collisionMask
                     entity[JumpComponent].apply {
                         jumping = false
                         wasJumping = false
@@ -124,7 +125,7 @@ class Box2DPhysicsSystem(
                     }
                 } else if (swimming && !currentlySwimming) { // finished swimming
                     physicsComponent.waterBodyFixture.filterData.maskBits = 0
-                    physicsComponent.landBodyFixture.filterData.maskBits = PLAYER_BODY_COLLISIONS
+                    physicsComponent.landBodyFixture.filterData.maskBits = physicsComponent.collisionMask
                     body.setTransformRadians(body.position, 0f)
                     entity[RotationComponent].targetRotation = 0f
                     entity.getOrNull(MoveComponent)?.let {
@@ -158,6 +159,26 @@ class Box2DPhysicsSystem(
                     if (knockbackEffect.canStop && knockbackEffect.atLeastForTicks <= 0 || knockbackEffect.ticksToWearOff <= 0) {
                         entity.configure {
                             it -= KnockbackComponent
+                        }
+                    }
+                }
+
+                body.getContactList().touchAll<Entity, Spike> { entity, spike ->
+                    if (entity.getOrNull(InvincibilityComponent) == null) {
+                        entity.getOrNull(HealthComponent)?.let {
+                            it.health -= 1f
+                        }
+                        val body = entity[Box2DPhysicsComponent].body
+                        val context = entity[ContextComponent]
+                        if (context.swimming) {
+                            tempVec2f.set(0f, -10f).rotate(entity[RotationComponent].currentRotation.radians)
+                                .add(body.position.x, body.position.y)
+                        } else {
+                            tempVec2f.set(body.position.x + if (context.facingRight) 1f else -1f, body.position.y)
+                        }
+                        applyKnockback(entity, tempVec2f.x, tempVec2f.y)
+                        entity.configure {
+                            it += InvincibilityComponent()
                         }
                     }
                 }
@@ -413,6 +434,7 @@ class Box2DPhysicsSystem(
                         userData = RightHand(entity)
                     })
                 },
+                collisionMask = PLAYER_BODY_COLLISIONS,
             ).apply {
                 // land body
                 landBodyFixture = body.createFixture(FixtureDef().apply {
@@ -485,6 +507,7 @@ class Box2DPhysicsSystem(
                     position.set(x, y)
                     gravityScale = 0f
                 }),
+                collisionMask = PLAYER_ATTACK_COLLISIONS,
             ).apply {
                 // land body
                 landBodyFixture = body.createFixture(FixtureDef().apply {
@@ -545,6 +568,7 @@ class Box2DPhysicsSystem(
                         userData = Torso(position)
                     })
                 },
+                collisionMask = ENEMY_BODY_COLLISION,
             ).apply {
                 // land body
                 landBodyFixture = body.createFixture(FixtureDef().apply {
@@ -601,6 +625,7 @@ class Box2DPhysicsSystem(
                 }).apply {
                     isFixedRotation = false
                 },
+                collisionMask = PEARL_COLLISIONS,
             ).apply {
                 // land body
                 landBodyFixture = body.createFixture(FixtureDef().apply {
@@ -679,6 +704,20 @@ class Box2DPhysicsSystem(
         }
     }
 
+    fun createSpike(vertices: Array<Vec2>) {
+        physics.createBody(BodyDef()).apply {
+            createFixture(FixtureDef().apply {
+                filter = Filter().apply {
+                    categoryBits = SPIKE_MASK
+                }
+                shape = ChainShape().apply {
+                    createLoop(vertices, vertices.size)
+                }
+                this.userData = Spike
+            })
+        }
+    }
+
     fun teleport(entity: Entity, moveToPosition: Vec2f, physicsComponentFromPreviousRoom: Box2DPhysicsComponent) {
         entity[Box2DPhysicsComponent].apply {
             previousPosition.set(moveToPosition)
@@ -733,6 +772,7 @@ class Box2DPhysicsSystem(
         contact.with<Entity> { other ->
             if (contact.isTouching) {
                 when (other) {
+                    is Spike -> { /* no-op, since it would allow to walk on spikes after, as they won't trigger beginContact anymore */}
                     is Checkpoint -> {
                         this.getOrNull(HealthComponent)?.apply {
                             health = maxHealth
@@ -742,34 +782,48 @@ class Box2DPhysicsSystem(
 
                     is Action -> other.onTouch()
                     is EnemyHazard -> {
-                        this.configure {
-                            it += KnockbackComponent()
-                        }
-                        this.getOrNull(HealthComponent)?.let {
-                            it.health -= other.damage
-                        }
+                        if (this.getOrNull(InvincibilityComponent) == null) {
+                            this.getOrNull(HealthComponent)?.let {
+                                it.health -= other.damage
+                            }
 
-                        val body = this[Box2DPhysicsComponent].body
-                        body.linearVelocityY = 0f
-                        body.linearVelocityX = 0f
-                        val position = body.position
-                        if (this[ContextComponent].swimming) {
-                            tempVec2f.set(position.x - other.bodyPosition.x, position.y - other.bodyPosition.y)
-                                .setLength(10f)
-                            this[MomentaryForceComponent].forces += Vec2f(
-                                tempVec2f.x,
-                                tempVec2f.y,
-                            )
-                        } else {
-                            this[MomentaryForceComponent].forces += Vec2f(
-                                10f * sign(position.x - other.bodyPosition.x),
-                                -10f
-                            )
+                            applyKnockback(this, other.bodyPosition.x, other.bodyPosition.y)
+                            this.configure {
+                                it += InvincibilityComponent()
+                            }
                         }
                     }
                 }
             }
 
+        }
+    }
+
+    private fun applyKnockback(
+        entity: Entity,
+        fromX: Float,
+        fromY: Float,
+    ) {
+        entity.configure {
+            it += KnockbackComponent()
+        }
+        val body = entity[Box2DPhysicsComponent].body
+        //body.gravityScale = GRAVITY_IN_FALL
+        body.linearVelocityY = 0f
+        body.linearVelocityX = 0f
+        val position = body.position
+        if (entity[ContextComponent].swimming) {
+            tempVec2f.set(position.x - fromX, position.y - fromY)
+                .setLength(10f)
+            entity[MomentaryForceComponent].forces += Vec2f(
+                tempVec2f.x,
+                tempVec2f.y,
+            )
+        } else {
+            entity[MomentaryForceComponent].forces += Vec2f(
+                10f * sign(position.x - fromX),
+                -10f
+            )
         }
     }
 
@@ -796,6 +850,7 @@ class Box2DPhysicsSystem(
     private class Platform(/*var isActive: Boolean = true, */val top: Float = 0f)
     private class Water(val top: Float = 0f)
     private object Wall
+    private object Spike
     private class Feet(val entity: Entity)
     private class Torso(val bodyPosition: Vec2)
     private class LeftHand(val entity: Entity)
@@ -812,6 +867,7 @@ class Box2DPhysicsSystem(
         private var SHIFT_INDEX = 0
         private val NEXT_MASK get() = 1 shl SHIFT_INDEX++
         private val WALL_MASK = NEXT_MASK
+        private val SPIKE_MASK = NEXT_MASK
 
         //private val PLATFORM_MASK = NEXT_MASK
         private val WATER_MASK = NEXT_MASK
@@ -830,10 +886,10 @@ class Box2DPhysicsSystem(
 
         private val PEARL_MASK = NEXT_MASK
 
-        private val PLAYER_BODY_COLLISIONS = WALL_MASK or ENEMY_BODY_MASK or CHECKPOINT_MASK or PEARL_MASK
-        private val PLAYER_LIMB_COLLISIONS = WALL_MASK or WATER_MASK
-        private val ENEMY_BODY_COLLISION = WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK or PLAYER_ATTACK_MASK or ENEMY_BODY_MASK
-        private val ENEMY_LIBS_COLLISIONS = WALL_MASK or WATER_MASK
+        private val PLAYER_BODY_COLLISIONS = WALL_MASK or ENEMY_BODY_MASK or CHECKPOINT_MASK or PEARL_MASK or SPIKE_MASK
+        private val PLAYER_LIMB_COLLISIONS = WALL_MASK or WATER_MASK or SPIKE_MASK
+        private val ENEMY_BODY_COLLISION = WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK or PLAYER_ATTACK_MASK or ENEMY_BODY_MASK or SPIKE_MASK
+        private val ENEMY_LIBS_COLLISIONS = WALL_MASK or WATER_MASK or SPIKE_MASK
         private val CHECKPOINT_COLLISIONS = PLAYER_BODY_MASK
         private val PEARL_COLLISIONS = PLAYER_BODY_MASK
         private val PLAYER_ATTACK_COLLISIONS = ENEMY_BODY_MASK
