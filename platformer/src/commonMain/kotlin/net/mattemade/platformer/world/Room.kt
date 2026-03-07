@@ -22,6 +22,7 @@ import net.mattemade.platformer.component.MomentaryForceComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PlayerComponent
 import net.mattemade.platformer.component.PositionComponent
+import net.mattemade.platformer.component.PushableComponent
 import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.component.StaminaComponent
@@ -55,7 +56,9 @@ class Room(
     private val map: TiledMap,
     val worldArea: Rect,
     val name: String,
+    val visibleOnMap: Boolean,
     private val switchRoom: (player: Entity) -> Unit,
+    private val mapSize: Rect,
 ) : Releasing by Self() {
 
     private val unitSize = 1f / map.tileWidth
@@ -130,7 +133,7 @@ class Room(
             add(RotationSystem())
             add(MascotSystem())
             add(RenderingSystem())
-            add(UiRenderingSystem(worldArea = worldArea, mapTexture = { mapTexture }))
+            add(UiRenderingSystem(worldArea = worldArea, mapVisible = visibleOnMap, mapTexture = { mapTexture }))
         }
     }
 
@@ -274,6 +277,7 @@ class Room(
             it += HealthComponent()
             it += StaminaComponent()
             it += StaminaDamageComponent()
+            it += PushableComponent()
             it += PlayerComponent()
             physicsSystem.createPlayerBody(this, it, initialPlayerBounds)
         }
@@ -495,6 +499,7 @@ class Room(
     }
 
     fun reset() {
+        addedToMap = false
         respawnEntities()
     }
 }

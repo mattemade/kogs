@@ -31,12 +31,14 @@ import net.mattemade.platformer.WORLD_UNIT_WIDTH
 import net.mattemade.platformer.WORLD_WIDTH
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
+import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PlayerComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.px
 import net.mattemade.utils.msdf.MsdfFontRenderer
+import kotlin.math.abs
 
 class RenderingSystem(
     private val context: Context = inject(),
@@ -200,6 +202,7 @@ class RenderingSystem(
             rotation = angle
         )
 
+        var animationTimeMultiplier = 1f
         entity.getOrNull(ContextComponent)?.let { context ->
             entity.getOrNull(Box2DPhysicsComponent)?.let { physicsComponent ->
                 val body = physicsComponent.body
@@ -211,6 +214,9 @@ class RenderingSystem(
                     } else if (context.dashing) {
                         spriteComponent.fallAnimation
                     } else {
+                        entity.getOrNull(MoveComponent)?.let { move ->
+                            animationTimeMultiplier = abs(move.moveDirection.x).clamp(0.5f, 2f)
+                        }
                         spriteComponent.walkAnimation
                     }
                 } else if (body.linearVelocityY < 0f) {
@@ -231,7 +237,7 @@ class RenderingSystem(
 
             val (currentAnimation, offset, scale) = spriteComponent.currentAnimation
 
-            currentAnimation.update(deltaTime.seconds, animationEvents::add)
+            currentAnimation.update((deltaTime * animationTimeMultiplier).seconds, animationEvents::add)
             entity.getOrNull(Box2DPhysicsComponent)?.let { physicsComponent ->
                 animationEvents.fastForEach {
                     spriteComponent.animationEventCallback.invoke(it, physicsComponent)

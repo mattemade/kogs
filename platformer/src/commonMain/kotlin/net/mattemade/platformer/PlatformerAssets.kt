@@ -209,7 +209,8 @@ class LevelFiles(
                                 mapDefinition.y.toFloat() / level.tileHeight,
                                 mapDefinition.width.toFloat() / level.tileWidth,
                                 mapDefinition.height.toFloat() / level.tileHeight,
-                            )
+                            ),
+                            level.properties["map"]?.bool != false,
                         )
                     }
                 }

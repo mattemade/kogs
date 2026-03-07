@@ -14,6 +14,8 @@ import com.littlekt.input.Pointer
 import com.littlekt.math.MutableVec2f
 import com.littlekt.math.MutableVec2i
 import com.littlekt.util.seconds
+import korlibs.time.TimeSpan
+import korlibs.time.blockingSleep
 import net.mattemade.platformer.input.ControllerInput
 import net.mattemade.platformer.input.TouchButton
 import net.mattemade.platformer.scene.PlatformingScene
@@ -201,7 +203,7 @@ class PlatformerGame(
         onRender { dt ->
             //gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
             //gl.clearColor(Color.BLACK)
-            //fpsCounter.update(dt.seconds)
+            fpsCounter.update(dt.seconds)
 
             if (!audioReady) {
                 audioReady = audio.isReady()
@@ -238,7 +240,7 @@ class PlatformerGame(
                 }
             }
 
-            //blockingSleep(TimeSpan(2.0))
+            //blockingSleep(TimeSpan(1000.0 / 15))
         }
 
         onDispose(::release)

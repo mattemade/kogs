@@ -35,6 +35,7 @@ class UiRenderingSystem(
     private val context: Context = inject(),
     private val gameContext: PlatformerGameContext = inject(),
     private val worldArea: Rect,
+    private val mapVisible: Boolean,
     private val mapTexture: () -> Texture?,
 ) : IteratingSystem(family = family { any(UiComponent, PlayerComponent) }) {
 
@@ -114,15 +115,19 @@ class UiRenderingSystem(
                     worldArea.height * mapScale
                 )
             }
-            shapeRenderer.filledRectangle(rect = roomPlacementOnMap, color = roomBackgroundColor)
-            batch.draw(
-                texture,
-                x = mapPlacement.x,
-                y = mapPlacement.y,
-                width = mapPlacement.width,
-                height = mapPlacement.height,
-                flipY = true
-            )
+
+            if (mapVisible) {
+                shapeRenderer.filledRectangle(rect = roomPlacementOnMap, color = roomBackgroundColor)
+                batch.draw(
+                    texture,
+                    x = mapPlacement.x,
+                    y = mapPlacement.y,
+                    width = mapPlacement.width,
+                    height = mapPlacement.height,
+                    flipY = true
+                )
+            }
+
 
             player.getOrNull(PositionComponent)?.let { position ->
                 shapeRenderer.filledRectangle(

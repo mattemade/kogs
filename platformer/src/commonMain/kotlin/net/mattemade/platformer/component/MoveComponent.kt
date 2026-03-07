@@ -5,6 +5,7 @@ import com.github.quillraven.fleks.ComponentType
 import com.littlekt.math.MutableVec2f
 
 class MoveComponent(
+    val maxMoveSpeed: Float = 1f,
     var speed: Float = 0f,
     val moveDirection: MutableVec2f = MutableVec2f(),
     val dashDirection: MutableVec2f = MutableVec2f(),

@@ -15,6 +15,7 @@ import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PositionComponent
+import net.mattemade.platformer.component.PushableComponent
 import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.system.Box2DPhysicsSystem
@@ -67,6 +68,7 @@ class ResourceEnemy(
         entity += MomentaryForceComponent()
         entity += ContextComponent()
         entity += HealthComponent(health = 2f, maxHealth = 2f)
+        entity += PushableComponent()
         entity += EnemyComponent()
         physicsSystem.createEnemyBody(
             this,

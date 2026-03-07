@@ -4,10 +4,10 @@ import com.github.quillraven.fleks.Entity
 import com.littlekt.graphics.Color
 import com.littlekt.graphics.g2d.Batch
 import com.littlekt.graphics.g2d.shape.ShapeRenderer
+import com.littlekt.graphics.gl.ClearBufferMask
 import com.littlekt.graphics.toFloatBits
 import com.littlekt.math.MutableVec2f
 import com.littlekt.util.seconds
-import net.mattemade.platformer.FIRST_LEVEL_NAME
 import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.component.AttackComponent
 import net.mattemade.platformer.component.Box2DPhysicsComponent
@@ -30,17 +30,21 @@ import kotlin.math.roundToInt
 
 class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasing by Self() {
 
-    private val fullWorldRect = gameContext.worldSize
+    private val mapSize = gameContext.worldSize
     private val rooms = gameContext.assets.resourceSheet.levelByName.map { (key, it) ->
-        fullWorldRect.x = minOf(fullWorldRect.x, it.worldArea.x)
-        fullWorldRect.y = minOf(fullWorldRect.y, it.worldArea.y)
-        fullWorldRect.x2 = maxOf(fullWorldRect.x2, it.worldArea.x2)
-        fullWorldRect.y2 = maxOf(fullWorldRect.y2, it.worldArea.y2)
+        if (it.visibleOnMap) {
+            mapSize.x = minOf(mapSize.x, it.worldArea.x)
+            mapSize.y = minOf(mapSize.y, it.worldArea.y)
+            mapSize.x2 = maxOf(mapSize.x2, it.worldArea.x2)
+            mapSize.y2 = maxOf(mapSize.y2, it.worldArea.y2)
+        }
         Room(
             map = gameContext.assets.levels.map[it.file]!!,
             gameContext = gameContext,
             worldArea = it.worldArea,
             name = it.file,
+            visibleOnMap = it.visibleOnMap,
+            mapSize = mapSize,
             switchRoom = ::switchRoom,
         ).releasing()
     }
@@ -52,21 +56,28 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
             gameContext.load(reset = true)
         }
 
+    private var initialMapDraw: Boolean = true
     private val sharedMapRenderer = PixelRender(
         gameContext.context,
-        targetWidth = fullWorldRect.width.roundToInt(),
-        targetHeight = fullWorldRect.height.roundToInt(),
-        virtualWidth = fullWorldRect.width,
-        virtualHeight = fullWorldRect.height,
+        targetWidth = mapSize.width.roundToInt(),
+        targetHeight = mapSize.height.roundToInt(),
+        virtualWidth = mapSize.width,
+        virtualHeight = mapSize.height,
         preRenderCall = { dt, camera ->
-            camera.position.set(fullWorldRect.cx, fullWorldRect.cy, 0f)
+            camera.position.set(mapSize.cx, mapSize.cy, 0f)
         },
         renderCall = { dt, camera, batch, shapeRenderer ->
-            // TODO: clear the texture before drawing rooms
-            rooms.forEach {
-                if (gameContext.gameState.roomStates[it.name]?.isVisited == true) {
-                    addRoomToMap(it, shapeRenderer)
+            if (initialMapDraw) {
+                gameContext.context.gl.clearColor(Color.CLEAR)
+                gameContext.context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
+                rooms.forEach {
+                    if (gameContext.gameState.roomStates[it.name]?.isVisited == true) {
+                        addRoomToMap(it, shapeRenderer)
+                    }
                 }
+                initialMapDraw = false
+            } else {
+                addRoomToMap(currentRoom, shapeRenderer)
             }
         }
     ).apply {
@@ -78,7 +89,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
     }
 
     private fun addRoomToMap(room: Room, shapeRenderer: ShapeRenderer) {
-        if (!room.addedToMap) {
+        if (!room.addedToMap && room.visibleOnMap) {
             room.tileTypeMap["solid"]?.forEachIndexed { x, row ->
                 row.forEachIndexed { y, value ->
                     if (value) {
@@ -114,6 +125,8 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
             it.reset()
         }
         currentRoom = getCurrentRoom()
+        initialMapDraw = true
+        sharedMapRenderer.render(0f.seconds)
     }
 
     override fun update(seconds: Float) {

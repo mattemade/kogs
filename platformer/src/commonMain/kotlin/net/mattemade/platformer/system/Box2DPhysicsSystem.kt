@@ -190,15 +190,6 @@ class Box2DPhysicsSystem(
             landBasedMovement(physicsComponent, context, entity)
         }
 
-        val horizontalVelocity = physicsComponent.body.linearVelocityX
-        if (!context.swimming) {
-            if (horizontalVelocity > 0f) {
-                context.facingRight = true
-            } else if (horizontalVelocity < 0f) {
-                context.facingRight = false
-            }
-        }
-
         entity.getOrNull(AttackComponent)?.let {
             if (it.requestingPhysicsToSpawnAttack > 0f) {
                 val angle = entity[RotationComponent].currentRotation.radians
@@ -301,6 +292,12 @@ class Box2DPhysicsSystem(
                     context.wallSlide = false
                     body.isAwake = true
                 }
+            }
+
+            if (it.moveDirection.x > 0f || it.dashDirection.x > 0f) {
+                context.facingRight = true
+            } else if (it.moveDirection.x < 0f || it.dashDirection.x < 0f) {
+                context.facingRight = false
             }
         }
 
@@ -522,11 +519,11 @@ class Box2DPhysicsSystem(
                 }).apply {
                     isFixedRotation = false
 
-                    /*createFixture(FixtureDef().apply {
+                    createFixture(FixtureDef().apply {
                         isSensor = true
                         filter = Filter().apply {
                             categoryBits = ENEMY_FOOT_MASK
-                            maskBits = PLAYER_LIMB_COLLISIONS
+                            maskBits = ENEMY_LIBS_COLLISIONS
                         }
                         shape = PolygonShape().apply {
                             setAsBox(
@@ -541,12 +538,12 @@ class Box2DPhysicsSystem(
                     createFixture(FixtureDef().apply {
                         isSensor = true
                         filter = Filter().apply {
-                            categoryBits = PLAYER_TORSO_MASK
-                            maskBits = PLAYER_LIMB_COLLISIONS
+                            categoryBits = ENEMY_TORSO_MASK
+                            maskBits = ENEMY_LIBS_COLLISIONS
                         }
-                        shape = CircleShape(radius = initialPlayerBounds.width * 0.3f)
-                        userData = Torso(body.position)
-                    })*/
+                        shape = PolygonShape().apply { setAsBox(width * 0.5f, height * 0.5f) }
+                        userData = Torso(position)
+                    })
                 },
             ).apply {
                 // land body
@@ -826,6 +823,7 @@ class Box2DPhysicsSystem(
 
         private val ENEMY_BODY_MASK = NEXT_MASK
         private val ENEMY_FOOT_MASK = NEXT_MASK
+        private val ENEMY_TORSO_MASK = NEXT_MASK
         private val PLAYER_ATTACK_MASK = NEXT_MASK
 
         private val CHECKPOINT_MASK = NEXT_MASK
@@ -835,6 +833,7 @@ class Box2DPhysicsSystem(
         private val PLAYER_BODY_COLLISIONS = WALL_MASK or ENEMY_BODY_MASK or CHECKPOINT_MASK or PEARL_MASK
         private val PLAYER_LIMB_COLLISIONS = WALL_MASK or WATER_MASK
         private val ENEMY_BODY_COLLISION = WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK or PLAYER_ATTACK_MASK
+        private val ENEMY_LIBS_COLLISIONS = WALL_MASK or WATER_MASK
         private val CHECKPOINT_COLLISIONS = PLAYER_BODY_MASK
         private val PEARL_COLLISIONS = PLAYER_BODY_MASK
         private val PLAYER_ATTACK_COLLISIONS = ENEMY_BODY_MASK

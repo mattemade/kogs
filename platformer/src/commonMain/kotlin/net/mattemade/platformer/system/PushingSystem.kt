@@ -9,12 +9,13 @@ import com.littlekt.math.Vec2f
 import com.littlekt.math.floorToInt
 import net.mattemade.platformer.component.MomentaryForceComponent
 import net.mattemade.platformer.component.PositionComponent
+import net.mattemade.platformer.component.PushableComponent
 
 class PushingSystem(
     val push: Array<Array<BooleanArray>>,
     val water: Array<BooleanArray>,
     interval: Interval = Fixed(1 / 200f),
-) : IteratingSystem(family { all(PositionComponent, MomentaryForceComponent) }, interval = interval) {
+) : IteratingSystem(family { all(PositionComponent, MomentaryForceComponent, PushableComponent) }, interval = interval) {
 
     override fun onTickEntity(entity: Entity) {
         val position = entity[PositionComponent].position
