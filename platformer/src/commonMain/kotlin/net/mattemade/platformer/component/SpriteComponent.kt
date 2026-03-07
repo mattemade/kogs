@@ -17,7 +17,7 @@ data class SpriteComponent(
     val wallSlideAnimation: AnimationWithOffset = idleAnimation,
     val animationEventCallback: (String, Box2DPhysicsComponent) -> Unit,
     val bounds: Rect,
-    val tint: Float = Color.RED.toFloatBits(),
+    var tint: Float = Color.RED.toFloatBits(),
     val priority: Int = 0,
     var visible: Boolean = true,
 ): Component<SpriteComponent> {

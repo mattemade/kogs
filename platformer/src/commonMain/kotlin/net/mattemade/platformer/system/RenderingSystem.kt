@@ -81,8 +81,8 @@ class RenderingSystem(
     }
 
     override fun onTick() {
-        context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
         context.gl.clearColor(Color.BLACK)
+        context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
 
         val playerPosition = family.first { it.getOrNull(PlayerComponent) != null }[PositionComponent].position
         val cameraX = playerPosition.x.clamp(minCameraPosition.x, maxCameraPosition.x)
@@ -215,7 +215,7 @@ class RenderingSystem(
                         spriteComponent.fallAnimation
                     } else {
                         entity.getOrNull(MoveComponent)?.let { move ->
-                            animationTimeMultiplier = abs(move.moveDirection.x).clamp(0.5f, 2f)
+                            animationTimeMultiplier = abs(move.moveDirection.x / move.maxMoveSpeed)//.clamp(0.5f, 2f)
                         }
                         spriteComponent.walkAnimation
                     }

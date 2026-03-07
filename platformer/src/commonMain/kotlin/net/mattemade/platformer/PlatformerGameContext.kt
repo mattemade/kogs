@@ -98,6 +98,7 @@ class PlatformerGameContext(
         var pearls: MutableList<Boolean> = mutableListOf(),
         var tutorials: MutableMap<String, Boolean> = mutableMapOf(),
         var currentRoom: String = FIRST_LEVEL_NAME,
+        var checkpoint: Int = -1,
     )
 
     @Serializable

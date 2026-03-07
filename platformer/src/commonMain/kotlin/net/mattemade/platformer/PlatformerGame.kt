@@ -201,9 +201,9 @@ class PlatformerGame(
         }
 
         onRender { dt ->
-            //gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
             //gl.clearColor(Color.BLACK)
-            fpsCounter.update(dt.seconds)
+            //gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
+            //fpsCounter.update(dt.seconds)
 
             if (!audioReady) {
                 audioReady = audio.isReady()
@@ -343,8 +343,8 @@ class PlatformerGame(
     }
 
     private fun finalRender(duration: Duration, batch: Batch, shapeRenderer: ShapeRenderer) {
-        context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
         context.gl.clearColor(Color.BLACK)
+        context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
         batch.draw(
             pixelRender.texture,
             x = gameOffset.x,

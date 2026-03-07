@@ -20,8 +20,12 @@ open class Rect(var x: Float = 0f, var y: Float = 0f, var width: Float = 0f, var
         set(value) {
             height = value - y
         }
-    val cx get() = x + width * 0.5f
-    val cy get() = y + height * 0.5f
+    var cx
+        get() = x + width * 0.5f
+        set(value) { x = value - width * 0.5f }
+    var cy
+        get() = y + height * 0.5f
+        set(value) { y = value - height * 0.5f }
     val isEmpty get() = width <= 0 || height <= 0
 
     fun set(newX: Float, newY: Float, newWidth: Float, newHeight: Float): Rect {

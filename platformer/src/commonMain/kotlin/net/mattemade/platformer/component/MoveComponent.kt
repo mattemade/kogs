@@ -10,6 +10,8 @@ class MoveComponent(
     val moveDirection: MutableVec2f = MutableVec2f(),
     val dashDirection: MutableVec2f = MutableVec2f(),
     var fallThrough: Boolean = false,
+    var forceStopAirDash: Boolean = false,
+    var forceStopWaterDash: Boolean = false,
 ): Component<MoveComponent> {
     override fun type() = MoveComponent
     companion object: ComponentType<MoveComponent>()

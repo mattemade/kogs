@@ -123,6 +123,9 @@ class Box2DPhysicsSystem(
                         coyoteTimeInTicks = JumpComponent.COYOTE_TICKS
                         canHoldJumpForTicks = JumpComponent.MAX_JUMP_TICKS
                     }
+                    /*entity.getOrNull(MoveComponent)?.let {
+                        it.forceStopWaterDash = true // do not continue dashing between substances
+                    }*/
                 } else if (swimming && !currentlySwimming) { // finished swimming
                     physicsComponent.waterBodyFixture.filterData.maskBits = 0
                     physicsComponent.landBodyFixture.filterData.maskBits = physicsComponent.collisionMask
@@ -131,7 +134,8 @@ class Box2DPhysicsSystem(
                     entity.getOrNull(MoveComponent)?.let {
                         val direction = it.moveDirection
                         // maybe jump a bit from the water if we are moving mostly up?
-                        if (direction.y < 0f && abs(direction.y) >= abs(direction.x)) {
+                        val movingVertically = abs(direction.y) >= abs(direction.x)
+                        if (direction.y < 0f && movingVertically) {
                             entity.getOrNull(MomentaryForceComponent)?.let {
                                 it.forces += Vec2f(0f, -15f)
                             }
@@ -139,9 +143,17 @@ class Box2DPhysicsSystem(
                             //teleport(entity, tempVec2f, physicsComponent)
                         }
                         if (direction.x != 0f) {
-                            entity[JumpComponent].apply { // do not allow to jump up the waterfall!!
-                                coyoteTimeInTicks = 0
+                            entity[JumpComponent].apply {
+                                coyoteTimeInTicks = if (gameContext.gameState.waterPearl) {
+                                    JumpComponent.COYOTE_TICKS
+                                } else {
+                                    0 // do not allow to jump up the waterfall without the pearl!!
+                                }
                             }
+                        }
+                        if (movingVertically) {
+                            it.forceStopAirDash = true // do not continue dashing in the air when jumping up or down
+                            println("stop dash on land")
                         }
                     }
                 }
@@ -299,9 +311,13 @@ class Box2DPhysicsSystem(
         entity.getOrNull(MoveComponent)?.let {
             physicsComponent.apply {
                 //println("left wall ${context.touchingLeftWall} ${context.touchingRightWall}")
-                val movingToWall = (context.touchingLeftWall && (it.dashDirection.x < 0f || it.moveDirection.x < 0f || context.wallSlide)) || (context.touchingRightWall && (it.dashDirection.x > 0f || it.moveDirection.x > 0f || context.wallSlide))
-                val dashingToWall = (context.touchingLeftWall && it.dashDirection.x < 0f) || (context.touchingRightWall && it.dashDirection.x > 0f)
-                if (movingToWall && (body.linearVelocityY > 0f || dashingToWall) && body.linearVelocityX == 0f) {
+                val movingToWall =
+                    (context.touchingLeftWall && (it.dashDirection.x < 0f || it.moveDirection.x < 0f || context.wallSlide)) || (context.touchingRightWall && (it.dashDirection.x > 0f || it.moveDirection.x > 0f || context.wallSlide))
+                val dashingToWall =
+                    (context.touchingLeftWall && it.dashDirection.x < 0f) || (context.touchingRightWall && it.dashDirection.x > 0f)
+                val dashingFromWall =
+                    (context.touchingLeftWall && it.dashDirection.x > 0f) || (context.touchingRightWall && it.dashDirection.x < 0f)
+                if (movingToWall && !dashingFromWall && (body.linearVelocityY > 0f || dashingToWall) && body.linearVelocityX == 0f) {
                     if (gameContext.gameState.airPearl) {
                         body.linearVelocityY = 1f
                         context.wallSlide = true
@@ -587,26 +603,36 @@ class Box2DPhysicsSystem(
         }
     }
 
-    fun createCheckpoint(x: Float, y: Float, width: Float, height: Float) {
-        physics.createBody(BodyDef().apply {
-            type = BodyType.STATIC
-            position.set(x, y)
-        }).apply {
-            createFixture(FixtureDef().apply {
-                isSensor = true
-                filter = Filter().apply {
-                    categoryBits = CHECKPOINT_MASK
-                    maskBits = CHECKPOINT_COLLISIONS
-                }
-                shape = PolygonShape().apply {
-                    setAsBox(
-                        width * 0.48f,
-                        height * 0.48f
-                    )
-                }
-                userData = Checkpoint
-            })
+    fun createCheckpoint(
+        entityCreateContext: EntityCreateContext,
+        entity: Entity,
+        x: Float, y: Float, width: Float, height: Float, id: Int, onTouch: () -> Unit) {
+        entityCreateContext.apply {
+            entity += Box2DPhysicsComponent(
+                body = physics.createBody(BodyDef().apply {
+                    type = BodyType.STATIC
+                    position.set(x, y)
+                }),
+                collisionMask = CHECKPOINT_COLLISIONS
+            ).apply {
+                landBodyFixture = body.createFixture(FixtureDef().apply {
+                    isSensor = true
+                    filter = Filter().apply {
+                        categoryBits = CHECKPOINT_MASK
+                        maskBits = CHECKPOINT_COLLISIONS
+                    }
+                    shape = PolygonShape().apply {
+                        setAsBox(
+                            width * 0.48f,
+                            height * 0.48f
+                        )
+                    }
+                    userData = Checkpoint(id, onTouch)
+                })!!
+                waterBodyFixture = landBodyFixture
+            }
         }
+
     }
 
     fun createPickupBody(
@@ -774,12 +800,14 @@ class Box2DPhysicsSystem(
         contact.with<Entity> { other ->
             if (contact.isTouching) {
                 when (other) {
-                    is Spike -> { /* no-op, since it would allow to walk on spikes after, as they won't trigger beginContact anymore */}
+                    is Spike -> { /* no-op, since it would allow to walk on spikes after, as they won't trigger beginContact anymore */
+                    }
+
                     is Checkpoint -> {
                         this.getOrNull(HealthComponent)?.apply {
                             health = maxHealth
                         }
-                        gameContext.save()
+                        other.onTouch()
                     }
 
                     is Action -> other.onTouch()
@@ -859,7 +887,7 @@ class Box2DPhysicsSystem(
     private class RightHand(val entity: Entity)
     private class EnemyHazard(val damage: Float, val bodyPosition: Vec2, val entity: Entity)
     private class PlayerAttack(val damage: Float, val x: Float, val y: Float)
-    private object Checkpoint
+    private class Checkpoint(val id: Int, val onTouch: () -> Unit)
     private class Action(val onTouch: () -> Unit)
 
     companion object {
@@ -890,7 +918,8 @@ class Box2DPhysicsSystem(
 
         private val PLAYER_BODY_COLLISIONS = WALL_MASK or ENEMY_BODY_MASK or CHECKPOINT_MASK or PEARL_MASK or SPIKE_MASK
         private val PLAYER_LIMB_COLLISIONS = WALL_MASK or WATER_MASK or SPIKE_MASK
-        private val ENEMY_BODY_COLLISION = WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK or PLAYER_ATTACK_MASK or ENEMY_BODY_MASK or SPIKE_MASK
+        private val ENEMY_BODY_COLLISION =
+            WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK or PLAYER_ATTACK_MASK or ENEMY_BODY_MASK or SPIKE_MASK
         private val ENEMY_LIBS_COLLISIONS = WALL_MASK or WATER_MASK or SPIKE_MASK
         private val CHECKPOINT_COLLISIONS = PLAYER_BODY_MASK
         private val PEARL_COLLISIONS = PLAYER_BODY_MASK

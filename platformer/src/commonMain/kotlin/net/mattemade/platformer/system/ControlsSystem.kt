@@ -67,12 +67,15 @@ class ControlsSystem(
         entity: Entity
     ) {
         val horizontalSpeed = input.movement.x * WALK_VELOCITY
-        val dash = gameContext.gameState.airPearl && input.dash.pressed
+        val moveComponent = entity[MoveComponent]
+        val dashIntent = gameContext.gameState.waterPearl && input.dash.pressed
+        moveComponent.forceStopAirDash = moveComponent.forceStopAirDash && dashIntent
+        val dash = dashIntent && !moveComponent.forceStopAirDash
 
         entity[JumpComponent].apply {
             if (input.jump.justPressed && (canJumpFromGround || canJumpInAir > 0 || (gameContext.gameState.airPearl && context.wallSlide)) && !jumping) {
                 if (input.movement.y > 0f) {
-                    entity[MoveComponent].fallThrough = true
+                    moveComponent.fallThrough = true
                 } else {
                     executeJump(entity, wallJump = context.wallSlide)
                 }
@@ -93,7 +96,7 @@ class ControlsSystem(
         }
 
 
-        entity[MoveComponent].apply {
+        moveComponent.apply {
             speed = 1f
             moveDirection.set(horizontalSpeed, 0f)
             context.dashing = dash
@@ -136,9 +139,12 @@ class ControlsSystem(
         val horizontalSpeed = input.movement.x * SWIM_ACCELERATION * swimSpeedMultiplier
         val verticalSpeed =
             (input.movement.y - if (input.jump.pressed) 1f else 0f) * SWIM_ACCELERATION * swimSpeedMultiplier
-        val dash = gameContext.gameState.waterPearl && input.dash.pressed
+        val moveComponent = entity[MoveComponent]
+        val dashIntent = gameContext.gameState.waterPearl && input.dash.pressed
+        moveComponent.forceStopWaterDash = moveComponent.forceStopWaterDash && dashIntent
+        val dash = dashIntent && !moveComponent.forceStopWaterDash
 
-        entity[MoveComponent].apply {
+        moveComponent.apply {
             speed = 1f
             moveDirection.set(horizontalSpeed, verticalSpeed)
             if (moveDirection.length() > SWIM_ACCELERATION) {

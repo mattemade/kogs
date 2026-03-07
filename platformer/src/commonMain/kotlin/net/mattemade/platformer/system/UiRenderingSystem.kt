@@ -59,8 +59,8 @@ class UiRenderingSystem(
     private val fontRenderer = MsdfFontRenderer(gameContext.assets.font.fredokaMsdf)
 
     override fun onTick() {
-        //context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
         //context.gl.clearColor(Color.BLACK)
+        //context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
 
         val uiComponent = family.firstOrNull() { it.getOrNull(UiComponent) != null }?.get(UiComponent) ?: return
         val player = family.first { it.getOrNull(PlayerComponent) != null }

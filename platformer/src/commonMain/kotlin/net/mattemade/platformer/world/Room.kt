@@ -11,8 +11,10 @@ import com.littlekt.graphics.toFloatBits
 import com.littlekt.math.Rect
 import com.littlekt.math.Vec2f
 import net.mattemade.platformer.PlatformerGameContext
+import net.mattemade.platformer.WALK_VELOCITY
 import net.mattemade.platformer.component.AttackComponent
 import net.mattemade.platformer.component.Box2DPhysicsComponent
+import net.mattemade.platformer.component.CheckpointComponent
 import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.FloatUpComponent
 import net.mattemade.platformer.component.HealthComponent
@@ -78,7 +80,17 @@ class Room(
     var mapTexture: Texture? = null
     var addedToMap: Boolean = false
     val tileTypeMap =
-        listOf("solid", "platform", "water", "fake", "push-up", "push-down", "push-left", "push-right", "spike").associateWith {
+        listOf(
+            "solid",
+            "platform",
+            "water",
+            "fake",
+            "push-up",
+            "push-down",
+            "push-left",
+            "push-right",
+            "spike"
+        ).associateWith {
             Array(map.width) { BooleanArray(map.height) }
         }
     val teleports = map.layers.mapNotNull {
@@ -117,17 +129,7 @@ class Room(
                 )
             )
             add(InvincibilitySystem())
-            add(Box2DPhysicsSystem(::spawnPlayerAttack).also {
-                physicsSystem = it
-                (map.layerOrNull("player-spawn") as? TiledObjectLayer)?.objects?.firstOrNull()?.bounds?.let {
-                    physicsSystem.createCheckpoint(
-                        it.cx * unitSize,
-                        it.cy * unitSize,
-                        it.width * unitSize,
-                        it.height * unitSize
-                    )
-                }
-            }.releasing())
+            add(Box2DPhysicsSystem(::spawnPlayerAttack).also { physicsSystem = it }.releasing())
             add(StaminaBreathingSystem())
             add(LowStaminaDamageSystem())
             add(StaminaRestorationSystem())
@@ -145,6 +147,7 @@ class Room(
     private lateinit var playerPosition: Vec2f
     private lateinit var playerEntity: Entity
     private lateinit var mascotEntity: Entity
+    private var currentlyActiveCheckpointInThisRoom: Entity? = null
 
     init {
         val typedTileIds = tileTypeMap.keys.associateWith { mutableSetOf<Int>() }
@@ -254,9 +257,25 @@ class Room(
     }
 
     private fun respawnEntities() {
+        currentlyActiveCheckpointInThisRoom = null
         ecs.removeAll(clearRecycled = false)
         uiEntity = ecs.entity {
             it += UiComponent()
+        }
+        map.layers.forEach {
+            if (it is TiledObjectLayer) {
+                it.objects.forEach { spawn ->
+                    when (spawn.name) {
+                        "checkpoint" -> {
+                            createCheckpoint(
+                                spawn,
+                                tint = Color.BLUE.toFloatBits(),
+                                tintActive = Color.CYAN.toFloatBits()
+                            )
+                        }
+                    }
+                }
+            }
         }
         playerEntity = ecs.entity {
             it += SpriteComponent(
@@ -282,7 +301,7 @@ class Room(
                 playerPosition = it.position
             }
             it += RotationComponent(maxRotationVelocity = 0.05f)
-            it += MoveComponent()
+            it += MoveComponent(maxMoveSpeed = WALK_VELOCITY * 0.75f)
             it += JumpComponent()
             it += AttackComponent(
                 specs = listOf(
@@ -381,9 +400,12 @@ class Room(
                                     spawn,
                                     tint = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits()
                                 ) {
-                                    gameContext.gameState.tutorials[id] = false
-                                    ecs.apply {
-                                        uiEntity[UiComponent].showTutorial = text
+
+                                    if (gameContext.gameState.tutorials[id] != true) { // in case player already covered that part somehow
+                                        gameContext.gameState.tutorials[id] = false
+                                        ecs.apply {
+                                            uiEntity[UiComponent].showTutorial = text
+                                        }
                                     }
                                 }
                             }
@@ -443,6 +465,63 @@ class Room(
                 gameContext.scheduler.schedule().then {
                     entity.remove()
                 }
+            }
+        }
+    }
+
+    private fun createCheckpoint(spawn: TiledMap.Object, tint: Float, tintActive: Float) {
+        ecs.entity { entity ->
+            val checkpointId = PlatformingScene.nextCheckpointId++
+            val isActive = gameContext.gameState.checkpoint == checkpointId
+            if (isActive) {
+                currentlyActiveCheckpointInThisRoom = entity
+                initialPlayerBounds.cx = spawn.bounds.cx * unitSize
+                initialPlayerBounds.cy = spawn.bounds.y2 * unitSize - initialPlayerBounds.height * 0.5f
+            }
+            entity += SpriteComponent(
+                idleAnimation = gameContext.assets.animation("MC idle"),
+                animationEventCallback = { it, _ -> println(it) },
+                // baking offset into the bounds, maybe it should be a separate property?
+                bounds = Rect(
+                    spawn.bounds.width * unitSize * -0.48f,
+                    spawn.bounds.height * unitSize * -0.48f,
+                    spawn.bounds.width * unitSize,
+                    spawn.bounds.height * unitSize
+                ),
+                tint = if (isActive) tintActive else tint,
+            )
+            entity += PositionComponent().also {
+                it.position.set(
+                    spawn.bounds.cx * unitSize,
+                    spawn.bounds.cy * unitSize
+                )
+            }
+            entity += RotationComponent()
+            entity += CheckpointComponent(checkpointId, isActivated = isActive)
+
+            physicsSystem.createCheckpoint(
+                this,
+                entity,
+                spawn.bounds.cx * unitSize,
+                spawn.bounds.cy * unitSize,
+                spawn.bounds.width * unitSize,
+                spawn.bounds.height * unitSize,
+                id = checkpointId,
+            ) {
+                val component = entity[CheckpointComponent]
+                if (!component.isActivated) {
+                    component.isActivated = true
+                    entity[SpriteComponent].tint = tintActive
+                }
+                currentlyActiveCheckpointInThisRoom?.let {
+                    if (it != entity) {
+                        it[CheckpointComponent].isActivated = false
+                        it[SpriteComponent].tint = tint
+                    }
+                }
+                currentlyActiveCheckpointInThisRoom = entity
+                gameContext.gameState.checkpoint = checkpointId
+                gameContext.save()
             }
         }
     }
@@ -537,6 +616,17 @@ class Room(
             }
             physicsSystem.teleport(playerEntity, playerPosition, physicsComponent)
             contextComponent.swimming = false // next room should switch body parameters for swimming if needed
+
+            val currentlyActiveCheckpointInThisRoom = currentlyActiveCheckpointInThisRoom
+            if (currentlyActiveCheckpointInThisRoom != null) {
+                val checkpointComponent = currentlyActiveCheckpointInThisRoom[CheckpointComponent]
+                if (checkpointComponent.id != gameContext.gameState.checkpoint) {
+                    checkpointComponent.isActivated = false
+                    this@Room.currentlyActiveCheckpointInThisRoom = null
+                } else {
+                    checkpointComponent.isActivated = true
+                }
+            }
         }
     }
 
