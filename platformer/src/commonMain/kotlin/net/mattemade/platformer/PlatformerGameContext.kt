@@ -27,7 +27,7 @@ class PlatformerGameContext(
     val scheduler = Scheduler()
     var canvasZoom: Float = 1f
     var canvasInverseZoom: Float = 1f
-    val worldSize = Rect()
+    val worldSize = Rect(x = 50000000000f, y = 50000000000f, width = -100000000000f, height = -100000000000f) // to ensure the world edges will be within
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true

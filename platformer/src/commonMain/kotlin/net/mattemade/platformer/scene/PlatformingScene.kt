@@ -34,10 +34,13 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
     private val mapSize = gameContext.worldSize
     private val rooms = gameContext.assets.resourceSheet.levelByName.map { (key, it) ->
         if (it.visibleOnMap) {
+            // x2/y2 are dynamically calculated based on x/y, so we need to cache them beforehand
+            val currentX2 = mapSize.x2
+            val currentY2 = mapSize.y2
             mapSize.x = minOf(mapSize.x, it.worldArea.x)
             mapSize.y = minOf(mapSize.y, it.worldArea.y)
-            mapSize.x2 = maxOf(mapSize.x2, it.worldArea.x2)
-            mapSize.y2 = maxOf(mapSize.y2, it.worldArea.y2)
+            mapSize.x2 = maxOf(currentX2, it.worldArea.x2)
+            mapSize.y2 = maxOf(currentY2, it.worldArea.y2)
         }
         Room(
             map = gameContext.assets.levels.map[it.file]!!,
@@ -77,9 +80,8 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                     }
                 }
                 initialMapDraw = false
-            } else {
-                addRoomToMap(currentRoom, shapeRenderer)
             }
+            addRoomToMap(currentRoom, shapeRenderer)
         }
     ).apply {
         gameContext.gameState.roomStates.getOrPut(currentRoom.name) { PlatformerGameContext.RoomState() }.isVisited = true
