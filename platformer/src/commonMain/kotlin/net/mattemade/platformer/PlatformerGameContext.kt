@@ -5,6 +5,7 @@ import com.littlekt.math.Rect
 import com.littlekt.util.seconds
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import net.mattemade.fmod.FmodEventInstance
 import net.mattemade.platformer.input.GameInput
 import net.mattemade.platformer.input.bindInputs
 import net.mattemade.utils.Scheduler
@@ -22,6 +23,7 @@ class PlatformerGameContext(
     val restartScene: () -> Unit,
 ) {
 
+    var currentlyPlayingMusic: FmodEventInstance? = null
     val assets = PlatformerAssets(context, this, getFromUrl, fmodFolderPrefix, fmodLiveUpdate, overrideResourcesFrom)
     val fmodAssets by lazy { FmodAssets(context, fmodFolderPrefix, this) }
     val scheduler = Scheduler()
@@ -107,7 +109,19 @@ class PlatformerGameContext(
     )
 
 
+    fun switchMusicState(state: String) {
+        println("setting state to $state")
+        currentlyPlayingMusic?.setParameterByIDWithLabel(fmodAssets.musicStateParameter, state, 0)
+    }
+
     companion object {
         private val LOG_TAG = "mgmt"
+        val stateWalking = "Walking"
+        val stateWalkingWithEnemies = "Walking, enemies"
+        val stateLowHealth = "Walking, low health"
+        val stateSwimming = "Swimming"
+        val stateSwimmingLowHealth = "Swimming, low health"
+
+
     }
 }

@@ -8,6 +8,8 @@ import com.github.quillraven.fleks.World.Companion.family
 import com.github.quillraven.fleks.World.Companion.inject
 import com.littlekt.Context
 import com.littlekt.math.MutableVec2f
+import net.mattemade.fmod.FMOD
+import net.mattemade.fmod.FmodStudioStopType
 import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.SWIM_ACCELERATION
 import net.mattemade.platformer.SWIM_VELOCITY
@@ -27,11 +29,7 @@ class ControlsSystem(
     interval: Interval = Fixed(1 / 200f),
 ) : IteratingSystem(family {
     all(
-        Box2DPhysicsComponent,
-        MoveComponent,
-        JumpComponent,
-        AttackComponent,
-        PlayerComponent
+        Box2DPhysicsComponent, MoveComponent, JumpComponent, AttackComponent, PlayerComponent
     )
 }, interval = interval) {
 
@@ -64,8 +62,7 @@ class ControlsSystem(
     }
 
     private fun landBasedControls(
-        context: ContextComponent,
-        entity: Entity
+        context: ContextComponent, entity: Entity
     ) {
         val horizontalSpeed = input.movement.x * WALK_VELOCITY
         val moveComponent = entity[MoveComponent]
@@ -103,31 +100,38 @@ class ControlsSystem(
 
             if (dash) {
                 dashDirection.set(
-                if (context.dashing) {
-                    if (moveComponent.ignoreNextDashDirection || horizontalSpeed == 0f) {
-                        dashDirection.x
-                    } else{
-                        horizontalSpeed.sign * dashDirection.x.absoluteValue
-                    }
-                } else if (context.wallSlide) {
-                    if (dashDirection.x != 0f) { // dashing into the wall
-                        moveComponent.forceStopAirDash = true
-                        context.dashing = false
-                        0f
-                    } else { // dashing from the wall
-                        context.wallSlide = false
-                        moveComponent.ignoreNextDashDirection = true
-                        if (context.touchingLeftWall) {
+                    if (context.dashing) {
+                        if (moveComponent.ignoreNextDashDirection || horizontalSpeed == 0f) {
+                            dashDirection.x
+                        } else {
+                            horizontalSpeed.sign * dashDirection.x.absoluteValue
+                        }
+                    } else if (context.wallSlide) {
+                        if (dashDirection.x != 0f) { // dashing into the wall
+                            moveComponent.forceStopAirDash = true
+                            context.dashing = false
+                            context.dashingSound?.stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+                            0f
+                        } else { // dashing from the wall
+                            context.wallSlide = false
+                            context.slidingSound?.stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+                            moveComponent.ignoreNextDashDirection = true
+                            context.dashingSound = entity[Box2DPhysicsComponent].playSound(gameContext.fmodAssets.airDash)
+                            if (context.touchingLeftWall) {
+                                WALK_VELOCITY * 3f
+                            } else /*if (context.touchingRightWall)*/ {
+                                -WALK_VELOCITY * 3f
+                            }
+                        }
+                    } else {
+                        context.dashingSound = entity[Box2DPhysicsComponent].playSound(gameContext.fmodAssets.airDash)
+                        if (context.facingRight) {
                             WALK_VELOCITY * 3f
-                        } else /*if (context.touchingRightWall)*/ {
+                        } else {
                             -WALK_VELOCITY * 3f
                         }
-                    }
-                } else if (context.facingRight) {
-                    WALK_VELOCITY * 3f
-                } else {
-                    -WALK_VELOCITY * 3f
-                }, 0f)
+                    }, 0f
+                )
 
                 context.dashing = dashDirection.x != 0f
             } else {
@@ -139,8 +143,7 @@ class ControlsSystem(
     }
 
     private fun waterBasedControls(
-        context: ContextComponent,
-        entity: Entity
+        context: ContextComponent, entity: Entity
     ) {
         val swimSpeedMultiplier = if (gameContext.gameState.waterPearl) 1.5f else 1f
         val horizontalSpeed = input.movement.x * SWIM_ACCELERATION * swimSpeedMultiplier
@@ -154,8 +157,22 @@ class ControlsSystem(
         moveComponent.apply {
             speed = 1f
             moveDirection.set(horizontalSpeed, verticalSpeed)
-            if (moveDirection.length() > SWIM_ACCELERATION) {
+            val length = moveDirection.length()
+            if (length > 0f) {
+                if (context.swimmingSound == null) {
+                    context.swimmingSound = entity[Box2DPhysicsComponent].playSoundAttached(gameContext.fmodAssets.swim)
+                }
+            } else {
+                context.swimmingSound?.stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+            }
+
+            if (length > SWIM_ACCELERATION) {
                 moveDirection.setLength(SWIM_ACCELERATION)
+            }
+            if (!context.dashing && dash) {
+                context.dashingSound = entity[Box2DPhysicsComponent].playSound(gameContext.fmodAssets.waterDash)
+            } else if (context.dashing && !dash) {
+                context.dashingSound?.stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
             }
             context.dashing = dash
             if (dash) {
@@ -175,6 +192,8 @@ class ControlsSystem(
         }
         canHoldJumpForTicks = JumpComponent.MAX_JUMP_TICKS
         jumpBuffer = 0
+
+        entity[Box2DPhysicsComponent].playSound(if (canJumpFromGround) gameContext.fmodAssets.jump else gameContext.fmodAssets.doubleJump)
     }
 
     private companion object {

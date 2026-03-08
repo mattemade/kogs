@@ -285,7 +285,11 @@ class Room(
                 swimDashAnimation = gameContext.assets.animation("MC swim_dash"),
                 airDashAnimation = gameContext.assets.animation("MC air_dash"),
                 hurtAnimation = gameContext.assets.animation("MC hurt"),
-                animationEventCallback = { it, _ -> println(it) },
+                animationEventCallback = { it, component ->
+                    when (it) {
+                        "step" -> component.playSound(gameContext.fmodAssets.step)
+                    }
+                },
                 // baking offset into the bounds, maybe it should be a separate property?
                 bounds = Rect(
                     -0.45f.px,

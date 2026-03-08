@@ -187,8 +187,14 @@ actual class FmodEventInstance(val id: Long) {
         value: Float,
         ignoreSeekSpeed: Int
     ) {
-        FMODStudio.FMOD_Studio_EventInstance_SetParameterByID(this.id, id.id, value, ignoreSeekSpeed)
+        FMODStudio.FMOD_Studio_EventInstance_SetParameterByID(this.id, id.id, value, ignoreSeekSpeed).checkError()
     }
+
+    actual fun setParameterByIDWithLabel(id: FmodParameterId, label: String, ignoreSeekSpeed: Int) {
+        FMODStudio.FMOD_Studio_EventInstance_SetParameterByIDWithLabel(this.id, id.id, label, ignoreSeekSpeed)
+            .checkError()
+    }
+
 
     actual fun getPlaybackState(): FmodPlaybackState {
         FMODStudio.FMOD_Studio_EventInstance_GetPlaybackState(this.id, intBuffer.clear()).checkError()
@@ -198,6 +204,7 @@ actual class FmodEventInstance(val id: Long) {
     actual fun set3DAttributes(attributes: Fmod3DAttributes) {
         FMODStudio.FMOD_Studio_EventInstance_Set3DAttributes(id, attributes.actual).checkError()
     }
+
 }
 
 actual class FmodDriverInfo(

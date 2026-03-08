@@ -210,18 +210,6 @@ class PlatformerGame(
             }
             if (!assetsReady) {
                 assetsReady = audioReady && gameContext.assets.isLoaded
-                if (assetsReady) {
-                    // parameters could be refreshed at that point, need to resize the viewport to match them
-                    resizeFinalRender(screenSize.x, screenSize.y)
-                    pixelRender.resize(WORLD_WIDTH, WORLD_HEIGHT)
-                    pixelRender.targetCamera.position.set(WORLD_WIDTH_FLOAT * 0.5f, WORLD_HEIGHT_FLOAT * 0.5f, 0f)
-
-                    directRender.updateShapeRenderer()
-                    pixelRender.updateShapeRenderer()
-
-                    gameContext.load()
-                    scene = PlatformingScene(gameContext)
-                }
             }
 
             if (focused && assetsReady && fmodAssetsReady) {
@@ -235,7 +223,21 @@ class PlatformerGame(
                 if (!fmodAssetsReady) {
                     fmodAssetsReady = gameContext.fmodAssets.isLoaded
                     if (fmodAssetsReady) {
-                        gameContext.fmodAssets.musicEventDescription.createInstance().start()
+                        gameContext.fmodAssets.musicEventDescription.createInstance().also {
+                            gameContext.currentlyPlayingMusic = it
+                        }.start()
+
+                        // parameters could be refreshed at that point, need to resize the viewport to match them
+                        resizeFinalRender(screenSize.x, screenSize.y)
+                        pixelRender.resize(WORLD_WIDTH, WORLD_HEIGHT)
+                        pixelRender.targetCamera.position.set(WORLD_WIDTH_FLOAT * 0.5f, WORLD_HEIGHT_FLOAT * 0.5f, 0f)
+
+                        directRender.updateShapeRenderer()
+                        pixelRender.updateShapeRenderer()
+
+                        gameContext.load()
+                        scene = PlatformingScene(gameContext)
+
                     }
                 }
             }

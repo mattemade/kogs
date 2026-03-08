@@ -116,6 +116,7 @@ expect class FmodEventInstance {
     fun release()
     fun setCallback(callback: FmodCallback, callbackMask: FmodCallbackType)
     fun setParameterByID(id: FmodParameterId, value: Float, ignoreSeekSpeed: Int)
+    fun setParameterByIDWithLabel(id: FmodParameterId, label: String, ignoreSeekSpeed: Int)
     fun getPlaybackState(): FmodPlaybackState
     fun set3DAttributes(attributes: Fmod3DAttributes)
 }

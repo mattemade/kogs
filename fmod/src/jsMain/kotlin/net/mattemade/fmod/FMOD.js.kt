@@ -162,6 +162,10 @@ actual class FmodEventInstance(private val actualEventInstance: dynamic) {
         checkError(actualEventInstance.setParameterByID(id.actualId, value, ignoreSeekSpeed))
     }
 
+    actual fun setParameterByIDWithLabel(id: FmodParameterId, label: String, ignoreSeekSpeed: Int) {
+        checkError(actualEventInstance.setParameterByIDWithLabel(id.actualId, label, ignoreSeekSpeed))
+    }
+
     actual fun getPlaybackState(): FmodPlaybackState =
         getResult { checkError(actualEventInstance.getPlaybackState(it)) }
 

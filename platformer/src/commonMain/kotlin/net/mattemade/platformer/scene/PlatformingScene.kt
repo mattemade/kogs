@@ -132,6 +132,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
         currentRoom = getCurrentRoom()
         initialMapDraw = true
         sharedMapRenderer.render(0f.seconds)
+        gameContext.switchMusicState(PlatformerGameContext.stateWalking)
     }
 
     override fun update(seconds: Float) {

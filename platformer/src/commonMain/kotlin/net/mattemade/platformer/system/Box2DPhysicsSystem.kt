@@ -32,6 +32,7 @@ import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.KnockbackComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
 import net.mattemade.platformer.component.MoveComponent
+import net.mattemade.platformer.component.PlayerComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.utils.math.NO_ROTATION
@@ -114,6 +115,9 @@ class Box2DPhysicsSystem(
                 }
 
                 if (!swimming && currentlySwimming) { // started swimming
+                    if (entity.getOrNull(PlayerComponent) != null) {
+                        gameContext.switchMusicState(PlatformerGameContext.stateSwimming)
+                    }
                     physicsComponent.landBodyFixture.filterData.maskBits = 0
                     physicsComponent.waterBodyFixture.filterData.maskBits = physicsComponent.collisionMask
                     entity[JumpComponent].apply {
@@ -127,6 +131,9 @@ class Box2DPhysicsSystem(
                         it.forceStopWaterDash = true // do not continue dashing between substances
                     }*/
                 } else if (swimming && !currentlySwimming) { // finished swimming
+                    if (entity.getOrNull(PlayerComponent) != null) {
+                        gameContext.switchMusicState(PlatformerGameContext.stateWalking)
+                    }
                     physicsComponent.waterBodyFixture.filterData.maskBits = 0
                     physicsComponent.landBodyFixture.filterData.maskBits = physicsComponent.collisionMask
                     body.setTransformRadians(body.position, 0f)
@@ -332,6 +339,7 @@ class Box2DPhysicsSystem(
                     if (gameContext.gameState.airPearl) {
                         body.linearVelocityY = 1f
                         context.wallSlide = true
+                        context.slidingSound = physicsComponent.playSoundAttached(gameContext.fmodAssets.wallSlideLoop)
                         if (dashingFromWall) {
                             it.forceStopAirDash = true
                         }
@@ -343,6 +351,7 @@ class Box2DPhysicsSystem(
                         wasJumping = true // just to force applying lower gravity
                     }
                     context.wallSlide = false
+                    context.slidingSound?.stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
                     body.isAwake = true
                 }
             }
