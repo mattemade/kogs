@@ -324,12 +324,15 @@ class RenderingSystem(
         batch: Batch,
         shapeRenderer: ShapeRenderer
     ) {
-        val ambientColor = (layer.properties[abmient] as? TiledMap.Property.ColorProp)?.value ?: Color.BLACK
-        gameContext.context.gl.clearColor(ambientColor)
+        gameContext.context.gl.clearColor(Color.BLACK)
         gameContext.context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
 
+        val ambientColor = (layer.properties[abmient] as? TiledMap.Property.ColorProp)?.value ?: Color.BLACK
+        shapeRenderer.filledRectangle(x = playerLightPosition.x - HALF_WORLD_UNIT_WIDTH, y = playerLightPosition.y - HALF_WORLD_UNIT_HEIGHT, width = WORLD_UNIT_WIDTH, height = WORLD_UNIT_HEIGHT, color = ambientColor.toFloatBits())
+        batch.setBlendFunction(BlendMode.Add)
         renderLayer(layer, batch)
         shapeRenderer.filledEllipse(x = playerLightPosition.x, y = playerLightPosition.y, rx = 8f, ry = 8f, innerColor = innerPlayerLight, outerColor = outerPlayerLight)
+        batch.setToPreviousBlendFunction()
     }
 
     companion object {
