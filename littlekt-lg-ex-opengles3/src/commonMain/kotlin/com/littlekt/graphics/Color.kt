@@ -137,11 +137,11 @@ open class Color(r: Float, g: Float, b: Float, a: Float = 1f) : Vec4f(r, g, b, a
                     b = str.substring(4, 6).toInt(16) / 255f
                 }
                 8 -> {
-                    // parse rgba
-                    r = str.substring(0, 2).toInt(16) / 255f
-                    g = str.substring(2, 4).toInt(16) / 255f
-                    b = str.substring(4, 6).toInt(16) / 255f
-                    a = str.substring(6, 8).toInt(16) / 255f
+                    // parse argb
+                    a = str.substring(0, 2).toInt(16) / 255f
+                    r = str.substring(2, 4).toInt(16) / 255f
+                    g = str.substring(4, 6).toInt(16) / 255f
+                    b = str.substring(6, 8).toInt(16) / 255f
                 }
             }
             return Color(r, g, b, a)
