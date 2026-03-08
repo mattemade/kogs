@@ -320,6 +320,9 @@ class Box2DPhysicsSystem(
                     if (gameContext.gameState.airPearl) {
                         body.linearVelocityY = 1f
                         context.wallSlide = true
+                        if (dashingFromWall) {
+                            it.forceStopAirDash = true
+                        }
                     }
                 } else if (context.wallSlide) {
                     entity[JumpComponent].apply {

@@ -276,7 +276,13 @@ class RenderingSystem(
                         spriteComponent.fallAnimation
                     }
                 } else if (context.dashing) {
-                    spriteComponent.fallAnimation
+                    if (body.linearVelocityX != 0f) {
+                        // we are dashing with no speed!! probably it's a remaining state of dash-to-wall-slide
+                        spriteComponent.fallAnimation
+                    } else {
+                        // we are dashing with no speed!! probably it's a remaining state of dash-to-wall-slide
+                        spriteComponent.currentAnimation
+                    }
                 } else {
                     spriteComponent.currentAnimation
                 }

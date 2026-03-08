@@ -27,6 +27,7 @@ import net.mattemade.platformer.resources.PlatformerResourceSheet
 import net.mattemade.platformer.resources.ResourceLevel
 import net.mattemade.platformer.resources.Sound
 import net.mattemade.platformer.resources.Sprite
+import net.mattemade.platformer.shader.PostShader
 import net.mattemade.utils.animation.SignallingAnimationPlayer
 import net.mattemade.utils.animation.readAnimationMultiPlayer
 import net.mattemade.utils.animation.readAnimationPlayer
@@ -285,6 +286,10 @@ class Shaders(context: Context) : AssetPack(context) {
     val msdfShader by preparePlain {
         MsdfFontShader.prepare(context)
         MsdfFontShader.program
+    }
+    val postShader by preparePlain {
+        PostShader.prepare(context)
+        PostShader.program
     }
 }
 

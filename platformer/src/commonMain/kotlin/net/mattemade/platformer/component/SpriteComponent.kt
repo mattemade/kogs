@@ -6,7 +6,6 @@ import com.littlekt.graphics.Color
 import com.littlekt.graphics.toFloatBits
 import com.littlekt.math.Rect
 import net.mattemade.platformer.resources.AnimationWithOffset
-import org.jbox2d.common.Vec2
 
 data class SpriteComponent(
     val idleAnimation: AnimationWithOffset,
@@ -20,7 +19,7 @@ data class SpriteComponent(
     var tint: Float = Color.RED.toFloatBits(),
     val priority: Int = 0,
     var visible: Boolean = true,
-): Component<SpriteComponent> {
+) : Component<SpriteComponent> {
 
     var currentAnimation = idleAnimation
         set(value) {
@@ -31,5 +30,6 @@ data class SpriteComponent(
         }
 
     override fun type() = SpriteComponent
-    companion object: ComponentType<SpriteComponent>()
+
+    companion object : ComponentType<SpriteComponent>()
 }

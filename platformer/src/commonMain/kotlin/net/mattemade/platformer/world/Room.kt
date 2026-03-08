@@ -67,15 +67,7 @@ class Room(
 ) : Releasing by Self() {
 
     private val unitSize = 1f / map.tileWidth
-    private val initialPlayerBounds =
-        (map.layerOrNull("player-spawn") as? TiledObjectLayer)?.objects?.firstOrNull()?.bounds?.let {
-            Rect(
-                x = it.cx * unitSize - 0.5f,
-                y = it.cy * unitSize - 1f,
-                width = 1f,
-                height = 2f,
-            )
-        } ?: Rect(x = 0f, y = 0f, width = 1f, height = 2f)
+    private val initialPlayerBounds = Rect(x = 0f, y = 0f, width = 1f, height = 2f)
 
     var mapTexture: Texture? = null
     var addedToMap: Boolean = false
@@ -257,6 +249,10 @@ class Room(
     }
 
     private fun respawnEntities() {
+        (map.layerOrNull("player-spawn") as? TiledObjectLayer)?.objects?.firstOrNull()?.bounds?.let {
+            initialPlayerBounds.x = it.cx * unitSize - 0.5f
+            initialPlayerBounds.y = it.cy * unitSize - 1f
+        }
         currentlyActiveCheckpointInThisRoom = null
         ecs.removeAll(clearRecycled = false)
         uiEntity = ecs.entity {

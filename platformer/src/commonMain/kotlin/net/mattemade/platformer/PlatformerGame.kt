@@ -345,6 +345,8 @@ class PlatformerGame(
     private fun finalRender(duration: Duration, batch: Batch, shapeRenderer: ShapeRenderer) {
         context.gl.clearColor(Color.BLACK)
         context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
+
+        batch.shader = gameContext.assets.shaders.postShader
         batch.draw(
             pixelRender.texture,
             x = gameOffset.x,
@@ -354,7 +356,9 @@ class PlatformerGame(
             flipY = true
         )
 
+
         if (gameContext.gameInput.touchInput) {
+            batch.useDefaultShader()
             touchButtons.forEach { button ->
                 if (button.isDpad) {
                     shapeRenderer.filledCircle(

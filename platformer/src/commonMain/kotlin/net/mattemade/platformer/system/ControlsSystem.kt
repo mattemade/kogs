@@ -18,6 +18,7 @@ import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PlayerComponent
+import kotlin.math.absoluteValue
 import kotlin.math.sign
 
 class ControlsSystem(
@@ -68,7 +69,7 @@ class ControlsSystem(
     ) {
         val horizontalSpeed = input.movement.x * WALK_VELOCITY
         val moveComponent = entity[MoveComponent]
-        val dashIntent = gameContext.gameState.waterPearl && input.dash.pressed
+        val dashIntent = gameContext.gameState.airPearl && input.dash.pressed
         moveComponent.forceStopAirDash = moveComponent.forceStopAirDash && dashIntent
         val dash = dashIntent && !moveComponent.forceStopAirDash
 
@@ -99,33 +100,39 @@ class ControlsSystem(
         moveComponent.apply {
             speed = 1f
             moveDirection.set(horizontalSpeed, 0f)
-            context.dashing = dash
+
             if (dash) {
-                if (dashDirection.x != 0f && dashDirection.y == 0f) {
-                    dashDirection.set(dashDirection.x.sign * WALK_VELOCITY * 3f, 0f)
+                dashDirection.set(
+                if (context.dashing) {
+                    if (moveComponent.ignoreNextDashDirection || horizontalSpeed == 0f) {
+                        dashDirection.x
+                    } else{
+                        horizontalSpeed.sign * dashDirection.x.absoluteValue
+                    }
+                } else if (context.wallSlide) {
+                    if (dashDirection.x != 0f) { // dashing into the wall
+                        moveComponent.forceStopAirDash = true
+                        context.dashing = false
+                        0f
+                    } else { // dashing from the wall
+                        context.wallSlide = false
+                        moveComponent.ignoreNextDashDirection = true
+                        if (context.touchingLeftWall) {
+                            WALK_VELOCITY * 3f
+                        } else /*if (context.touchingRightWall)*/ {
+                            -WALK_VELOCITY * 3f
+                        }
+                    }
+                } else if (context.facingRight) {
+                    WALK_VELOCITY * 3f
                 } else {
-                    dashDirection.set(
-                        if (context.wallSlide) {
-                            if (context.touchingLeftWall) {
-                                WALK_VELOCITY * 3f
-                            } else if (context.touchingRightWall) {
-                                -WALK_VELOCITY * 3f
-                            } else {
-                                0f
-                            }
-                        } else {
-                            if (horizontalSpeed != 0f) {
-                                horizontalSpeed.sign * WALK_VELOCITY * 3f
-                            } else if (context.facingRight) {
-                                WALK_VELOCITY * 3f
-                            } else {
-                                -WALK_VELOCITY * 3f
-                            }
-                        }, 0f
-                    )
-                    context.wallSlide = false
-                }
+                    -WALK_VELOCITY * 3f
+                }, 0f)
+
+                context.dashing = dashDirection.x != 0f
             } else {
+                moveComponent.ignoreNextDashDirection = false
+                context.dashing = false
                 dashDirection.set(0f, 0f)
             }
         }

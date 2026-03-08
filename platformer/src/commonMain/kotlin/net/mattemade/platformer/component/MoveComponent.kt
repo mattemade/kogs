@@ -12,6 +12,7 @@ class MoveComponent(
     var fallThrough: Boolean = false,
     var forceStopAirDash: Boolean = false,
     var forceStopWaterDash: Boolean = false,
+    var ignoreNextDashDirection: Boolean = false,
 ): Component<MoveComponent> {
     override fun type() = MoveComponent
     companion object: ComponentType<MoveComponent>()
