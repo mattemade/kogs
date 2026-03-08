@@ -97,7 +97,7 @@ class Box2DPhysicsSystem(
             entity[ContextComponent].apply {
                 val wasStanding = standing
                 standing = body.getContactList()
-                    .let { it.isTouching<Feet, Wall>() || it.isTouching<Feet, Platform>() || it.isTouching<Feet, Spike>() } && body.linearVelocityY == 0f
+                    .let { it.isTouching<Feet, Wall>() || it.isTouching<Feet, Platform>() || it.isTouching<Feet, Spike>() || it.isTouching<Feet, EnemyHazard>() } && body.linearVelocityY == 0f
                 touchingLeftWall = body.getContactList().isTouching<LeftHand, Wall>()
                 touchingRightWall = body.getContactList().isTouching<RightHand, Wall>()
 
@@ -190,6 +190,18 @@ class Box2DPhysicsSystem(
                             tempVec2f.set(body.position.x + if (context.facingRight) 1f else -1f, body.position.y)
                         }
                         applyKnockback(entity, tempVec2f.x, tempVec2f.y)
+                        entity.configure {
+                            it += InvincibilityComponent()
+                        }
+                    }
+                }
+                body.getContactList().touchAll<Entity, EnemyHazard> { entity, hazard ->
+                    if (entity.getOrNull(InvincibilityComponent) == null) {
+                        entity.getOrNull(HealthComponent)?.let {
+                            it.health -= hazard.damage
+                        }
+
+                        applyKnockback(entity, hazard.bodyPosition.x, hazard.bodyPosition.y)
                         entity.configure {
                             it += InvincibilityComponent()
                         }
@@ -814,16 +826,7 @@ class Box2DPhysicsSystem(
 
                     is Action -> other.onTouch()
                     is EnemyHazard -> {
-                        if (this.getOrNull(InvincibilityComponent) == null) {
-                            this.getOrNull(HealthComponent)?.let {
-                                it.health -= other.damage
-                            }
-
-                            applyKnockback(this, other.bodyPosition.x, other.bodyPosition.y)
-                            this.configure {
-                                it += InvincibilityComponent()
-                            }
-                        }
+                        /* no-op, since it would allow to walk on spikes after, as they won't trigger beginContact anymore */
                     }
                 }
             }
@@ -919,9 +922,9 @@ class Box2DPhysicsSystem(
         private val PEARL_MASK = NEXT_MASK
 
         private val PLAYER_BODY_COLLISIONS = WALL_MASK or ENEMY_BODY_MASK or CHECKPOINT_MASK or PEARL_MASK or SPIKE_MASK
-        private val PLAYER_LIMB_COLLISIONS = WALL_MASK or WATER_MASK or SPIKE_MASK
+        private val PLAYER_LIMB_COLLISIONS = WALL_MASK or WATER_MASK or SPIKE_MASK or ENEMY_BODY_MASK
         private val ENEMY_BODY_COLLISION =
-            WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK or PLAYER_ATTACK_MASK or ENEMY_BODY_MASK or SPIKE_MASK
+            WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK or PLAYER_ATTACK_MASK or ENEMY_BODY_MASK or SPIKE_MASK or PLAYER_FOOT_MASK
         private val ENEMY_LIBS_COLLISIONS = WALL_MASK or WATER_MASK or SPIKE_MASK
         private val CHECKPOINT_COLLISIONS = PLAYER_BODY_MASK
         private val PEARL_COLLISIONS = PLAYER_BODY_MASK

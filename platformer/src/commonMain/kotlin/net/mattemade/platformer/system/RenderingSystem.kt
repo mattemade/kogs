@@ -36,6 +36,7 @@ import net.mattemade.platformer.WORLD_UNIT_WIDTH
 import net.mattemade.platformer.WORLD_WIDTH
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
+import net.mattemade.platformer.component.KnockbackComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PlayerComponent
 import net.mattemade.platformer.component.PositionComponent
@@ -254,8 +255,19 @@ class RenderingSystem(
         entity.getOrNull(ContextComponent)?.let { context ->
             entity.getOrNull(Box2DPhysicsComponent)?.let { physicsComponent ->
                 val body = physicsComponent.body
-                spriteComponent.currentAnimation = if (context.swimming) {
-                    spriteComponent.swimAnimation
+                spriteComponent.currentAnimation = if (entity.getOrNull(KnockbackComponent) != null) {
+                    spriteComponent.hurtAnimation
+                } else if (context.swimming) {
+                    entity.getOrNull(MoveComponent)?.let { move ->
+                        //animationTimeMultiplier = abs(move.moveDirection.x / move.maxMoveSpeed)//.clamp(0.5f, 2f)
+                        if (context.dashing) {
+                            spriteComponent.swimDashAnimation
+                        } else if (move.moveDirection.x != 0f || move.moveDirection.y != 0f) {
+                            spriteComponent.swimAnimation
+                        } else {
+                            spriteComponent.swimIdleAnimation
+                        }
+                    } ?: spriteComponent.swimAnimation
                 } else if (context.standing && body.linearVelocityY == 0f) { // grounded
                     if (body.linearVelocityX == 0f) {
                         spriteComponent.idleAnimation
@@ -276,9 +288,10 @@ class RenderingSystem(
                         spriteComponent.fallAnimation
                     }
                 } else if (context.dashing) {
-                    if (body.linearVelocityX != 0f) {
-                        // we are dashing with no speed!! probably it's a remaining state of dash-to-wall-slide
-                        spriteComponent.fallAnimation
+                    if (context.swimming) {
+                        spriteComponent.swimDashAnimation
+                    } else if (body.linearVelocityX != 0f) {
+                        spriteComponent.airDashAnimation
                     } else {
                         // we are dashing with no speed!! probably it's a remaining state of dash-to-wall-slide
                         spriteComponent.currentAnimation

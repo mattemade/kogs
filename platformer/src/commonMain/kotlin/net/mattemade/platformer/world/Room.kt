@@ -281,6 +281,10 @@ class Room(
                 fallAnimation = gameContext.assets.animation("MC fall"),
                 swimAnimation = gameContext.assets.animation("MC swimming"),
                 wallSlideAnimation = gameContext.assets.animation("MC wall slide"),
+                swimIdleAnimation = gameContext.assets.animation("MC swim_idle"),
+                swimDashAnimation = gameContext.assets.animation("MC swim_dash"),
+                airDashAnimation = gameContext.assets.animation("MC air_dash"),
+                hurtAnimation = gameContext.assets.animation("MC hurt"),
                 animationEventCallback = { it, _ -> println(it) },
                 // baking offset into the bounds, maybe it should be a separate property?
                 bounds = Rect(

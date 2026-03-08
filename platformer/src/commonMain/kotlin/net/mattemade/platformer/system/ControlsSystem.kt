@@ -157,6 +157,7 @@ class ControlsSystem(
             if (moveDirection.length() > SWIM_ACCELERATION) {
                 moveDirection.setLength(SWIM_ACCELERATION)
             }
+            context.dashing = dash
             if (dash) {
                 dashDirection.set(moveDirection).norm().setLength(SWIM_VELOCITY * 3f)
             } else {
