@@ -6,12 +6,17 @@ import com.github.quillraven.fleks.World.Companion.family
 import com.github.quillraven.fleks.World.Companion.inject
 import com.github.quillraven.fleks.collection.compareEntity
 import com.littlekt.Context
+import com.littlekt.graphics.Camera
 import com.littlekt.graphics.Color
+import com.littlekt.graphics.g2d.Batch
 import com.littlekt.graphics.g2d.SpriteBatch
 import com.littlekt.graphics.g2d.shape.ShapeRenderer
+import com.littlekt.graphics.g2d.tilemap.tiled.TiledLayer
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledMap
+import com.littlekt.graphics.g2d.tilemap.tiled.TiledObjectLayer
 import com.littlekt.graphics.gl.ClearBufferMask
 import com.littlekt.graphics.toFloatBits
+import com.littlekt.graphics.util.BlendMode
 import com.littlekt.math.MutableVec2f
 import com.littlekt.math.Vec2f
 import com.littlekt.math.clamp
@@ -38,7 +43,9 @@ import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.px
 import net.mattemade.utils.msdf.MsdfFontRenderer
+import net.mattemade.utils.render.PixelRender
 import kotlin.math.abs
+import kotlin.time.Duration
 
 class RenderingSystem(
     private val context: Context = inject(),
@@ -56,6 +63,7 @@ class RenderingSystem(
         virtualHeight = WORLD_UNIT_HEIGHT
     )
     private val camera = viewport.camera
+    private val playerLightPosition = MutableVec2f()
     private val batch = SpriteBatch(context)
     private val shapeRenderer = ShapeRenderer(batch, slice = gameContext.assets.textureFiles.whitePixel)
     private val mapScale = 1f / map.tileWidth
@@ -80,11 +88,26 @@ class RenderingSystem(
         up.apply { x = 0f; y = 1f; z = 0f; }
     }
 
+    init {
+        if (sharedLightRenderer == null) {
+            sharedLightRenderer = PixelRender(
+                gameContext.context,
+                targetWidth = WORLD_WIDTH,
+                targetHeight = WORLD_HEIGHT,
+                virtualWidth = WORLD_UNIT_WIDTH,
+                virtualHeight = WORLD_UNIT_HEIGHT,
+                preRenderCall = { dt, camera -> },
+                renderCall = { dt, camera, batch, shapeRenderer -> }
+            )
+        }
+    }
+
     override fun onTick() {
         context.gl.clearColor(Color.BLACK)
         context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
 
         val playerPosition = family.first { it.getOrNull(PlayerComponent) != null }[PositionComponent].position
+        playerLightPosition.set(playerPosition)
         val cameraX = playerPosition.x.clamp(minCameraPosition.x, maxCameraPosition.x)
         val cameraY = playerPosition.y.clamp(minCameraPosition.y, maxCameraPosition.y)
         camera.position.set(
@@ -97,6 +120,13 @@ class RenderingSystem(
             y = cameraY
         }
         gameContext.assets.fmod.studioSystem.setListenerAttributes(0, fmodListenerAttributes)
+
+        var hasLight = false
+        (map.layers.firstOrNull { it.name == light } as? TiledObjectLayer)?.let {
+            hasLight = true
+            sharedLightRenderer?.render(it, 0f.seconds, ::prerenderLight, ::renderLight)
+        }
+
         //camera.position.set(WORLD_UNIT_WIDTH * 0.5f, WORLD_UNIT_HEIGHT * 0.5f, 0f)
         viewport.apply(context)
         batch.begin(camera.viewProjection)
@@ -104,6 +134,21 @@ class RenderingSystem(
         super.onTick() // tick to render entities
         renderLevel(from = playerLayerIndex + 1, to = mapLayers)
         renderSideBars() // to cover any sprite that goes out-of-bounds
+
+        if (hasLight) {
+            sharedLightRenderer?.texture?.let {
+                batch.setBlendFunction(BlendMode.Multiply)
+                batch.draw(
+                    it,
+                    x = camera.position.x - HALF_WORLD_UNIT_WIDTH,
+                    y = camera.position.y - HALF_WORLD_UNIT_HEIGHT,
+                    width = WORLD_UNIT_WIDTH,
+                    height = WORLD_UNIT_HEIGHT,
+                    flipY = true,
+                )
+                batch.setToPreviousBlendFunction()
+            }
+        }
 
         if (showTutorial) {
             fontRenderer.drawAllTextAtOnce(batch) {
@@ -124,7 +169,6 @@ class RenderingSystem(
             }
         }
 
-
         batch.end()
     }
 
@@ -136,9 +180,13 @@ class RenderingSystem(
 
     private fun renderLevelLayer(i: Int) {
         val layer = map.layers[i]
-        if (layer.name == fakeWalls) {
+        if (layer.name == fakeWalls || layer.name == light) {
             return
         }
+        renderLayer(layer, batch)
+    }
+
+    private fun renderLayer(layer: TiledLayer, batch: Batch) {
         val xOffset = (1f - layer.parallaxFactor.x) * (camera.position.x - minCameraPosition.x)
         val yOffset = (1f - layer.parallaxFactor.y) * (camera.position.y - minCameraPosition.y)
         layer.render(batch, camera = camera, x = xOffset.px, y = yOffset.px, scale = mapScale, displayObjects = true)
@@ -265,12 +313,37 @@ class RenderingSystem(
         }
     }
 
+    private fun prerenderLight(level: TiledObjectLayer, dt: Duration, camera: Camera) {
+        camera.position.set(this.camera.position)
+    }
+
+    private fun renderLight(
+        layer: TiledObjectLayer,
+        dt: Duration,
+        camera: Camera,
+        batch: Batch,
+        shapeRenderer: ShapeRenderer
+    ) {
+        val ambientColor = (layer.properties[abmient] as? TiledMap.Property.ColorProp)?.value ?: Color.BLACK
+        gameContext.context.gl.clearColor(ambientColor)
+        gameContext.context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
+
+        renderLayer(layer, batch)
+        shapeRenderer.filledEllipse(x = playerLightPosition.x, y = playerLightPosition.y, rx = 8f, ry = 8f, innerColor = innerPlayerLight, outerColor = outerPlayerLight)
+    }
+
     companion object {
         private val tempVec2f = MutableVec2f()
         private val sideBarColor = Color.BLACK.toFloatBits()
         private val topColor = Color.RED.toFloatBits()
         private val bottomColor = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits()
         private val fakeWalls = "FAKE WALLS"
+        private val light = "light"
+        private val abmient = "ambient"
+        private val innerPlayerLight = Color.WHITE.toFloatBits()
+        private val outerPlayerLight = Color.WHITE.toMutableColor().apply { a = 0f }.toFloatBits()
+
+        private var sharedLightRenderer: PixelRender? = null
     }
 
 }

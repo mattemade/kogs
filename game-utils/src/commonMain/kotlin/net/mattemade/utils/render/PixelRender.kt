@@ -24,8 +24,8 @@ class PixelRender(
     targetHeight: Int,
     virtualWidth: Float = targetWidth.toFloat(),
     virtualHeight: Float = targetHeight.toFloat(),
-    private val preRenderCall: (dt: Duration, camera: Camera) -> Unit,
-    private val renderCall: (dt: Duration, camera: Camera, batch: Batch, shapeRenderer: ShapeRenderer) -> Unit,
+    var preRenderCall: (dt: Duration, camera: Camera) -> Unit,
+    var renderCall: (dt: Duration, camera: Camera, batch: Batch, shapeRenderer: ShapeRenderer) -> Unit,
     private val clear: Boolean = false,
     private val blending: Boolean = false,
     private val allowFiltering: Boolean = false,
@@ -63,6 +63,38 @@ class PixelRender(
             shader.bind()
         }
         renderCall(dt, targetCamera, batch, shapeRenderer)
+        if (shader != defaultShader) {
+            batch.shader = defaultShader
+            defaultShader.bind()
+        }
+        if (blending) {
+            batch.setToPreviousBlendFunction()
+            context.gl.disable(State.BLEND)
+        }
+        batch.end()
+        target.end()
+    }
+
+    fun <T> render(item: T, dt: Duration,
+                   preRenderCall: (item: T, dt: Duration, camera: Camera) -> Unit,
+                   renderCall: (item: T, dt: Duration, camera: Camera, batch: Batch, shapeRenderer: ShapeRenderer) -> Unit,) {
+        target.begin()
+        preRenderCall(item, dt, targetCamera)
+        if (clear) {
+            context.gl.clearColor(Color.CLEAR)
+            context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
+        }
+        targetViewport.apply(context)
+        batch.begin(targetCamera.viewProjection)
+        if (blending) {
+            context.gl.enable(State.BLEND)
+            batch.setBlendFunction(BlendFactor.SRC_ALPHA, BlendFactor.ONE_MINUS_SRC_ALPHA)
+        }
+        if (shader != defaultShader) {
+            batch.shader = shader
+            shader.bind()
+        }
+        renderCall(item, dt, targetCamera, batch, shapeRenderer)
         if (shader != defaultShader) {
             batch.shader = defaultShader
             defaultShader.bind()

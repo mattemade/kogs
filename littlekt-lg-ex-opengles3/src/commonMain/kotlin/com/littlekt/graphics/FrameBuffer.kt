@@ -255,6 +255,8 @@ open class FrameBuffer(
 
         gl.bindFrameBuffer(fboHandle)
         gl.viewport(0, 0, width, height)
+
+        framebuffers += fboHandle
     }
 
     /**
@@ -273,7 +275,16 @@ open class FrameBuffer(
         val fboHandle = fboHandle
         check(isPrepared && fboHandle != null) { "The framebuffer has not been prepared yet! Ensure you called prepare() sometime before you call end()" }
 
-        gl.bindDefaultFrameBuffer()
+        val removed = framebuffers.removeLastOrNull()
+        if (removed != fboHandle) {
+            throw IllegalStateException("You should end framebuffers in reverse order of beginning them")
+        }
+        val lastHandle = framebuffers.lastOrNull()
+        if (lastHandle != null) {
+            gl.bindFrameBuffer(lastHandle)
+        } else {
+            gl.bindDefaultFrameBuffer()
+        }
         gl.viewport(x, y, width, height)
     }
 
@@ -301,6 +312,10 @@ open class FrameBuffer(
             depthStencilPackedBufferHandle = null
         }
         fboHandle?.let { gl.deleteFrameBuffer(it) }
+    }
+
+    companion object {
+        val framebuffers = mutableListOf<GlFrameBuffer>()
     }
 }
 

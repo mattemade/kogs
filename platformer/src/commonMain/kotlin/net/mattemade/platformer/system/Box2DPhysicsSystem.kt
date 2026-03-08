@@ -153,7 +153,6 @@ class Box2DPhysicsSystem(
                         }
                         if (movingVertically) {
                             it.forceStopAirDash = true // do not continue dashing in the air when jumping up or down
-                            println("stop dash on land")
                         }
                     }
                 }
