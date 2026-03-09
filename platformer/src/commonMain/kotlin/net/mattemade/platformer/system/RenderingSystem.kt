@@ -217,7 +217,7 @@ class RenderingSystem(
         val (rotation) = entity[RotationComponent]
 
         val angle = rotation.radians
-/*        val tint = spriteComponent.tint
+        val tint = spriteComponent.tint
         tempVec2f.set(bounds.x, bounds.y).rotate(angle)
         shapeRenderer.filledRectangle(
             x = (position.x + bounds.x).px,
@@ -229,7 +229,7 @@ class RenderingSystem(
             color3 = tint,
             color4 = tint,
             rotation = angle
-        )*/
+        )
 
         var animationTimeMultiplier = 1f
         entity.getOrNull(ContextComponent)?.let { context ->

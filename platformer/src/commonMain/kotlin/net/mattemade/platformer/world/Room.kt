@@ -496,7 +496,7 @@ class Room(
                 initialPlayerBounds.cy = spawn.bounds.y2 * unitSize - initialPlayerBounds.height * 0.5f
             }
             entity += SpriteComponent(
-                idleAnimation = gameContext.assets.animation("MC idle"),
+                idleAnimation = gameContext.assets.animation("empty"),
                 animationEventCallback = { it, _ -> println(it) },
                 // baking offset into the bounds, maybe it should be a separate property?
                 bounds = Rect(
@@ -525,6 +525,7 @@ class Room(
                 spawn.bounds.height * unitSize,
                 id = checkpointId,
             ) {
+                gameContext.fmodAssets.checkPointActivated.createInstance().start()
                 val component = entity[CheckpointComponent]
                 if (!component.isActivated) {
                     component.isActivated = true

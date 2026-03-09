@@ -121,6 +121,7 @@ class Box2DPhysicsSystem(
                 if (!swimming && currentlySwimming) { // started swimming
                     if (entity.getOrNull(PlayerComponent) != null) {
                         gameContext.switchMusicState(PlatformerGameContext.stateSwimming)
+                        physicsComponent.playSound(gameContext.fmodAssets.getInWater)
                     }
                     physicsComponent.landBodyFixture.filterData.maskBits = 0
                     physicsComponent.waterBodyFixture.filterData.maskBits = physicsComponent.collisionMask
@@ -137,6 +138,7 @@ class Box2DPhysicsSystem(
                 } else if (swimming && !currentlySwimming) { // finished swimming
                     if (entity.getOrNull(PlayerComponent) != null) {
                         gameContext.switchMusicState(PlatformerGameContext.stateWalking)
+                        physicsComponent.playSound(gameContext.fmodAssets.getOutOfWater)
                     }
                     physicsComponent.waterBodyFixture.filterData.maskBits = 0
                     physicsComponent.landBodyFixture.filterData.maskBits = physicsComponent.collisionMask
@@ -189,6 +191,7 @@ class Box2DPhysicsSystem(
 
                 body.getContactList().touchAll<Entity, Spike> { entity, spike ->
                     if (entity.getOrNull(InvincibilityComponent) == null) {
+                        physicsComponent.playSound(gameContext.fmodAssets.damaged)
                         entity.getOrNull(HealthComponent)?.let {
                             it.health -= 1f
                         }
@@ -208,6 +211,7 @@ class Box2DPhysicsSystem(
                 }
                 body.getContactList().touchAll<Entity, EnemyHazard> { entity, hazard ->
                     if (entity.getOrNull(InvincibilityComponent) == null) {
+                        physicsComponent.playSound(gameContext.fmodAssets.damaged)
                         entity.getOrNull(HealthComponent)?.let {
                             it.health -= hazard.damage
                         }
@@ -853,6 +857,11 @@ class Box2DPhysicsSystem(
                         }
                         other.entity.getOrNull(HealthComponent)?.let {
                             it.health -= this.damage
+                            if (it.health > 0f) {
+                                other.entity[Box2DPhysicsComponent].playSound(gameContext.fmodAssets.hitEnemy)
+                            } else {
+                                other.entity[Box2DPhysicsComponent].playSound(gameContext.fmodAssets.enemyDefeated)
+                            }
                         }
                         val body = other.entity[Box2DPhysicsComponent].body
                         body.linearVelocityY = 0f

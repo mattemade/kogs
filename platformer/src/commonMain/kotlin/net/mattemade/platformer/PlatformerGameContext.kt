@@ -8,6 +8,7 @@ import kotlinx.serialization.json.Json
 import net.mattemade.fmod.FmodEventInstance
 import net.mattemade.platformer.input.GameInput
 import net.mattemade.platformer.input.bindInputs
+import net.mattemade.platformer.scene.PlatformingScene
 import net.mattemade.utils.Scheduler
 import kotlin.random.Random
 import kotlin.time.Duration
@@ -65,6 +66,7 @@ class PlatformerGameContext(
     fun save() {
         val state = json.encodeToString(gameState)
         if (previousSavedState != state) {
+            log("save|${gameState.checkpoint}|${gameState.sword}|${gameState.waterPearl}|${gameState.airPearl}|${PlatformingScene.collectedPearls}}")
             println("saving $state")
             context.vfs.store("save", state)
             previousSavedState = state
@@ -112,7 +114,6 @@ class PlatformerGameContext(
 
 
     fun switchMusicState(state: String) {
-        println("setting state to $state")
         currentlyPlayingMusic?.setParameterByIDWithLabel(fmodAssets.musicStateParameter, state, 0)
     }
 

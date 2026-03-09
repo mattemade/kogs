@@ -85,7 +85,6 @@ class FmodAssets(
         studioSystem.getEvent("event:/Music/StemTest")
     }
     val musicStateParameter by preparePlain(order = 3) {
-        println("getting parameter id")
         musicEventDescription.getParameterDescriptionByName("Player state").id
     }
 }

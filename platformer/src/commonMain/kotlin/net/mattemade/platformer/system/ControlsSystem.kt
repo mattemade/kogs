@@ -184,7 +184,6 @@ class ControlsSystem(
     }
 
     private fun JumpComponent.executeJump(entity: Entity, wallJump: Boolean = false) {
-        entity[Box2DPhysicsComponent].playSound(gameContext.fmodAssets.jump)
 
         jumping = true
         if (!canJumpFromGround && !wallJump) {
