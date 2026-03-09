@@ -14,6 +14,7 @@ actual class LittleKtProps {
     var title: String = "LitteKt"
     var assetsDir: String = "./"
     var backgroundColor: Color = Color.CLEAR
+    var selfInitializeAudioContext: Boolean = true
 }
 
 /**
@@ -24,35 +25,37 @@ actual fun createLittleKtApp(action: LittleKtProps.() -> Unit): LittleKtApp {
     val props = LittleKtProps().apply(action)
     props.action()
 
-    // trigger the initialization of AudioContext to enable sound in certain web browsers
-    val userInteractionEventNames = listOf(
-        "click",
-        "contextmenu",
-        "auxclick",
-        "doubleclick",
-        "mousedown",
-        "mouseup",
-        "pointerup",
-        "touchstart",
-        "touchend",
-        "keydown"
-    )
-    val listener = object : EventListener {
-        override fun handleEvent(event: Event) {
-            val audioContext = globalAudioContext
-            if (audioContext != null) {
-                if (audioContext.state != "running") {
-                    audioContext.resume()
+    if (props.selfInitializeAudioContext) {
+        // trigger the initialization of AudioContext to enable sound in certain web browsers
+        val userInteractionEventNames = listOf(
+            "click",
+            "contextmenu",
+            "auxclick",
+            "doubleclick",
+            "mousedown",
+            "mouseup",
+            "pointerup",
+            "touchstart",
+            "touchend",
+            "keydown"
+        )
+        val listener = object : EventListener {
+            override fun handleEvent(event: Event) {
+                val audioContext = globalAudioContext
+                if (audioContext != null) {
+                    if (audioContext.state != "running") {
+                        audioContext.resume()
+                    }
+                    userInteractionEventNames.forEach {
+                        document.removeEventListener(it, this)
+                    }
                 }
-                userInteractionEventNames.forEach {
-                    document.removeEventListener(it, this)
-                }
-            }
 
+            }
         }
-    }
-    userInteractionEventNames.forEach { eventName ->
-        document.addEventListener(eventName, listener)
+        userInteractionEventNames.forEach { eventName ->
+            document.addEventListener(eventName, listener)
+        }
     }
 
     return LittleKtApp(

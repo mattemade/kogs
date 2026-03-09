@@ -136,6 +136,11 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
     }
 
     override fun update(seconds: Float) {
+        if (gameContext.currentlyPlayingMusic == null) {
+            gameContext.fmodAssets.musicEventDescription.createInstance().also {
+                gameContext.currentlyPlayingMusic = it
+            }.start()
+        }
         currentRoom.render(seconds)
     }
 

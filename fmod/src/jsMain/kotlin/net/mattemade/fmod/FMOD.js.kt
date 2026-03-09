@@ -98,6 +98,14 @@ actual class FmodStudioSystemCore(private val actualCore: dynamic) {
     ) {
         checkError(actualCore.setSoftwareFormat(sampleRate, speakerMode, numSpeakers))
     }
+
+    actual fun mixerSuspend() {
+        checkError(actualCore.mixerSuspend())
+    }
+
+    actual fun mixerResume() {
+        checkError(actualCore.mixerResume())
+    }
 }
 
 actual class FmodBank(private val actualBank: dynamic) {

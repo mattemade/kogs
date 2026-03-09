@@ -90,6 +90,9 @@ expect class FmodStudioSystemCore {
     ): FmodDriverInfo
 
     fun setSoftwareFormat(sampleRate: Int, speakerMode: FmodSpeakerMode, numSpeakers: Int)
+
+    fun mixerSuspend()
+    fun mixerResume()
 }
 
 expect class FmodBank {

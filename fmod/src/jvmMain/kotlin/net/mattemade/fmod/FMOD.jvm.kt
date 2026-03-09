@@ -81,11 +81,11 @@ actual class FmodStudioSystem(val id: Long) {
 
 actual class FmodStudioSystemCore(val id: Long) {
     actual fun setDSPBufferSize(bufferLength: Int, numBuffers: Int) {
-        FMOD.FMOD_System_SetDSPBufferSize(id, bufferLength, numBuffers)
+        FMOD.FMOD_System_SetDSPBufferSize(id, bufferLength, numBuffers).checkError()
     }
 
     actual fun getCPUUsage(cpu: FmodCpu) {
-        FMOD.FMOD_System_GetCPUUsage(id, cpu.usage)
+        FMOD.FMOD_System_GetCPUUsage(id, cpu.usage).checkError()
     }
 
     actual fun getDriverInfo(
@@ -102,7 +102,7 @@ actual class FmodStudioSystemCore(val id: Long) {
             systemRate,
             speakerMode,
             speakerModeChannels
-        )
+        ).checkError()
         return FmodDriverInfo(systemRate.get(), speakerMode.get(), speakerModeChannels.get())
     }
 
@@ -111,7 +111,15 @@ actual class FmodStudioSystemCore(val id: Long) {
         speakerMode: FmodSpeakerMode,
         numSpeakers: Int
     ) {
-        FMOD.FMOD_System_SetSoftwareFormat(id, sampleRate, speakerMode, numSpeakers)
+        FMOD.FMOD_System_SetSoftwareFormat(id, sampleRate, speakerMode, numSpeakers).checkError()
+    }
+
+    actual fun mixerSuspend() {
+        FMOD.FMOD_System_MixerSuspend(id).checkError()
+    }
+
+    actual fun mixerResume() {
+        FMOD.FMOD_System_MixerResume(id).checkError()
     }
 }
 

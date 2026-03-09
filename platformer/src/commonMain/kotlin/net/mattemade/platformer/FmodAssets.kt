@@ -18,24 +18,33 @@ class FmodAssets(
 
     val preparation by selfPreparePlain(order = 0, action = {
         FMOD_BANKS.forEach { bankName ->
-        val bank by selfPreparePlain(order = 0, action = {
-            val bank = studioSystem.loadBankFile("${fmodFolderPrefix}fmod/${bankName}", FMOD.STUDIO_LOAD_BANK_NONBLOCKING)
-            bank
-        }) {
-            val result = it.loadingState == FMOD.STUDIO_LOADING_STATE_LOADED
-            if (result) {
-                map[bankName] = it
+            val bank by selfPreparePlain(order = 0, action = {
+                val bank =
+                    studioSystem.loadBankFile("${fmodFolderPrefix}fmod/${bankName}", FMOD.STUDIO_LOAD_BANK_NONBLOCKING)
+                bank
+            }) {
+                val result = it.loadingState == FMOD.STUDIO_LOADING_STATE_LOADED
+                if (result) {
+                    map[bankName] = it
+                }
+                result
             }
-            result
         }
-    }}) {
+    }) {
         map.size == FMOD_BANKS.size
     }
 
     val sampleDataPreparation by selfPreparePlain(order = 1, action = {
-        map.values.forEach { it.loadSampleData() }
+        map.forEach { (key, value) ->
+            if (!key.contains("Ocean")) {
+                value.loadSampleData()
+            }
+        }
     }) {
-        map.values.all { it.sampleLoadingState == FMOD.STUDIO_LOADING_STATE_LOADED }
+        map.all { (key, value) ->
+            key.contains("Ocean") ||
+                    value.sampleLoadingState == FMOD.STUDIO_LOADING_STATE_LOADED
+        }
     }
 
     val jump by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump") }

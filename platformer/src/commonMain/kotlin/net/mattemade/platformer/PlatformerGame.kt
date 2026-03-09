@@ -20,6 +20,7 @@ import net.mattemade.platformer.input.ControllerInput
 import net.mattemade.platformer.input.TouchButton
 import net.mattemade.platformer.scene.PlatformingScene
 import net.mattemade.platformer.scene.Scene
+import net.mattemade.platformer.scene.SplashScene
 import net.mattemade.utils.network.SocketConnection
 import net.mattemade.utils.network.SocketMessage
 import net.mattemade.utils.releasing.Releasing
@@ -55,11 +56,12 @@ class PlatformerGame(
             }
             field = value
         }
+
     private var audioReady: Boolean = false
     private var assetsReady: Boolean = false
     private var fmodAssetsReady: Boolean = false
     private val gameContext =
-        PlatformerGameContext(context, log, encodeUrlComponent, getBlocking, overrideResourcesFrom, fmodFolderPrefix, fmodLiveUpdate, ::restartScene)
+        PlatformerGameContext(context, log, encodeUrlComponent, getBlocking, overrideResourcesFrom, fmodFolderPrefix, fmodLiveUpdate, ::restartScene, ::startGame)
     private val pixelRender =
         PixelRender(
             context,
@@ -109,6 +111,7 @@ class PlatformerGame(
         context.releaseCursor()
     }
 
+    private val platformingScene: PlatformingScene by lazy { PlatformingScene(gameContext) }
     private var scene: Scene? = null
         set(value) {
             if (field != value) {
@@ -117,6 +120,10 @@ class PlatformerGame(
                 oldValue?.release()
             }
         }
+
+    private fun startGame() {
+        scene = platformingScene
+    }
 
     private fun restartScene() {
         (scene as? PlatformingScene)?.reset()
@@ -127,7 +134,7 @@ class PlatformerGame(
     override suspend fun Context.start() {
         gameContext.log("start")
         input.catchKeys.add(Key.TAB)
-        input.addInputProcessor(object : InputProcessor {
+        input.addActiveInputProcessor(object : InputProcessor {
             override fun keyDown(key: Key): Boolean {
                 if (!focused) {
                     focused = true
@@ -141,13 +148,20 @@ class PlatformerGame(
                 movementX: Float,
                 movementY: Float
             ): Boolean {
-                gameContext.gameInput.mouseDetected = true
+                if (movementX != 0f && movementY != 0f) {
+                    gameContext.gameInput.mouseDetected = true
+                }
                 return false
             }
 
             override fun touchUp(screenX: Float, screenY: Float, pointer: Pointer): Boolean {
                 if (!focused) {
                     focused = true
+                }
+                if (!audioReady && assetsReady) {
+                    audioReady = true
+                    gameContext.assets.fmod.system.mixerSuspend()
+                    gameContext.assets.fmod.system.mixerResume()
                 }
                 updatePointer(pointer, screenX, screenY, false)
                 return false
@@ -200,33 +214,12 @@ class PlatformerGame(
             resizeFinalRender(width, height)
         }
 
-        onRender { dt ->
-            //gl.clearColor(Color.BLACK)
-            //gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
-            //fpsCounter.update(dt.seconds)
-
-            if (!audioReady) {
-                audioReady = audio.isReady()
-            }
-            if (!assetsReady) {
-                assetsReady = audioReady && gameContext.assets.isLoaded
-            }
-
-            if (focused && assetsReady && fmodAssetsReady) {
-                gameContext.update(dt)
-                pixelRender.render(dt)
-                directRender.render(dt)
-            }
-
+        onQuickUpdate {
             if (assetsReady) {
                 gameContext.assets.fmod.studioSystem.update()
                 if (!fmodAssetsReady) {
                     fmodAssetsReady = gameContext.fmodAssets.isLoaded
                     if (fmodAssetsReady) {
-                        gameContext.fmodAssets.musicEventDescription.createInstance().also {
-                            gameContext.currentlyPlayingMusic = it
-                        }.start()
-
                         // parameters could be refreshed at that point, need to resize the viewport to match them
                         resizeFinalRender(screenSize.x, screenSize.y)
                         pixelRender.resize(WORLD_WIDTH, WORLD_HEIGHT)
@@ -236,10 +229,26 @@ class PlatformerGame(
                         pixelRender.updateShapeRenderer()
 
                         gameContext.load()
-                        scene = PlatformingScene(gameContext)
+                        scene = SplashScene(gameContext)
 
                     }
                 }
+            }
+        }
+
+        onRender { dt ->
+            //gl.clearColor(Color.BLACK)
+            //gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
+            //fpsCounter.update(dt.seconds)
+
+            if (!assetsReady) {
+                assetsReady = gameContext.assets.isLoaded
+            }
+
+            if (focused && assetsReady && fmodAssetsReady) {
+                gameContext.update(dt)
+                pixelRender.render(dt)
+                directRender.render(dt)
             }
 
             //blockingSleep(TimeSpan(1000.0 / 15))

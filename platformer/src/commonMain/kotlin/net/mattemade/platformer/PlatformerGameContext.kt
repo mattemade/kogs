@@ -21,6 +21,7 @@ class PlatformerGameContext(
     val fmodFolderPrefix: String,
     val fmodLiveUpdate: Boolean,
     val restartScene: () -> Unit,
+    val startGame: () -> Unit,
 ) {
 
     var currentlyPlayingMusic: FmodEventInstance? = null

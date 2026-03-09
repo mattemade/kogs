@@ -21,6 +21,7 @@ import net.mattemade.fmod.FMOD_FS_createPreloadedFile
 import net.mattemade.fmod.FMOD_Module_Create
 import net.mattemade.fmod.FMOD_Studio_System_Create
 import net.mattemade.fmod.FmodStudioSystem
+import net.mattemade.fmod.FmodStudioSystemCore
 import net.mattemade.platformer.resources.AnimationWithOffset
 import net.mattemade.platformer.resources.Music
 import net.mattemade.platformer.resources.PlatformerResourceSheet
@@ -296,6 +297,7 @@ class Shaders(context: Context) : AssetPack(context) {
 class Fmod(context: Context, fmodFolderPrefix: String, fmodLiveUpdate: Boolean) : AssetPack(context) {
 
     lateinit var studioSystem: FmodStudioSystem
+    lateinit var system: FmodStudioSystemCore
     private var studioSystemReady = false
     private val module by selfPreparePlain(order = 0, tag = "module", {
         FMOD_Module_Create({
@@ -305,6 +307,7 @@ class Fmod(context: Context, fmodFolderPrefix: String, fmodLiveUpdate: Boolean) 
         }) {
             studioSystem = FMOD_Studio_System_Create()
             val core = studioSystem.coreSystem
+            system = core
             // 128 is much better!
             core.setDSPBufferSize(1024, 2)
             val driver = core.getDriverInfo(0)
