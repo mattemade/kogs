@@ -233,12 +233,12 @@ class RenderingSystem(
     override fun onTickEntity(entity: Entity) {
         val spriteComponent = entity[SpriteComponent]
         val bounds = spriteComponent.bounds
-        val tint = spriteComponent.tint
+//        val tint = spriteComponent.tint
         val (position) = entity[PositionComponent]
         val (rotation) = entity[RotationComponent]
 
         val angle = rotation.radians
-        tempVec2f.set(bounds.x, bounds.y).rotate(angle)
+/*        tempVec2f.set(bounds.x, bounds.y).rotate(angle)
         shapeRenderer.filledRectangle(
             x = (position.x + bounds.x).px,
             y = (position.y + bounds.y).px,
@@ -249,7 +249,7 @@ class RenderingSystem(
             color3 = tint,
             color4 = tint,
             rotation = angle
-        )
+        )*/
 
         var animationTimeMultiplier = 1f
         entity.getOrNull(ContextComponent)?.let { context ->

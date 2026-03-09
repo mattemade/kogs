@@ -9,6 +9,8 @@ class ContextComponent(
     var touchingRightWall: Boolean = false,
     var facingRight: Boolean = false,
     var standing: Boolean = false,
+    var standingLeftFoot: Boolean = false,
+    var standingRightFoot: Boolean = false,
     var wallSlide: Boolean = false,
     var swimming: Boolean = false,
     var dashing: Boolean = false,

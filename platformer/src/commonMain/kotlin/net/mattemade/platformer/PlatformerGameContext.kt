@@ -39,6 +39,7 @@ class PlatformerGameContext(
     lateinit var gameState: GameState
     var gameInput = GameInput(context, context.bindInputs())
     var controlsActive = true
+    var paused = false
 
     private var tag =
         context.vfs.loadString("tag") ?: Random.nextInt().toString().also {

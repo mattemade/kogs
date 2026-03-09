@@ -95,11 +95,13 @@ class PlatformerGame(
 
     fun blur() {
         focused = false
+        gameContext.paused = true
         gameContext.log("blur")
     }
 
     fun focus() {
         focused = true
+        gameContext.paused = false
         gameContext.log("focus")
     }
 

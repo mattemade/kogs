@@ -62,14 +62,14 @@ class ResourceEnemy(
             it.position.set(cx, cy)
         }
         entity += RotationComponent(maxRotationVelocity = 0.1f)
-        entity += MoveComponent()
+        entity += MoveComponent(speed = 1f)
         entity += JumpComponent()
         entity += FloatUpComponent()
         entity += MomentaryForceComponent()
         entity += ContextComponent()
-        entity += HealthComponent(health = 2f, maxHealth = 2f)
+        entity += HealthComponent(health = 4f, maxHealth = 4f)
         entity += PushableComponent()
-        entity += EnemyComponent()
+        entity += EnemyComponent(this@ResourceEnemy)
         physicsSystem.createEnemyBody(
             this,
             entity,

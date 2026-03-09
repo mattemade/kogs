@@ -33,6 +33,7 @@ class AttackSystem(
         if (attack.activated) {
             attack.activated = false
             if (attack.currentCooldown <= 0) {
+                println("attack ${attack.currentAttackIndex}")
                 attack.spamming = false
                 attack.requestingPhysicsToSpawnAttack = attack.specs[attack.currentAttackIndex].damage
                 attack.resetCooldown = attack.maxResetCooldown
@@ -40,7 +41,9 @@ class AttackSystem(
                 attack.currentAttackIndex = (attack.currentAttackIndex + 1) % attack.specs.size
             } else if (!attack.spamming) {
                 attack.spamming = true
-                attack.currentCooldown = attack.specs[attack.currentAttackIndex].shortCooldown
+                val previousAttack = (attack.currentAttackIndex + attack.specs.size - 1) % attack.specs.size
+                println("spam of $previousAttack after ${attack.currentAttackIndex}")
+                attack.currentCooldown = attack.specs[previousAttack].longCooldown
                 attack.resetCooldown = maxOf(attack.currentCooldown, attack.maxResetCooldown)
             }
         }

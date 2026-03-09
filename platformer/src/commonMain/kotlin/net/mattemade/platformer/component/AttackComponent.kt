@@ -8,7 +8,7 @@ data class AttackComponent(
     var currentAttackIndex: Int = 0,
     var currentCooldown: Float = 0f,
     var resetCooldown: Float = 0f,
-    var maxResetCooldown: Float = 0.5f,
+    var maxResetCooldown: Float = 1f,
     var activated: Boolean = false,
     var spamming: Boolean = false,
     var requestingPhysicsToSpawnAttack: Float = 0f,

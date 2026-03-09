@@ -97,8 +97,12 @@ class Box2DPhysicsSystem(
             val body = physicsComponent.body
             entity[ContextComponent].apply {
                 val wasStanding = standing
-                standing = body.getContactList()
-                    .let { it.isTouching<Feet, Wall>() || it.isTouching<Feet, Platform>() || it.isTouching<Feet, Spike>() || it.isTouching<Feet, EnemyHazard>() } && body.linearVelocityY == 0f
+                standingLeftFoot = body.getContactList()
+                    .let { it.isTouching<LeftFoot, Wall>() || it.isTouching<LeftFoot, Platform>() || it.isTouching<LeftFoot, Spike>() || it.isTouching<LeftFoot, EnemyHazard>() }
+                standingRightFoot = body.getContactList()
+                    .let { it.isTouching<RightFoot, Wall>() || it.isTouching<RightFoot, Platform>() || it.isTouching<RightFoot, Spike>() || it.isTouching<RightFoot, EnemyHazard>() }
+
+                standing = (standingLeftFoot || standingRightFoot) && body.linearVelocityY == 0f
                 touchingLeftWall = body.getContactList().isTouching<LeftHand, Wall>()
                 touchingRightWall = body.getContactList().isTouching<RightHand, Wall>()
 
@@ -512,13 +516,29 @@ class Box2DPhysicsSystem(
                     }
                     shape = PolygonShape().apply {
                         setAsBox(
-                            initialPlayerBounds.width * 0.5f * 0.8f, // a bit shorter that body width
+                            initialPlayerBounds.width * 0.25f * 0.8f, // a bit shorter that body halfwidth
                             0.1f, // just a tiny block at the bottom
-                            center = Vec2(0f, initialPlayerBounds.height * 0.5f),
+                            center = Vec2(-initialPlayerBounds.width*0.25f, initialPlayerBounds.height * 0.5f),
                             angle = Angle.ZERO
                         )
                     }
-                    userData = Feet(entity)
+                    userData = LeftFoot(entity)
+                })!!
+                body.createFixture(FixtureDef().apply {
+                    isSensor = true
+                    filter = Filter().apply {
+                        categoryBits = PLAYER_FOOT_MASK
+                        maskBits = PLAYER_LIMB_COLLISIONS
+                    }
+                    shape = PolygonShape().apply {
+                        setAsBox(
+                            initialPlayerBounds.width * 0.25f * 0.8f, // a bit shorter that body halfwidth
+                            0.1f, // just a tiny block at the bottom
+                            center = Vec2(initialPlayerBounds.width*0.25f, initialPlayerBounds.height * 0.5f),
+                            angle = Angle.ZERO
+                        )
+                    }
+                    userData = RightFoot(entity)
                 })!!
                 body.createFixture(FixtureDef().apply {
                     isSensor = true
@@ -586,18 +606,53 @@ class Box2DPhysicsSystem(
                     createFixture(FixtureDef().apply {
                         isSensor = true
                         filter = Filter().apply {
+                            categoryBits = ENEMY_HANDS_MASK
+                            maskBits = ENEMY_LIBS_COLLISIONS
+                        }
+                        shape = CircleShape(minOf(width, height) * 0.25f).apply { p.set(-width * 0.5f, 0f) }
+                        userData = LeftHand(entity)
+                    })
+                    createFixture(FixtureDef().apply {
+                        isSensor = true
+                        filter = Filter().apply {
+                            categoryBits = ENEMY_HANDS_MASK
+                            maskBits = ENEMY_LIBS_COLLISIONS
+                        }
+                        shape = CircleShape(minOf(width, height) * 0.25f).apply { p.set(width * 0.5f, 0f) }
+                        userData = RightHand(entity)
+                    })
+
+                    createFixture(FixtureDef().apply {
+                        isSensor = true
+                        filter = Filter().apply {
                             categoryBits = ENEMY_FOOT_MASK
                             maskBits = ENEMY_LIBS_COLLISIONS
                         }
                         shape = PolygonShape().apply {
                             setAsBox(
-                                width * 0.5f * 0.8f, // a bit shorter that body width
+                                width * 0.25f * 0.8f,
                                 0.1f, // just a tiny block at the bottom
-                                center = Vec2(0f, height * 0.5f),
+                                center = Vec2(-width*0.25f, height * 0.5f),
                                 angle = Angle.ZERO
                             )
                         }
-                        userData = Feet(entity)
+                        userData = LeftFoot(entity)
+                    })
+                    createFixture(FixtureDef().apply {
+                        isSensor = true
+                        filter = Filter().apply {
+                            categoryBits = ENEMY_FOOT_MASK
+                            maskBits = ENEMY_LIBS_COLLISIONS
+                        }
+                        shape = PolygonShape().apply {
+                            setAsBox(
+                                width * 0.25f * 0.8f,
+                                0.1f, // just a tiny block at the bottom
+                                center = Vec2(width * 0.5f, height * 0.5f),
+                                angle = Angle.ZERO
+                            )
+                        }
+                        userData = RightFoot(entity)
                     })
                     createFixture(FixtureDef().apply {
                         isSensor = true
@@ -794,7 +849,7 @@ class Box2DPhysicsSystem(
                 when (other) {
                     is EnemyHazard -> {
                         other.entity.configure {
-                            it += KnockbackComponent(atLeastForTicks = 0, ticksToWearOff = 5)
+                            it += KnockbackComponent(atLeastForTicks = 20, ticksToWearOff = 40)
                         }
                         other.entity.getOrNull(HealthComponent)?.let {
                             it.health -= this.damage
@@ -812,8 +867,8 @@ class Box2DPhysicsSystem(
                             )
                         } else {
                             other.entity[MomentaryForceComponent].forces += Vec2f(
-                                5f * sign(position.x - this.x),
-                                -5f
+                                7f * sign(position.x - this.x),
+                                -7f
                             )
                         }
                     }
@@ -895,7 +950,8 @@ class Box2DPhysicsSystem(
     private class Water(val top: Float = 0f)
     private object Wall
     private object Spike
-    private class Feet(val entity: Entity)
+    private class LeftFoot(val entity: Entity)
+    private class RightFoot(val entity: Entity)
     private class Torso(val bodyPosition: Vec2)
     private class LeftHand(val entity: Entity)
     private class RightHand(val entity: Entity)
@@ -923,6 +979,7 @@ class Box2DPhysicsSystem(
 
         private val ENEMY_BODY_MASK = NEXT_MASK
         private val ENEMY_FOOT_MASK = NEXT_MASK
+        private val ENEMY_HANDS_MASK = NEXT_MASK
         private val ENEMY_TORSO_MASK = NEXT_MASK
         private val PLAYER_ATTACK_MASK = NEXT_MASK
 

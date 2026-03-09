@@ -37,6 +37,7 @@ import net.mattemade.platformer.scene.PlatformingScene
 import net.mattemade.platformer.system.AttackSystem
 import net.mattemade.platformer.system.Box2DPhysicsSystem
 import net.mattemade.platformer.system.ControlsSystem
+import net.mattemade.platformer.system.EnemyBehaviourSystem
 import net.mattemade.platformer.system.EnemyDeathSystem
 import net.mattemade.platformer.system.InvincibilitySystem
 import net.mattemade.platformer.system.LoadOnPlayerDeathSystem
@@ -121,6 +122,7 @@ class Room(
                 )
             )
             add(InvincibilitySystem())
+            add(EnemyBehaviourSystem())
             add(Box2DPhysicsSystem(::spawnPlayerAttack).also { physicsSystem = it }.releasing())
             add(StaminaBreathingSystem())
             add(LowStaminaDamageSystem())
@@ -309,9 +311,9 @@ class Room(
             it += JumpComponent()
             it += AttackComponent(
                 specs = listOf(
-                    AttackComponent.AttackSpec(shortCooldown = 0.5f, longCooldown = 0.75f, damage = 1f),
-                    AttackComponent.AttackSpec(shortCooldown = 0.5f, longCooldown = 0.75f, damage = 1f),
-                    AttackComponent.AttackSpec(shortCooldown = 1f, longCooldown = 1.5f, damage = 2f),
+                    AttackComponent.AttackSpec(shortCooldown = 0.3f, longCooldown = 0.6f, damage = 1f),
+                    AttackComponent.AttackSpec(shortCooldown = 0.3f, longCooldown = 0.6f, damage = 1f),
+                    AttackComponent.AttackSpec(shortCooldown = 0.6f, longCooldown = 1.2f, damage = 2f),
                 )
             )
             it += FloatUpComponent()
@@ -635,15 +637,17 @@ class Room(
     }
 
     fun render(dt: Float) {
-        ecs.update(dt)
-
-        if (playerPosition.x < 0f || playerPosition.y < 0f || playerPosition.x > worldArea.width || playerPosition.y > worldArea.height || teleports.any {
-                it.contains(
-                    playerPosition
-                )
-            }) {
-            switchRoom(playerEntity)
+        if (!gameContext.paused) {
+            ecs.update(dt)
+            if (playerPosition.x < 0f || playerPosition.y < 0f || playerPosition.x > worldArea.width || playerPosition.y > worldArea.height || teleports.any {
+                    it.contains(
+                        playerPosition
+                    )
+                }) {
+                switchRoom(playerEntity)
+            }
         }
+
 
     }
 
