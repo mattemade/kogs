@@ -30,6 +30,7 @@ import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.StaminaComponent
 import net.mattemade.platformer.component.UiComponent
 import net.mattemade.platformer.px
+import net.mattemade.platformer.scene.PlatformingScene
 import net.mattemade.utils.msdf.MsdfFontRenderer
 
 class UiRenderingSystem(
@@ -70,6 +71,12 @@ class UiRenderingSystem(
         renderUi(player, uiComponent)
         if (uiComponent.showMap) {
             renderMap(player)
+            if (collectionText == null) {
+                collectionText = "${PlatformingScene.collectedPearls} / ${PlatformingScene.nextPearlId} pearls"
+            }
+            fontRenderer.drawAllTextAtOnce(batch) {
+                draw(collectionText!!, 1f, WORLD_UNIT_HEIGHT - 1f, 1f, batch)
+            }
         }
         batch.end()
     }
@@ -156,6 +163,7 @@ class UiRenderingSystem(
         private val mapBackgroundColor = Color.BLACK.toMutableColor().apply { a = 0.5f }.toFloatBits()
         private val roomBackgroundColor = Color.BLUE.toMutableColor().apply { a = 0.5f }.toFloatBits()
         private val playerColor = Color.RED.toFloatBits()
+        var collectionText: String? = null
     }
 
 }

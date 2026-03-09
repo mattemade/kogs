@@ -360,7 +360,8 @@ class Room(
                     when (spawn.name) {
                         "water-pearl" -> {
                             if (!gameContext.gameState.waterPearl) {
-                                createPickup(spawn, tint = Color.BLUE.toFloatBits()) {
+                                createPickup(spawn, "Water pearl", tint = Color.BLUE.toFloatBits()) {
+                                    gameContext.fmodAssets.pickUpgrade.createInstance().start()
                                     gameContext.gameState.waterPearl = true
                                     gameContext.save()
                                 }
@@ -369,7 +370,8 @@ class Room(
 
                         "air-pearl" -> {
                             if (!gameContext.gameState.airPearl) {
-                                createPickup(spawn, tint = Color.GREEN.toFloatBits()) {
+                                createPickup(spawn, "Air pearl", tint = Color.GREEN.toFloatBits()) {
+                                    gameContext.fmodAssets.pickUpgrade.createInstance().start()
                                     gameContext.gameState.airPearl = true
                                     gameContext.save()
                                 }
@@ -378,7 +380,8 @@ class Room(
 
                         "sword" -> {
                             if (!gameContext.gameState.sword) {
-                                createPickup(spawn, tint = Color.YELLOW.toFloatBits()) {
+                                createPickup(spawn, "MC idle", tint = Color.YELLOW.toFloatBits()) {
+                                    gameContext.fmodAssets.pickUpgrade.createInstance().start()
                                     gameContext.gameState.sword = true
                                     gameContext.save()
                                 }
@@ -390,9 +393,14 @@ class Room(
                             while (gameContext.gameState.pearls.size <= pearlId) {
                                 gameContext.gameState.pearls.add(false)
                             }
-                            if (!gameContext.gameState.pearls[pearlId]) {
-                                createPickup(spawn, tint = Color.WHITE.toFloatBits()) {
+                            if (gameContext.gameState.pearls[pearlId]) {
+                                PlatformingScene.collectedPearls++
+                            } else {
+                                createPickup(spawn, "MC idle", tint = Color.WHITE.toFloatBits()) {
+                                    gameContext.fmodAssets.pickCollectiblePearl.createInstance().start()
                                     gameContext.gameState.pearls[pearlId] = true
+                                    PlatformingScene.collectedPearls++
+                                    UiRenderingSystem.collectionText = null // to let it update
                                     gameContext.save()
                                 }
                             }
@@ -404,6 +412,7 @@ class Room(
                             if (id != null && text != null && gameContext.gameState.tutorials[id] != true) {
                                 createPickup(
                                     spawn,
+                                    "empty",
                                     tint = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits()
                                 ) {
 
@@ -422,6 +431,7 @@ class Room(
                                 if (gameContext.gameState.tutorials[id] != true) {
                                     createPickup(
                                         spawn,
+                                        "empty",
                                         tint = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits()
                                     ) {
                                         gameContext.gameState.tutorials[id] = true
@@ -438,10 +448,10 @@ class Room(
         }
     }
 
-    private fun createPickup(spawn: TiledMap.Object, tint: Float, collect: () -> Unit) {
+    private fun createPickup(spawn: TiledMap.Object, animationName: String, tint: Float, collect: () -> Unit) {
         ecs.entity { entity ->
             entity += SpriteComponent(
-                idleAnimation = gameContext.assets.animation("MC idle"),
+                idleAnimation = gameContext.assets.animation(animationName),
                 animationEventCallback = { it, _ -> println(it) },
                 // baking offset into the bounds, maybe it should be a separate property?
                 bounds = Rect(
@@ -459,6 +469,7 @@ class Room(
                 )
             }
             entity += RotationComponent()
+            entity += ContextComponent()
             physicsSystem.createPickupBody(
                 this,
                 entity,

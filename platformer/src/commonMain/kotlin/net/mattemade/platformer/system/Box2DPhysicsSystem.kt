@@ -103,8 +103,8 @@ class Box2DPhysicsSystem(
                     .let { it.isTouching<RightFoot, Wall>() || it.isTouching<RightFoot, Platform>() || it.isTouching<RightFoot, Spike>() || it.isTouching<RightFoot, EnemyHazard>() }
 
                 standing = (standingLeftFoot || standingRightFoot) && body.linearVelocityY == 0f
-                touchingLeftWall = body.getContactList().isTouching<LeftHand, Wall>()
-                touchingRightWall = body.getContactList().isTouching<RightHand, Wall>()
+                touchingLeftWall = body.getContactList().let { it.isTouching<LeftHand, Wall>() || it.isTouching<LeftHand, EnemyHazard>() } // enemies should feel each other
+                touchingRightWall = body.getContactList().let { it.isTouching<RightHand, Wall>() || it.isTouching<RightHand, EnemyHazard>() } // enemies should feel each other
 
                 if (standing && physicsComponent.previousVelocity.y != 0f) {
                     physicsComponent.playSound(gameContext.fmodAssets.land)
@@ -990,8 +990,8 @@ class Box2DPhysicsSystem(
         private val PLAYER_BODY_COLLISIONS = WALL_MASK or ENEMY_BODY_MASK or CHECKPOINT_MASK or PEARL_MASK or SPIKE_MASK
         private val PLAYER_LIMB_COLLISIONS = WALL_MASK or WATER_MASK or SPIKE_MASK or ENEMY_BODY_MASK
         private val ENEMY_BODY_COLLISION =
-            WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK or PLAYER_ATTACK_MASK or ENEMY_BODY_MASK or SPIKE_MASK or PLAYER_FOOT_MASK
-        private val ENEMY_LIBS_COLLISIONS = WALL_MASK or WATER_MASK or SPIKE_MASK
+            WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK or PLAYER_ATTACK_MASK or ENEMY_BODY_MASK or SPIKE_MASK or PLAYER_FOOT_MASK or ENEMY_HANDS_MASK
+        private val ENEMY_LIBS_COLLISIONS = WALL_MASK or WATER_MASK or SPIKE_MASK or ENEMY_BODY_MASK
         private val CHECKPOINT_COLLISIONS = PLAYER_BODY_MASK
         private val PEARL_COLLISIONS = PLAYER_BODY_MASK
         private val PLAYER_ATTACK_COLLISIONS = ENEMY_BODY_MASK

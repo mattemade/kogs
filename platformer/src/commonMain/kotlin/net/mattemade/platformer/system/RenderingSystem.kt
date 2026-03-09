@@ -82,7 +82,6 @@ class RenderingSystem(
         if (mapFillsHeight) map.height - HALF_WORLD_UNIT_HEIGHT else minCameraPosition.y,
     )
     private val fontRenderer = MsdfFontRenderer(gameContext.assets.font.fredokaMsdf)
-    private val showTutorial = map.layers.any { it.name == "tutorial" }
 
     private val fmodListenerAttributes = Fmod3DAttributes().apply {
         forward.apply { x = 0f; y = 0f; z = 1f; }
@@ -151,25 +150,6 @@ class RenderingSystem(
             }
         }
 
-        if (showTutorial) {
-            fontRenderer.drawAllTextAtOnce(batch) {
-                draw(
-                    """
-                    arrows/WASD - walk/swim
-                    Space - jump / double jump
-                    down/S + Space - drop from platform
-                    
-                    Shift + move (land/air/water) -
-                            dash while holding Shift
-                    
-                    Fall by wall to slide
-                    
-                    hold Tab to see the map
-                    """.trimIndent(), 1f, 1f, 1f, batch
-                )
-            }
-        }
-
         batch.end()
     }
 
@@ -233,12 +213,12 @@ class RenderingSystem(
     override fun onTickEntity(entity: Entity) {
         val spriteComponent = entity[SpriteComponent]
         val bounds = spriteComponent.bounds
-//        val tint = spriteComponent.tint
         val (position) = entity[PositionComponent]
         val (rotation) = entity[RotationComponent]
 
         val angle = rotation.radians
-/*        tempVec2f.set(bounds.x, bounds.y).rotate(angle)
+/*        val tint = spriteComponent.tint
+        tempVec2f.set(bounds.x, bounds.y).rotate(angle)
         shapeRenderer.filledRectangle(
             x = (position.x + bounds.x).px,
             y = (position.y + bounds.y).px,

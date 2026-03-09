@@ -22,6 +22,7 @@ import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.component.StaminaComponent
 import net.mattemade.platformer.component.StaminaDamageComponent
+import net.mattemade.platformer.system.UiRenderingSystem
 import net.mattemade.platformer.world.Room
 import net.mattemade.utils.releasing.Releasing
 import net.mattemade.utils.releasing.Self
@@ -125,6 +126,8 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
 
     fun reset() {
         nextPearlId = 0
+        collectedPearls = 0
+        UiRenderingSystem.collectionText = null
         nextCheckpointId = 0
         rooms.forEach {
             it.reset()
@@ -204,5 +207,6 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
         private val mapColor = Color.WHITE.toMutableColor().apply { a = 1f }.toFloatBits()
         var nextCheckpointId = 0
         var nextPearlId = 0
+        var collectedPearls = 0
     }
 }
