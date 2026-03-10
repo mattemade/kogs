@@ -44,9 +44,9 @@ class Box2DPhysicsComponent(
             position.apply { x = body.position.x; y = body.position.y; }
             velocity.apply { x = body.linearVelocityX; y = body.linearVelocityY; }
         }
-        attachedSounds += Pair(instance, attributes)
         instance.set3DAttributes(attributes)
         instance.start()
+        instance.release()
         return instance
     }
 

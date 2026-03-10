@@ -225,7 +225,9 @@ class Box2DPhysicsSystem(
             }
             physicsComponent.attachedSounds.removeAll { (sound, attributes) ->
                 val shouldBeRemoved = sound.getPlaybackState() == FMOD.STUDIO_PLAYBACK_STOPPED
-                if (!shouldBeRemoved) {
+                if (shouldBeRemoved) {
+                    sound.release()
+                } else {
                     attributes.position.apply { x = body.position.x; y = body.position.y; }
                     attributes.velocity.apply { x = body.linearVelocityY; y = body.linearVelocityY; }
                     sound.set3DAttributes(attributes)
