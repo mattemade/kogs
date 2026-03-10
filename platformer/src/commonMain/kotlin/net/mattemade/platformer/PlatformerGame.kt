@@ -101,7 +101,6 @@ class PlatformerGame(
 
     fun focus() {
         focused = true
-        gameContext.paused = false
         gameContext.log("focus")
     }
 
@@ -252,6 +251,9 @@ class PlatformerGame(
                 pixelRender.render(dt)
                 directRender.render(dt)
             }
+
+            // unpause in the end of onRender, to let the previous update with huuuuuge dt to not affect the game
+            gameContext.paused = false
 
             //blockingSleep(TimeSpan(1000.0 / 15))
         }
