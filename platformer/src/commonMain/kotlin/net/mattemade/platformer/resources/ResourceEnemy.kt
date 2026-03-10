@@ -69,7 +69,7 @@ class ResourceEnemy(
         entity += ContextComponent()
         entity += HealthComponent(health = 4f, maxHealth = 4f)
         entity += PushableComponent()
-        entity += EnemyComponent(this@ResourceEnemy)
+        entity += EnemyComponent(this@ResourceEnemy,)
         physicsSystem.createEnemyBody(
             this,
             entity,

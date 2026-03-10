@@ -25,6 +25,7 @@ import net.mattemade.platformer.WALK_VELOCITY
 import net.mattemade.platformer.component.AttackComponent
 import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.ContextComponent
+import net.mattemade.platformer.component.EnemyComponent
 import net.mattemade.platformer.component.FloatUpComponent
 import net.mattemade.platformer.component.HealthComponent
 import net.mattemade.platformer.component.InvincibilityComponent
@@ -484,6 +485,20 @@ class Box2DPhysicsSystem(
                         shape = CircleShape(0.25f).apply { p.set(0.5f, 0f) }
                         userData = RightHand(entity)
                     })
+                    createFixture(FixtureDef().apply {
+                        isSensor = true
+                        filter = Filter().apply {
+                            categoryBits = PLAYER_HITBOX_MASK
+                            maskBits = PLAYER_HITBOX_COLLISIONS
+                        }
+                        shape = PolygonShape().apply {
+                            setAsBox( // SAME AS THE MAIN BODY!!!
+                                initialPlayerBounds.width * 0.5f * 0.9f,
+                                initialPlayerBounds.height * 0.5f * 0.9f
+                            )
+                        }
+                        userData = entity
+                    })
                 },
                 collisionMask = PLAYER_BODY_COLLISIONS,
             ).apply {
@@ -495,7 +510,7 @@ class Box2DPhysicsSystem(
                         maskBits = PLAYER_BODY_COLLISIONS
                     }
                     shape = PolygonShape().apply {
-                        setAsBox(
+                        setAsBox( // SAME AS THE HITBOX!!!
                             initialPlayerBounds.width * 0.5f * 0.9f,
                             initialPlayerBounds.height * 0.5f * 0.9f
                         )
@@ -669,6 +684,29 @@ class Box2DPhysicsSystem(
                         shape = PolygonShape().apply { setAsBox(width * 0.5f, height * 0.5f) }
                         userData = Torso(position)
                     })
+                    createFixture(FixtureDef().apply {
+                        isSensor = true
+                        filter = Filter().apply {
+                            categoryBits = ENEMY_VISION_MASK
+                            maskBits = ENEMY_PLAYER_DETECTOR_COLLISIONS
+                        }
+                        shape = CircleShape(5f)
+                        userData = Box2DPhysicsSystem.Action {
+                            entity[EnemyComponent].spottedPlayerPosition = it[Box2DPhysicsComponent].body.position
+                        }
+                    })
+
+                    createFixture(FixtureDef().apply {
+                        isSensor = true
+                        filter = Filter().apply {
+                            categoryBits = ENEMY_PROXIMITY_MASK
+                            maskBits = ENEMY_PLAYER_DETECTOR_COLLISIONS
+                        }
+                        shape = CircleShape(2f)
+                        userData = Box2DPhysicsSystem.Action {
+                            entity[EnemyComponent].nearPlayer = it[Box2DPhysicsComponent].body.position
+                        }
+                    })
                 },
                 collisionMask = ENEMY_BODY_COLLISION,
             ).apply {
@@ -752,7 +790,7 @@ class Box2DPhysicsSystem(
                             height * 0.48f
                         )
                     }
-                    userData = Action(onTouch = onTouch)
+                    userData = Action(onTouch = { onTouch() })
                 })!!
                 waterBodyFixture = landBodyFixture
             }
@@ -899,7 +937,7 @@ class Box2DPhysicsSystem(
                         other.onTouch()
                     }
 
-                    is Action -> other.onTouch()
+                    is Action -> other.onTouch(this)
                     is EnemyHazard -> {
                         /* no-op, since it would allow to walk on spikes after, as they won't trigger beginContact anymore */
                     }
@@ -969,7 +1007,7 @@ class Box2DPhysicsSystem(
     private class EnemyHazard(val damage: Float, val bodyPosition: Vec2, val entity: Entity)
     private class PlayerAttack(val damage: Float, val x: Float, val y: Float)
     private class Checkpoint(val id: Int, val onTouch: () -> Unit)
-    private class Action(val onTouch: () -> Unit)
+    private class Action(val onTouch: (otherEntity: Entity) -> Unit)
 
     companion object {
         private val tempVec2 = Vec2()
@@ -985,27 +1023,31 @@ class Box2DPhysicsSystem(
         private val PLAYER_BODY_MASK = NEXT_MASK
         private val PLAYER_FOOT_MASK = NEXT_MASK
         private val PLAYER_TORSO_MASK = NEXT_MASK
-        private val PLAYER_HEAD_MASK = NEXT_MASK
         private val PLAYER_HANDS_MASK = NEXT_MASK
+        private val PLAYER_HITBOX_MASK = NEXT_MASK
 
         private val ENEMY_BODY_MASK = NEXT_MASK
         private val ENEMY_FOOT_MASK = NEXT_MASK
         private val ENEMY_HANDS_MASK = NEXT_MASK
         private val ENEMY_TORSO_MASK = NEXT_MASK
         private val PLAYER_ATTACK_MASK = NEXT_MASK
+        private val ENEMY_VISION_MASK = NEXT_MASK
+        private val ENEMY_PROXIMITY_MASK = NEXT_MASK
 
         private val CHECKPOINT_MASK = NEXT_MASK
 
         private val PEARL_MASK = NEXT_MASK
 
-        private val PLAYER_BODY_COLLISIONS = WALL_MASK or ENEMY_BODY_MASK or CHECKPOINT_MASK or PEARL_MASK or SPIKE_MASK
+        private val PLAYER_BODY_COLLISIONS = WALL_MASK or CHECKPOINT_MASK or PEARL_MASK or SPIKE_MASK or ENEMY_VISION_MASK or ENEMY_PROXIMITY_MASK
+        private val PLAYER_HITBOX_COLLISIONS = ENEMY_BODY_MASK or SPIKE_MASK
         private val PLAYER_LIMB_COLLISIONS = WALL_MASK or WATER_MASK or SPIKE_MASK or ENEMY_BODY_MASK
         private val ENEMY_BODY_COLLISION =
-            WALL_MASK or PLAYER_BODY_MASK or PLAYER_TORSO_MASK or PLAYER_ATTACK_MASK or ENEMY_BODY_MASK or SPIKE_MASK or PLAYER_FOOT_MASK or ENEMY_HANDS_MASK
+            WALL_MASK or PLAYER_HITBOX_MASK or PLAYER_TORSO_MASK or PLAYER_ATTACK_MASK or ENEMY_BODY_MASK or SPIKE_MASK or PLAYER_FOOT_MASK or ENEMY_HANDS_MASK
         private val ENEMY_LIBS_COLLISIONS = WALL_MASK or WATER_MASK or SPIKE_MASK or ENEMY_BODY_MASK
         private val CHECKPOINT_COLLISIONS = PLAYER_BODY_MASK
         private val PEARL_COLLISIONS = PLAYER_BODY_MASK
         private val PLAYER_ATTACK_COLLISIONS = ENEMY_BODY_MASK
+        private val ENEMY_PLAYER_DETECTOR_COLLISIONS = PLAYER_BODY_MASK
 
         private inline fun <reified T> Contact.with(crossinline action: T.(Any?) -> Unit) =
             (getFixtureA()?.userData as? T)?.action(getFixtureB()?.userData) ?: (getFixtureB()?.userData as? T)?.action(
