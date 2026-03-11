@@ -189,9 +189,6 @@ class ControlsSystem(
     }
 
     private fun JumpComponent.executeJump(entity: Entity, wallJump: Boolean = false) {
-        if (true) {
-throw RuntimeException()
-        }
         jumping = true
         if (!canJumpFromGround && !wallJump) {
             canJumpInAir--
