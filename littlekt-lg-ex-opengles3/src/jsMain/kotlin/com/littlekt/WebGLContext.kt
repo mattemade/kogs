@@ -61,7 +61,7 @@ class WebGLContext(override val configuration: JsConfiguration) : Context() {
             }
         }
         window.requestAnimationFrame(::update)
-        window.setInterval(::quickUpdate, 2)
+        window.setInterval(::quickUpdate, quickUpdateTimeout)
     }
 
     private fun quickUpdate() {

@@ -83,10 +83,7 @@ class RenderingSystem(
     )
     private val fontRenderer = MsdfFontRenderer(gameContext.assets.font.fredokaMsdf)
 
-    private val fmodListenerAttributes = Fmod3DAttributes().apply {
-        forward.apply { x = 0f; y = 0f; z = 1f; }
-        up.apply { x = 0f; y = 1f; z = 0f; }
-    }
+    private val fmodListenerAttributes = PlatformerGameContext.sharedAttributes
 
     init {
         if (sharedLightRenderer == null) {

@@ -314,7 +314,7 @@ class Fmod(context: Context, fmodFolderPrefix: String, fmodLiveUpdate: Boolean) 
             core.setSoftwareFormat(driver.systemRate, FMOD.SPEAKERMODE_DEFAULT, 0)
             studioSystem.initialize(
                 maxChannels = 1024,
-                studioInitFlags = if (fmodLiveUpdate) FMOD.STUDIO_INIT_LIVEUPDATE else FMOD.STUDIO_INIT_NORMAL,
+                studioInitFlags = (if (fmodLiveUpdate) FMOD.STUDIO_INIT_LIVEUPDATE else FMOD.STUDIO_INIT_NORMAL) or FMOD.STUDIO_INIT_SYNCHRONOUS_UPDATE,
                 initFlags = FMOD.INIT_NORMAL,
                 extraDriverData = null
             )
