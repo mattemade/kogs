@@ -21,14 +21,14 @@ class MascotSystem(
 ) : IteratingSystem(family { all(MascotComponent) }, interval = interval) {
 
     override fun onTickEntity(entity: Entity) {
-        val (player, target) = entity[MascotComponent]
+        val (offset, player, target) = entity[MascotComponent]
         val position = entity[PositionComponent]
         val context = entity[ContextComponent]
 
         val playerContext = player[ContextComponent]
         val playerPosition = player[PositionComponent].position
         val playerRotation = player[RotationComponent].currentRotation
-        target.set(if (playerContext.facingRight) -1f else 1f, -1f).rotate(playerRotation.radians).add(playerPosition)
+        target.set(if (playerContext.facingRight) -1f - offset.x else 1f + offset.x, -1f +  offset.y).rotate(playerRotation.radians).add(playerPosition)
         //target.set(playerPosition.x + if (playerContext.facingRight) -1f else 1f, playerPosition.y - 1f)
 
         //tempVec2f.set(target).subtract(position.position)

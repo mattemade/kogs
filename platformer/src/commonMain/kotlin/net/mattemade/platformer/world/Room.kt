@@ -140,7 +140,7 @@ class Room(
     private lateinit var uiEntity: Entity
     private lateinit var playerPosition: Vec2f
     private lateinit var playerEntity: Entity
-    private lateinit var mascotEntity: Entity
+    //private lateinit var mascotEntity: Entity
     private var currentlyActiveCheckpointInThisRoom: Entity? = null
 
     init {
@@ -326,7 +326,7 @@ class Room(
             it += PlayerComponent()
             physicsSystem.createPlayerBody(this, it, initialPlayerBounds)
         }
-        mascotEntity = ecs.entity {
+        /*mascotEntity = */ecs.entity {
             it += SpriteComponent(
                 idleAnimation = gameContext.assets.animation("Dragon idle"),
                 animationEventCallback = { it, _ -> println(it) },
@@ -337,7 +337,20 @@ class Room(
             it += PositionComponent()
             it += RotationComponent()
             it += ContextComponent()
-            it += MascotComponent(playerEntity)
+            it += MascotComponent(Vec2f(0f, 0f), playerEntity)
+        }
+        ecs.entity {
+            it += SpriteComponent(
+                idleAnimation = gameContext.assets.animation("Celestial mascot"),
+                animationEventCallback = { it, _ -> println(it) },
+                // baking offset into the bounds, maybe it should be a separate property?
+                bounds = Rect(0f, 0f, 0f, 0f),
+                tint = Color.GRAY.toMutableColor().apply { a = 0.2f }.toFloatBits(),
+            )
+            it += PositionComponent()
+            it += RotationComponent()
+            it += ContextComponent()
+            it += MascotComponent(Vec2f(0.2f, 1f), playerEntity)
         }
         map.layers.forEach {
             if (it is TiledObjectLayer) {

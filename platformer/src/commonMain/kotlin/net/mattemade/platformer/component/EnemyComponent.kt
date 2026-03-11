@@ -27,6 +27,7 @@ class EnemyComponent(
             "cat" -> { {this.createCatSequence(it)} }
             "wildcat" -> { {this.createCatSequence(it)} }
             "wildcat2" -> { {this.createCatSequence(it)} }
+            "boss" -> { {this.createCatSequence(it)} }
             else -> { { Intent.Idle(50000000f) } }
         }
 
