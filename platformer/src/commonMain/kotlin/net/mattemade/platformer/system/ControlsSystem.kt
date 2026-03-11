@@ -163,7 +163,12 @@ class ControlsSystem(
                     context.swimmingSound = entity[Box2DPhysicsComponent].playSoundAttached(gameContext.fmodAssets.swim)
                 }
             } else {
-                context.swimmingSound?.stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+                context.swimmingSound?.let{ sound ->
+                    sound.stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+                    sound.release()
+                    entity[Box2DPhysicsComponent].attachedSounds.removeAll { it.first === sound }
+                    context.swimmingSound = null
+                }
             }
 
             if (length > SWIM_ACCELERATION) {
@@ -184,7 +189,9 @@ class ControlsSystem(
     }
 
     private fun JumpComponent.executeJump(entity: Entity, wallJump: Boolean = false) {
-
+        if (true) {
+throw RuntimeException()
+        }
         jumping = true
         if (!canJumpFromGround && !wallJump) {
             canJumpInAir--

@@ -66,7 +66,7 @@ class PlatformerGameContext(
     fun save() {
         val state = json.encodeToString(gameState)
         if (previousSavedState != state) {
-            log("save|${gameState.checkpoint}|${gameState.sword}|${gameState.waterPearl}|${gameState.airPearl}|${PlatformingScene.collectedPearls}}")
+            log("save|${gameState.checkpoint}|${gameState.sword}|${gameState.waterPearl}|${gameState.airPearl}|${PlatformingScene.collectedPearls}")
             println("saving $state")
             context.vfs.store("save", state)
             previousSavedState = state

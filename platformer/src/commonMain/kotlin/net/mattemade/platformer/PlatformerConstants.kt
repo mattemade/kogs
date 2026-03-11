@@ -7,9 +7,9 @@ val parameterOverride = mutableMapOf<String, String>()
 
 val WORLD_NAME get() = parameterOverride["World file"] ?: "test-world.world"
 val FIRST_LEVEL_NAME get() = parameterOverride["First level"] ?: "test-level1.tmj"
-val SCREEN_RESOLUTION_WIDTH get() = parameterOverride["Screen width"]?.toIntOrNull() ?: 960
-val SCREEN_RESOLUTION_HEIGHT get() = parameterOverride["Screen height"]?.toIntOrNull() ?: 540
-val TILE_PIXEL_SIZE get() = parameterOverride["Tile size"]?.toIntOrNull() ?: 48
+val SCREEN_RESOLUTION_WIDTH get() = parameterOverride["Screen width"]?.toIntOrNull() ?: 640
+val SCREEN_RESOLUTION_HEIGHT get() = parameterOverride["Screen height"]?.toIntOrNull() ?: 480
+val TILE_PIXEL_SIZE get() = parameterOverride["Tile size"]?.toIntOrNull() ?: 32
 
 val WORLD_UNIT_WIDTH get() = SCREEN_RESOLUTION_WIDTH.toFloat() / TILE_PIXEL_SIZE
 val WORLD_UNIT_HEIGHT get() = SCREEN_RESOLUTION_HEIGHT.toFloat() / TILE_PIXEL_SIZE

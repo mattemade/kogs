@@ -63,6 +63,10 @@ fun main() {
         window.addEventListener("blur", { game.blur() })
         window.addEventListener("focus", { game.focus() })
         window.addEventListener("beforeunload ", { game.destroy() })
+        window.onerror = { errorMsg, url, lineNumber, something, last ->
+            game.error("$errorMsg|$lineNumber")
+            false
+        }
         document.addEventListener("pointerlockchange", {
             if (document.asDynamic().pointerLockElement !== canvas) {
                 game.pointerLockReleased()

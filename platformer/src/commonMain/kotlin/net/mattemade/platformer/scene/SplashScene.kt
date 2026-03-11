@@ -1,6 +1,5 @@
 package net.mattemade.platformer.scene
 
-import com.github.quillraven.fleks.Entity
 import com.littlekt.graphics.Color
 import com.littlekt.graphics.g2d.Batch
 import com.littlekt.graphics.g2d.SpriteBatch
@@ -9,9 +8,8 @@ import com.littlekt.graphics.gl.ClearBufferMask
 import com.littlekt.graphics.toFloatBits
 import com.littlekt.math.MutableVec2f
 import com.littlekt.util.Scaler
-import com.littlekt.util.seconds
 import com.littlekt.util.viewport.ScalingViewport
-import net.mattemade.platformer.FIRST_LEVEL_NAME
+import net.mattemade.gui.api.math.Vec2
 import net.mattemade.platformer.HALF_WORLD_UNIT_HEIGHT
 import net.mattemade.platformer.HALF_WORLD_UNIT_WIDTH
 import net.mattemade.platformer.PlatformerGameContext
@@ -19,27 +17,10 @@ import net.mattemade.platformer.WORLD_HEIGHT
 import net.mattemade.platformer.WORLD_UNIT_HEIGHT
 import net.mattemade.platformer.WORLD_UNIT_WIDTH
 import net.mattemade.platformer.WORLD_WIDTH
-import net.mattemade.platformer.component.AttackComponent
-import net.mattemade.platformer.component.Box2DPhysicsComponent
-import net.mattemade.platformer.component.ContextComponent
-import net.mattemade.platformer.component.FloatUpComponent
-import net.mattemade.platformer.component.HealthComponent
-import net.mattemade.platformer.component.JumpComponent
-import net.mattemade.platformer.component.MoveComponent
-import net.mattemade.platformer.component.PositionComponent
-import net.mattemade.platformer.component.RotationComponent
-import net.mattemade.platformer.component.SpriteComponent
-import net.mattemade.platformer.component.StaminaComponent
-import net.mattemade.platformer.component.StaminaDamageComponent
-import net.mattemade.platformer.px
-import net.mattemade.platformer.world.Room
 import net.mattemade.utils.msdf.MsdfFontRenderer
 import net.mattemade.utils.releasing.Releasing
 import net.mattemade.utils.releasing.Self
-import net.mattemade.utils.render.PixelRender
-import net.mattemade.utils.tiled.BoundsListener
-import org.jbox2d.common.Vec2
-import kotlin.math.roundToInt
+import kotlin.math.sin
 
 class SplashScene(val gameContext: PlatformerGameContext) : Scene, Releasing by Self() {
 
@@ -57,7 +38,10 @@ class SplashScene(val gameContext: PlatformerGameContext) : Scene, Releasing by 
     private val fontRenderer = MsdfFontRenderer(gameContext.assets.font.fredokaMsdf)
     private var touched: Boolean = false
 
+    private var time: Float = 0f
+
     override fun update(seconds: Float) {
+        time += seconds * 4f
         gameContext.context.gl.clearColor(Color.BLACK)
         gameContext.context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
         camera.position.set(
@@ -70,8 +54,10 @@ class SplashScene(val gameContext: PlatformerGameContext) : Scene, Releasing by 
         batch.begin(camera.viewProjection)
 
         fontRenderer.drawAllTextAtOnce(batch) {
+            val scale = 1f + sin(time) * 0.1f
+            measure(clickToStartText, scale, tempVec2)
             draw(
-                """Click or touch to start""".trimIndent(), 1f, 1f, 1f, batch
+                clickToStartText, HALF_WORLD_UNIT_WIDTH - tempVec2.x * 0.5f, 2f - tempVec2.y * 0.5f, scale = scale, batch
             )
         }
 
@@ -89,7 +75,9 @@ class SplashScene(val gameContext: PlatformerGameContext) : Scene, Releasing by 
     }
 
     companion object {
+        private val clickToStartText = "Click or touch to start"
         private val tempVec2f = MutableVec2f()
+        private val tempVec2 = Vec2.borrow()
         private val mapColor = Color.WHITE.toMutableColor().apply { a = 1f }.toFloatBits()
     }
 }

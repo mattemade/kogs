@@ -2,11 +2,15 @@ package net.mattemade.platformer
 
 import com.littlekt.Context
 import com.littlekt.ContextListener
+import com.littlekt.file.vfs.readTexture
 import com.littlekt.graphics.Camera
 import com.littlekt.graphics.Color
+import com.littlekt.graphics.Texture
 import com.littlekt.graphics.g2d.Batch
 import com.littlekt.graphics.g2d.shape.ShapeRenderer
 import com.littlekt.graphics.gl.ClearBufferMask
+import com.littlekt.graphics.gl.TexMagFilter
+import com.littlekt.graphics.gl.TexMinFilter
 import com.littlekt.graphics.toFloatBits
 import com.littlekt.input.InputProcessor
 import com.littlekt.input.Key
@@ -28,6 +32,7 @@ import net.mattemade.utils.releasing.Self
 import net.mattemade.utils.render.DirectRender
 import net.mattemade.utils.render.PixelRender
 import net.mattemade.utils.util.FpsCounter
+import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.time.Duration
 
@@ -56,10 +61,12 @@ class PlatformerGame(
             }
             field = value
         }
+    private var error: Boolean = false
 
     private var audioReady: Boolean = false
     private var assetsReady: Boolean = false
     private var fmodAssetsReady: Boolean = false
+    private var gameStarted: Boolean = false
     private val gameContext =
         PlatformerGameContext(context, log, encodeUrlComponent, getBlocking, overrideResourcesFrom, fmodFolderPrefix, fmodLiveUpdate, ::restartScene, ::startGame)
     private val pixelRender =
@@ -94,13 +101,13 @@ class PlatformerGame(
 
 
     fun blur() {
-        focused = false
+        //focused = false
         gameContext.paused = true
         gameContext.log("blur")
     }
 
     fun focus() {
-        focused = true
+        //focused = true
         gameContext.log("focus")
     }
 
@@ -110,6 +117,11 @@ class PlatformerGame(
 
     fun pointerLockReleased() {
         context.releaseCursor()
+    }
+
+    fun error(line: String) {
+        gameContext.log("error|$line")
+        error = true
     }
 
     private val platformingScene: PlatformingScene by lazy { PlatformingScene(gameContext) }
@@ -123,6 +135,8 @@ class PlatformerGame(
         }
 
     private fun startGame() {
+        gameContext.log("click")
+        gameStarted = true
         scene = platformingScene
     }
 
@@ -132,8 +146,17 @@ class PlatformerGame(
 //        scene = PlatformingScene(gameContext)
     }
 
+    private lateinit var loadingTexture: Texture
+    private lateinit var errorTexture: Texture
+    private lateinit var fmodTexture: Texture
+
     override suspend fun Context.start() {
         gameContext.log("start")
+
+        loadingTexture = context.vfs["texture/loading.png"].readTexture(mipmaps = false)
+        errorTexture = context.vfs["texture/error.png"].readTexture(mipmaps = false)
+        fmodTexture = context.vfs["texture/FMOD Logo White - Transparent Background.png"].readTexture(minFilter = TexMinFilter.LINEAR_MIPMAP_LINEAR, magFilter = TexMagFilter.LINEAR, mipmaps = true)
+
         input.catchKeys.add(Key.TAB)
         input.addActiveInputProcessor(object : InputProcessor {
             override fun keyDown(key: Key): Boolean {
@@ -202,7 +225,7 @@ class PlatformerGame(
 
             if (width == 0 || height == 0) {
                 // collapsed the mobile session
-                // TODO: pause??
+                gameContext.paused = true
                 return@onResize
             }
 
@@ -229,9 +252,10 @@ class PlatformerGame(
                         directRender.updateShapeRenderer()
                         pixelRender.updateShapeRenderer()
 
+                        gameContext.log("loaded")
                         gameContext.load()
                         scene = SplashScene(gameContext)
-
+                        platformingScene // just to initialize it
                     }
                 }
             }
@@ -246,11 +270,11 @@ class PlatformerGame(
                 assetsReady = gameContext.assets.isLoaded
             }
 
-            if (focused && assetsReady && fmodAssetsReady) {
+            //if (focused && assetsReady && fmodAssetsReady) {
                 gameContext.update(dt)
                 pixelRender.render(dt)
                 directRender.render(dt)
-            }
+            //}
 
             // unpause in the end of onRender, to let the previous update with huuuuuge dt to not affect the game
             gameContext.paused = false
@@ -283,7 +307,6 @@ class PlatformerGame(
         directRender.resize(width, height, fullWidth, fullHeight)
         directRender.camera.position.set(fullWidth * 0.5f, fullHeight * 0.5f, 0f)
         layoutButtons()
-
     }
 
     private fun layoutButtons() {
@@ -334,7 +357,10 @@ class PlatformerGame(
         scene?.render(batch, shapeRenderer)
     }
 
+    private var time: Float = 0f
+
     private fun finalUpdate(duration: Duration, camera: Camera) {
+        time += duration.seconds
         if (gameContext.gameInput.touchInput) {
             touchButtons.forEach { button ->
                 if (button.isDpad && button.trackingPointer >= 0) {
@@ -371,6 +397,18 @@ class PlatformerGame(
             flipY = true
         )
 
+        if (!gameStarted) {
+            batch.draw(fmodTexture, x = gameOffset.x + 100f, y = 400f, scaleX = 0.25f, scaleY = 0.25f)
+        }
+
+        if (!assetsReady || !fmodAssetsReady) {
+            val scale = 1f + sin(time) * 0.05f
+            batch.draw(loadingTexture, x = gameOffset.x, y = 0f, scaleX = scale, scaleY = scale)
+        }
+
+        if (error) {
+            batch.draw(errorTexture, x = gameOffset.x, y = 0f)
+        }
 
         if (gameContext.gameInput.touchInput) {
             batch.useDefaultShader()
