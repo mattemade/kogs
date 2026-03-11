@@ -374,7 +374,10 @@ class Room(
                         "water-pearl" -> {
                             if (!gameContext.gameState.waterPearl) {
                                 createPickup(spawn, "Water pearl", tint = Color.BLUE.toFloatBits()) {
-                                    gameContext.fmodAssets.pickUpgrade.createInstance().start()
+                                    gameContext.fmodAssets.pickUpgrade.createInstance().apply {
+                                        start()
+                                        release()
+                                    }
                                     gameContext.gameState.waterPearl = true
                                     gameContext.save()
                                 }
@@ -384,7 +387,10 @@ class Room(
                         "air-pearl" -> {
                             if (!gameContext.gameState.airPearl) {
                                 createPickup(spawn, "Air pearl", tint = Color.GREEN.toFloatBits()) {
-                                    gameContext.fmodAssets.pickUpgrade.createInstance().start()
+                                    gameContext.fmodAssets.pickUpgrade.createInstance().apply {
+                                        start()
+                                        release()
+                                    }
                                     gameContext.gameState.airPearl = true
                                     gameContext.save()
                                 }
@@ -394,7 +400,10 @@ class Room(
                         "sword" -> {
                             if (!gameContext.gameState.sword) {
                                 createPickup(spawn, "MC idle", tint = Color.YELLOW.toFloatBits()) {
-                                    gameContext.fmodAssets.pickUpgrade.createInstance().start()
+                                    gameContext.fmodAssets.pickUpgrade.createInstance().apply {
+                                        start()
+                                        release()
+                                    }
                                     gameContext.gameState.sword = true
                                     gameContext.save()
                                 }
@@ -410,7 +419,10 @@ class Room(
                                 PlatformingScene.collectedPearls++
                             } else {
                                 createPickup(spawn, "MC idle", tint = Color.WHITE.toFloatBits()) {
-                                    gameContext.fmodAssets.pickCollectiblePearl.createInstance().start()
+                                    gameContext.fmodAssets.pickCollectiblePearl.createInstance().apply {
+                                        start()
+                                        release()
+                                    }
                                     gameContext.gameState.pearls[pearlId] = true
                                     PlatformingScene.collectedPearls++
                                     UiRenderingSystem.collectionText = null // to let it update
@@ -538,7 +550,10 @@ class Room(
                 spawn.bounds.height * unitSize,
                 id = checkpointId,
             ) {
-                gameContext.fmodAssets.checkPointActivated.createInstance().start()
+                gameContext.fmodAssets.checkPointActivated.createInstance().apply {
+                    start()
+                    release()
+                }
                 val component = entity[CheckpointComponent]
                 if (!component.isActivated) {
                     component.isActivated = true

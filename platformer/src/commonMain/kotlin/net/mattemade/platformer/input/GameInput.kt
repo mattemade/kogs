@@ -3,14 +3,12 @@ package net.mattemade.platformer.input
 import com.littlekt.Context
 import com.littlekt.input.InputMapController
 import com.littlekt.math.MutableVec2f
-import kotlin.time.Duration
 
 class GameInput(
     private val context: Context,
     private val input: InputMapController<ControllerInput>
 ) {
 
-    val previousMovement = MutableVec2f()
     val movement = MutableVec2f()
 
     private var states = mutableListOf<State>()
@@ -55,7 +53,6 @@ class GameInput(
         }
 
         if (!touchInput) {
-            previousMovement.set(movement)
             movement
                 .set(
                     input.axis(ControllerInput.MOVE_HORIZONTAL),
@@ -71,7 +68,12 @@ class GameInput(
         states.forEach { it.update(controlsActive) }
     }
 
-    class State(private val input: InputMapController<ControllerInput>, private val touchStates: Array<Boolean>, val type: ControllerInput, private val tag: String? = null) {
+    class State(
+        private val input: InputMapController<ControllerInput>,
+        private val touchStates: Array<Boolean>,
+        val type: ControllerInput,
+        private val tag: String? = null
+    ) {
         var pressed = false
         var justPressed = false
         var justReleased = false

@@ -5,9 +5,11 @@ import com.github.quillraven.fleks.ComponentType
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.World
 import com.littlekt.math.MutableVec2f
+import net.mattemade.fmod.FMOD
 import net.mattemade.fmod.Fmod3DAttributes
 import net.mattemade.fmod.FmodEventDescription
 import net.mattemade.fmod.FmodEventInstance
+import net.mattemade.platformer.PlatformerGameContext
 import org.jbox2d.dynamics.Body
 import org.jbox2d.dynamics.Fixture
 
@@ -24,7 +26,7 @@ class Box2DPhysicsComponent(
 
     fun playSoundAttached(event: FmodEventDescription): FmodEventInstance {
         val instance = event.createInstance()
-        val attributes = Fmod3DAttributes().apply {
+        val attributes = PlatformerGameContext.sharedAttributes.apply {
             forward.apply { z = 1f }
             up.apply { y = 1f }
             position.apply { x = body.position.x; y = body.position.y; }
@@ -38,9 +40,7 @@ class Box2DPhysicsComponent(
 
     fun playSound(event: FmodEventDescription): FmodEventInstance {
         val instance = event.createInstance()
-        val attributes = Fmod3DAttributes().apply {
-            forward.apply { z = 1f }
-            up.apply { y = 1f }
+        val attributes = PlatformerGameContext.sharedAttributes.apply {
             position.apply { x = body.position.x; y = body.position.y; }
             velocity.apply { x = body.linearVelocityX; y = body.linearVelocityY; }
         }
@@ -55,6 +55,12 @@ class Box2DPhysicsComponent(
     override fun World.onRemove(entity: Entity) {
         body.userData = null
         body.destroyBody()
+
+        attachedSounds.forEach {
+            it.first.stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+            it.first.release()
+        }
+        attachedSounds.clear()
     }
 
     companion object : ComponentType<Box2DPhysicsComponent>()

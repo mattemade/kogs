@@ -327,7 +327,6 @@ class PlatformerGame(
             if (it.isDpad) {
                 if (it.isActive) {
                     gameContext.gameInput.movement.set(it.touchDirection).scale(inverseAdjustedStickRadius)
-                    println(gameContext.gameInput.movement)
                 } else {
                     gameContext.gameInput.movement.set(0f, 0f)
                 }
@@ -433,11 +432,6 @@ class PlatformerGame(
                         radius = button.radius,
                         color = if (button.isActive) button.activeColor else button.color,
                     )
-                }
-            }
-            for (i in 0..19) {
-                if (activePointers[i]) {
-                    shapeRenderer.filledCircle(center = touchPointers[i], radius = 1f)
                 }
             }
         }

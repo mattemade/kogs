@@ -190,10 +190,6 @@ class EnemyBehaviourSystem(
 
         class JumpForward(var x: Float, var y: Float, var holdJumpFor: Float = 0f, val onEnd: Intent? = null) : Intent {
 
-            init {
-                println("jump forward to $x")
-            }
-
             private var wasJumping = false
 
             override fun IteratingSystem.switch(entity: Entity): Intent? =

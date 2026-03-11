@@ -5,6 +5,7 @@ import com.littlekt.math.Rect
 import com.littlekt.util.seconds
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import net.mattemade.fmod.Fmod3DAttributes
 import net.mattemade.fmod.FmodEventInstance
 import net.mattemade.platformer.input.GameInput
 import net.mattemade.platformer.input.bindInputs
@@ -125,6 +126,12 @@ class PlatformerGameContext(
         val stateSwimming = "Swimming"
         val stateSwimmingLowHealth = "Swimming, low health"
 
+        val sharedAttributes: Fmod3DAttributes by lazy {
+            Fmod3DAttributes().apply {
+                forward.apply { z = 1f }
+                up.apply { y = 1f }
+            }
+        }
 
     }
 }

@@ -81,8 +81,8 @@ class ControlsSystem(
                 jumping = false
                 jumpBuffer = 0
             } else { // jump is still pressed, do not double-jump automatically in this case, but jump when landed within buffered time
-                if (input.movement.y > 0f) {
-                    // no-op
+                if (input.movement.y > 0f && input.movement.y.absoluteValue > input.movement.x.absoluteValue) {
+                    // mostly pressing down, no-op
                 } else if (canJumpFromGround) {
                     if (!jumping && jumpBuffer < JumpComponent.BUFFER_TICKS) {
                         executeJump(entity)
@@ -110,11 +110,21 @@ class ControlsSystem(
                         if (dashDirection.x != 0f) { // dashing into the wall
                             moveComponent.forceStopAirDash = true
                             context.dashing = false
-                            context.dashingSound?.stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+                            context.dashingSound?.apply {
+                                stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+                                release()
+                                entity[Box2DPhysicsComponent].attachedSounds.removeAll { it.first === this }
+                                context.dashingSound = null
+                            }
                             0f
                         } else { // dashing from the wall
                             context.wallSlide = false
-                            context.slidingSound?.stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+                            context.slidingSound?.apply {
+                                stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+                                release()
+                                entity[Box2DPhysicsComponent].attachedSounds.removeAll { it.first === this }
+                                context.dashingSound = null
+                            }
                             moveComponent.ignoreNextDashDirection = true
                             context.dashingSound = entity[Box2DPhysicsComponent].playSound(gameContext.fmodAssets.airDash)
                             if (context.touchingLeftWall) {
@@ -177,7 +187,12 @@ class ControlsSystem(
             if (!context.dashing && dash) {
                 context.dashingSound = entity[Box2DPhysicsComponent].playSound(gameContext.fmodAssets.waterDash)
             } else if (context.dashing && !dash) {
-                context.dashingSound?.stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+                context.dashingSound?.apply {
+                    stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+                    release()
+                    entity[Box2DPhysicsComponent].attachedSounds.removeAll { it.first === this }
+                    context.dashingSound = null
+                }
             }
             context.dashing = dash
             if (dash) {

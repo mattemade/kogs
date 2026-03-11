@@ -362,7 +362,12 @@ class Box2DPhysicsSystem(
                         wasJumping = true // just to force applying lower gravity
                     }
                     context.wallSlide = false
-                    context.slidingSound?.stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+                    context.slidingSound?.apply {
+                        physicsComponent.attachedSounds.removeAll { it.first === this }
+                        stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+                        release()
+                        context.slidingSound = null
+                    }
                     body.isAwake = true
                 }
             }
