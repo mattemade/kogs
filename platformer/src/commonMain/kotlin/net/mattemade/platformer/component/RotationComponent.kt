@@ -7,6 +7,7 @@ data class RotationComponent(
     var currentRotation: Float = 0f,
     var targetRotation: Float = 0f,
     var maxRotationVelocity: Float = 0.05f,
+    val fixedRotation: Boolean = false,
 ): Component<RotationComponent> {
     override fun type() = RotationComponent
     companion object: ComponentType<RotationComponent>()

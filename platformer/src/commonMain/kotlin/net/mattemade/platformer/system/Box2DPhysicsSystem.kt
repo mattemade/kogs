@@ -275,7 +275,7 @@ class Box2DPhysicsSystem(
         }
 
         if (context.swimming) {
-            waterBasedMovement(physicsComponent, entity)
+            waterBasedMovement(physicsComponent, context, entity)
         } else {
             landBasedMovement(physicsComponent, context, entity)
         }
@@ -306,6 +306,7 @@ class Box2DPhysicsSystem(
 
     private fun waterBasedMovement(
         physicsComponent: Box2DPhysicsComponent,
+        context: ContextComponent,
         entity: Entity
     ) {
         if (entity.getOrNull(KnockbackComponent) != null) {
@@ -314,6 +315,7 @@ class Box2DPhysicsSystem(
         }
 
         physicsComponent.body.gravityScale = 0f
+        val rotationComponent = entity[RotationComponent]
         entity.getOrNull(MoveComponent)?.let { move ->
             physicsComponent.body.applyImpulse(
                 if (move.moveDirection.x != 0f) move.moveDirection.x * move.speed else 0f,
@@ -326,21 +328,39 @@ class Box2DPhysicsSystem(
                 physicsComponent.body.linearVelocityX = move.dashDirection.x
                 physicsComponent.body.linearVelocityY = move.dashDirection.y
 
-                entity[RotationComponent].currentRotation =
-                    (move.dashDirection.angleTo(NO_ROTATION).radians + HALF_PI_F + PI2_F) % PI2_F
-                entity[RotationComponent].targetRotation =
-                    (move.dashDirection.angleTo(NO_ROTATION).radians + HALF_PI_F + PI2_F) % PI2_F
+                rotationComponent.apply {
+                    if (!fixedRotation) {
+                        currentRotation =
+                            (move.dashDirection.angleTo(NO_ROTATION).radians + HALF_PI_F + PI2_F) % PI2_F
+                        targetRotation =
+                            (move.dashDirection.angleTo(NO_ROTATION).radians + HALF_PI_F + PI2_F) % PI2_F
+                    }
+                }
             } else if (move.moveDirection.x != 0f || move.moveDirection.y != 0f) {
-                entity[RotationComponent].targetRotation =
-                    (move.moveDirection.angleTo(NO_ROTATION).radians + HALF_PI_F + PI2_F) % PI2_F
+                rotationComponent.apply {
+                    if (!fixedRotation) {
+                        targetRotation =
+                            (move.moveDirection.angleTo(NO_ROTATION).radians + HALF_PI_F + PI2_F) % PI2_F
+                    }
+                }
+            }
+
+            if (rotationComponent.fixedRotation) {
+                if (move.moveDirection.x > 0f || move.dashDirection.x > 0f) {
+                    context.facingRight = true
+                } else if (move.moveDirection.x < 0f || move.dashDirection.x < 0f) {
+                    context.facingRight = false
+                }
             }
         }
 
         // movement dampening
         physicsComponent.body.apply {
             if (linearVelocityX != 0f || linearVelocityY != 0f) {
-                val rotation = entity[RotationComponent].currentRotation
-                setTransformRadians(position, rotation)
+                if (!rotationComponent.fixedRotation) {
+                    val rotation = entity[RotationComponent].currentRotation
+                    setTransformRadians(position, rotation)
+                }
 
                 linearVelocityX *= 0.9f
                 linearVelocityY *= 0.9f

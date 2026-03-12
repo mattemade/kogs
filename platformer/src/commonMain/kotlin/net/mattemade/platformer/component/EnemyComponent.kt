@@ -28,11 +28,26 @@ class EnemyComponent(
             "cat" -> { {this.createCatSequence(it)} }
             "wildcat" -> { {this.createCatSequence(it)} }
             "wildcat2" -> { {this.createCatSequence(it)} }
+            "eel" -> { {this.createEelSequence(it)} }
+            "copydora" -> { {this.createCopydoraSequence(it)} }
+            "jellyfish" -> { {this.createJellyfishSequence(it)} }
             "boss" -> { {this.createCatSequence(it)} }
             else -> { { Intent.Idle(50000000f) } }
         }
 
     private var counter: Int = 0
+
+    private fun IteratingSystem.createEelSequence(entity: Entity): Intent =
+        when (Random.nextInt(4)) {
+            0, 1, 2 -> Intent.Move(0.4f * (Random.nextFloat() - 0.5f).sign, 0f, limit = 0.5f + Random.nextFloat() * 2f, swim = true)
+            else -> Intent.Idle(0.4f + Random.nextFloat() * 2f)
+        }
+
+    private fun IteratingSystem.createCopydoraSequence(entity: Entity): Intent =
+        Intent.Move(-0.2f, 0f, limit = Float.MAX_VALUE, swim = true)
+
+    private fun IteratingSystem.createJellyfishSequence(entity: Entity): Intent =
+        Intent.FlyInSine(x = 0f, dy = 0.4f, timeScale = 2f)
 
     private fun IteratingSystem.createBatSequence(entity: Entity): Intent =
         when (counter++) {

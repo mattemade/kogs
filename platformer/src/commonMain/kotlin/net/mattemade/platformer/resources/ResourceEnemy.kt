@@ -61,7 +61,7 @@ class ResourceEnemy(
         entity += PositionComponent().also {
             it.position.set(cx, cy)
         }
-        entity += RotationComponent(maxRotationVelocity = 0.1f)
+        entity += RotationComponent(fixedRotation = true)
         entity += MoveComponent(speed = 1f)
         entity += JumpComponent()
         entity += FloatUpComponent()

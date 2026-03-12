@@ -103,22 +103,26 @@ class EnemyBehaviourSystem(
 
         }
 
-        class FlyInSine(var x: Float, var dy: Float, var y: Float = 0f): Intent {
+        class FlyInSine(var x: Float, var dy: Float, var timeScale: Float = 5f, var y: Float = 0f, val swimOnly: Boolean = false): Intent {
 
             private var time: Float = 0f
 
             override fun IteratingSystem.switch(entity: Entity): Intent? {
-                time += deltaTime * 5f
+                time += deltaTime * timeScale
                 y = sin(time) * dy
                 val context = entity[ContextComponent]
                 if (context.touchingRightWall && x > 0f || context.touchingLeftWall && x < 0f) {
                     x = -x
                 }
+                if (swimOnly && !context.swimming) {
+                    x = 0f
+                    dy = 0f
+                }
                 return this@FlyInSine
             }
         }
 
-        class Move(var x: Float, var y: Float, var keep: Float = 0f, var limit: Float = 0f, val fallFromEdges: Boolean = false, val jumpOnWalls: Float = 0f, val triggerVision: ((Intent) -> Intent)? = null, val triggerProximity: ((Intent) -> Intent)? = null) :
+        class Move(var x: Float, var y: Float, var keep: Float = 0f, var limit: Float = 0f, val fallFromEdges: Boolean = false, val jumpOnWalls: Float = 0f, val triggerVision: ((Intent) -> Intent)? = null, val triggerProximity: ((Intent) -> Intent)? = null, val swim: Boolean = false) :
             Intent {
 
             override fun IteratingSystem.switch(entity: Entity): Intent? {
@@ -133,8 +137,13 @@ class EnemyBehaviourSystem(
                     triggerVision(this@Move).also { entity[EnemyComponent].spottedPlayerPosition = null }
                 } else if (triggerProximity != null && entity[EnemyComponent].nearPlayer != null) {
                     triggerProximity(this@Move).also { entity[EnemyComponent].nearPlayer = null }
+                } else if (swim) {
+                    if (context.touchingRightWall && x > 0f || context.touchingLeftWall && x < 0f) {
+                        x = -x
+                        keep = 0.5f // move the opposite way for some time
+                    }
+                    this@Move
                 } else if (context.standing) {
-                    fallFromEdges
                     if (!context.standingRightFoot && x > 0f || !context.standingLeftFoot && x < 0f) {
                         if (fallFromEdges) {
                             this@Move
@@ -161,7 +170,7 @@ class EnemyBehaviourSystem(
 
             fun IteratingSystem.shouldStop(entity: Entity): Boolean {
                 limit -= deltaTime
-                return limit <= 0f || entity[ContextComponent].swimming
+                return limit <= 0f || entity[ContextComponent].swimming.let { swim && !it || !swim && it }
             }
         }
 

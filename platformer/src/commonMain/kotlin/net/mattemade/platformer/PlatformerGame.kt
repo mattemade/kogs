@@ -264,7 +264,7 @@ class PlatformerGame(
         onRender { dt ->
             //gl.clearColor(Color.BLACK)
             //gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
-            //fpsCounter.update(dt.seconds)
+//            fpsCounter.update(dt.seconds)
 
             if (!assetsReady) {
                 assetsReady = gameContext.assets.isLoaded
