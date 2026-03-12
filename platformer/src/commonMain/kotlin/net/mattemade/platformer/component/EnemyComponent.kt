@@ -58,9 +58,7 @@ class EnemyComponent(
             1 -> {
                 val playerPosition = spottedPlayerPosition
                 val batPosition = entity[Box2DPhysicsComponent].body.position
-                println("bat flies!")
                 Intent.FlyTo( { (playerPosition?.y ?: 1000f) - 3f }, dy = 10f) {
-                    println("bat flies in sine!!")
                     Intent.FlyInSine(x = 3f * ((playerPosition?.x ?: 0f) - batPosition.x).sign, dy = 12f)
                 }
             }
