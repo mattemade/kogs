@@ -130,7 +130,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
         UiRenderingSystem.collectionText = null
         nextCheckpointId = 0
         rooms.forEach {
-            it.reset()
+            it.reset(full = true)
         }
         currentRoom = getCurrentRoom()
         initialMapDraw = true

@@ -72,6 +72,9 @@ class Room(
 
     var mapTexture: Texture? = null
     var addedToMap: Boolean = false
+    var firstCheckpointIdInThisRoom: Int = -1
+    var nextCheckpointId: Int = -1
+    var incrementGlobalCheckpoints: Boolean = true
     val tileTypeMap =
         listOf(
             "solid",
@@ -123,7 +126,7 @@ class Room(
             )
             add(InvincibilitySystem())
             add(EnemyBehaviourSystem())
-            add(Box2DPhysicsSystem(::spawnPlayerAttack).also { physicsSystem = it }.releasing())
+            add(Box2DPhysicsSystem(::spawnPlayerAttack, Vec2f(worldArea.width, worldArea.height)).also { physicsSystem = it }.releasing())
             add(StaminaBreathingSystem())
             add(LowStaminaDamageSystem())
             add(StaminaRestorationSystem())
@@ -250,7 +253,11 @@ class Room(
         respawnEntities()
     }
 
-    private fun respawnEntities() {
+    private fun respawnEntities(fullReset: Boolean = false) {
+        if (firstCheckpointIdInThisRoom < 0 || fullReset) {
+            firstCheckpointIdInThisRoom = PlatformingScene.nextCheckpointId
+        }
+        nextCheckpointId = firstCheckpointIdInThisRoom
         (map.layerOrNull("player-spawn") as? TiledObjectLayer)?.objects?.firstOrNull()?.bounds?.let {
             initialPlayerBounds.x = it.cx * unitSize - 0.5f
             initialPlayerBounds.y = it.cy * unitSize - 1f
@@ -260,6 +267,8 @@ class Room(
         uiEntity = ecs.entity {
             it += UiComponent()
         }
+
+        incrementGlobalCheckpoints = incrementGlobalCheckpoints || fullReset
         map.layers.forEach {
             if (it is TiledObjectLayer) {
                 it.objects.forEach { spawn ->
@@ -275,6 +284,8 @@ class Room(
                 }
             }
         }
+        incrementGlobalCheckpoints = false // to not do it during room reset!
+
         playerEntity = ecs.entity {
             it += SpriteComponent(
                 idleAnimation = gameContext.assets.animation("MC idle"),
@@ -513,7 +524,10 @@ class Room(
 
     private fun createCheckpoint(spawn: TiledMap.Object, tint: Float, tintActive: Float) {
         ecs.entity { entity ->
-            val checkpointId = PlatformingScene.nextCheckpointId++
+            val checkpointId = nextCheckpointId++
+            if (incrementGlobalCheckpoints) {
+                PlatformingScene.nextCheckpointId++
+            }
             val isActive = gameContext.gameState.checkpoint == checkpointId
             if (isActive) {
                 currentlyActiveCheckpointInThisRoom = entity
@@ -638,6 +652,7 @@ class Room(
         invincibilityComponent: InvincibilityComponent?,
         physicsComponent: Box2DPhysicsComponent
     ) {
+        reset(full = false)
         ecs.apply {
             playerEntity.configure {
                 // all the components are replaced
@@ -691,8 +706,10 @@ class Room(
 
     }
 
-    fun reset() {
-        addedToMap = false
-        respawnEntities()
+    fun reset(full: Boolean = false) {
+        if (full) {
+            addedToMap = false
+        }
+        respawnEntities(full)
     }
 }

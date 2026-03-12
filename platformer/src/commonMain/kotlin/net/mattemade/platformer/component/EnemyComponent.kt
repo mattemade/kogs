@@ -22,6 +22,7 @@ class EnemyComponent(
     val nextIntent: IteratingSystem.(entity: Entity) -> Intent =
         when (enemy.name) {
             // what a syntax!!
+            "bat" -> { {this.createBatSequence(it)} }
             "crab" -> { {this.createRandomCrabIntent(it)} }
             "snake" -> { {this.createSnakeSequence(it)} }
             "cat" -> { {this.createCatSequence(it)} }
@@ -33,6 +34,27 @@ class EnemyComponent(
 
     private var counter: Int = 0
 
+    private fun IteratingSystem.createBatSequence(entity: Entity): Intent =
+        when (counter++) {
+            0 -> {
+                entity[Box2DPhysicsComponent].gravityScaleOverride = 0f
+                Intent.WaitForPlayerAppear()
+            }
+            1 -> {
+                val playerPosition = spottedPlayerPosition
+                val batPosition = entity[Box2DPhysicsComponent].body.position
+                println("bat flies!")
+                Intent.FlyTo( { (playerPosition?.y ?: 1000f) - 3f }, dy = 10f) {
+                    println("bat flies in sine!!")
+                    Intent.FlyInSine(x = 3f * ((playerPosition?.x ?: 0f) - batPosition.x).sign, dy = 12f)
+                }
+            }
+            else -> {
+                spottedPlayerPosition = null
+                counter = 1
+                Intent.WaitForPlayerAppear()
+            }
+        }
 
     private fun IteratingSystem.createCatSequence(entity: Entity): Intent =
         when (counter++) {

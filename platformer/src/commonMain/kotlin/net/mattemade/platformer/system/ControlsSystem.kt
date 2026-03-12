@@ -81,7 +81,7 @@ class ControlsSystem(
                 jumping = false
                 jumpBuffer = 0
             } else { // jump is still pressed, do not double-jump automatically in this case, but jump when landed within buffered time
-                if (input.movement.y > 0f && input.movement.y.absoluteValue > input.movement.x.absoluteValue) {
+                if (input.movement.y > 0f && input.movement.y.absoluteValue > input.movement.x.absoluteValue * 0.75f) {
                     // mostly pressing down, no-op
                 } else if (canJumpFromGround) {
                     if (!jumping && jumpBuffer < JumpComponent.BUFFER_TICKS) {

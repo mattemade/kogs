@@ -19,6 +19,7 @@ class Box2DPhysicsComponent(
     val previousPosition: MutableVec2f = MutableVec2f(body.position.x, body.position.y),
     val previousVelocity: MutableVec2f = MutableVec2f(0f, 0f),
     val attachedSounds: MutableList<Pair<FmodEventInstance, Fmod3DAttributes>> = mutableListOf(),
+    var gravityScaleOverride: Float? = null,
 ) : Component<Box2DPhysicsComponent> {
 
     lateinit var landBodyFixture: Fixture

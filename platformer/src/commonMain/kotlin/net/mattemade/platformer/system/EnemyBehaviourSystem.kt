@@ -12,6 +12,7 @@ import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.EnemyComponent
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
+import kotlin.math.sin
 
 class EnemyBehaviourSystem(
     private val gameContext: PlatformerGameContext = inject(),
@@ -41,6 +42,12 @@ class EnemyBehaviourSystem(
                 entity[MoveComponent].moveDirection.set(intent.x, intent.y)
                 entity[JumpComponent].jumping = intent.holdJumpFor > 0f
                 entity[JumpComponent].canHoldJumpForTicks = JumpComponent.MAX_JUMP_TICKS // monster's jump is unlimited!!
+            }
+            is Intent.FlyInSine -> {
+                entity[MoveComponent].moveDirection.set(intent.x, intent.y)
+            }
+            is Intent.FlyTo -> {
+                entity[MoveComponent].moveDirection.set(0f, intent.dy)
             }
             is Intent.Idle,
             is Intent.WaitForPlayerAppear,
@@ -82,6 +89,33 @@ class EnemyBehaviourSystem(
         class WaitForPlayerComeClose : Intent {
             override fun IteratingSystem.switch(entity: Entity): Intent? =
                 if (entity[EnemyComponent].nearPlayer != null) null else this@WaitForPlayerComeClose
+        }
+
+        class FlyTo(val y: () -> Float, val dy: Float, val next: () -> Intent) : Intent {
+            override fun IteratingSystem.switch(entity: Entity): Intent? {
+                val context = entity[ContextComponent]
+                val physics = entity[Box2DPhysicsComponent]
+                if (context.standing || physics.body.position.y >= y()) {
+                    return next()
+                }
+                return this@FlyTo
+            }
+
+        }
+
+        class FlyInSine(var x: Float, var dy: Float, var y: Float = 0f): Intent {
+
+            private var time: Float = 0f
+
+            override fun IteratingSystem.switch(entity: Entity): Intent? {
+                time += deltaTime * 5f
+                y = sin(time) * dy
+                val context = entity[ContextComponent]
+                if (context.touchingRightWall && x > 0f || context.touchingLeftWall && x < 0f) {
+                    x = -x
+                }
+                return this@FlyInSine
+            }
         }
 
         class Move(var x: Float, var y: Float, var keep: Float = 0f, var limit: Float = 0f, val fallFromEdges: Boolean = false, val jumpOnWalls: Float = 0f, val triggerVision: ((Intent) -> Intent)? = null, val triggerProximity: ((Intent) -> Intent)? = null) :
@@ -130,63 +164,6 @@ class EnemyBehaviourSystem(
                 return limit <= 0f || entity[ContextComponent].swimming
             }
         }
-
-        /*class MoveToPlatformEndAndBackWhileLookingForPlayer(var x: Float, var y: Float, var keep: Float = 0f, var limit: Float = 0f) :
-            Intent {
-
-            override fun IteratingSystem.switch(entity: Entity): Intent? {
-                if (keep > 0f) {
-                    keep -= deltaTime
-                    return this@MoveToPlatformEndAndBackWhileLookingForPlayer
-                }
-                val context = entity[ContextComponent]
-                return if (shouldStop(entity)) {
-                    null
-                } else if (context.standing) {
-                    if ((!context.standingRightFoot || context.touchingRightWall) && x > 0f || (!context.standingLeftFoot || context.touchingLeftWall) && x < 0f) {
-                        x = -x
-                        keep = 0.5f // move the opposite way for some time
-                    }
-                    this@MoveToPlatformEndAndBackWhileLookingForPlayer
-                } else {
-                    this@MoveToPlatformEndAndBackWhileLookingForPlayer
-                }
-            }
-
-            override fun IteratingSystem.shouldStop(entity: Entity): Boolean {
-                limit -= deltaTime
-                return limit <= 0f || entity[ContextComponent].swimming || entity[EnemyComponent].spottedPlayerPosition != null
-            }
-        }
-
-        class MoveToPlatformEndAndBackWhileWainingForPlayerClose(var x: Float, var y: Float, var keep: Float = 0f, var limit: Float = 0f, var canJump: Boolean = false) :
-            Intent {
-
-            override fun IteratingSystem.switch(entity: Entity): Intent? {
-                if (keep > 0f) {
-                    keep -= deltaTime
-                    return this@MoveToPlatformEndAndBackWhileWainingForPlayerClose
-                }
-                val context = entity[ContextComponent]
-                return if (shouldStop(entity)) {
-
-                    null
-                } else if (context.standing) {
-                    if ((!context.standingRightFoot || context.touchingRightWall) && x > 0f || (!context.standingLeftFoot || context.touchingLeftWall) && x < 0f) {
-                        x = -x
-                        keep = 0.5f // move the opposite way for some time
-                    }
-                    this@MoveToPlatformEndAndBackWhileWainingForPlayerClose
-                } else {
-                    this@MoveToPlatformEndAndBackWhileWainingForPlayerClose
-                }
-            }
-
-            fun IteratingSystem.shouldStop(entity: Entity): Boolean {
-                limit -= deltaTime
-                return limit <= 0f || entity[ContextComponent].swimming || entity[EnemyComponent].nearPlayer != null
-            }
-        }*/
 
         class JumpForward(var x: Float, var y: Float, var holdJumpFor: Float = 0f, val onEnd: Intent? = null) : Intent {
 
