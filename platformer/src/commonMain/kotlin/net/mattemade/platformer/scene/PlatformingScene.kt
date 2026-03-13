@@ -121,6 +121,19 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                     }
                 }
             }
+            room.tileTypeMap["water"]?.forEachIndexed { x, row ->
+                row.forEachIndexed { y, value ->
+                    if (value) {
+                        shapeRenderer.filledRectangle(
+                            x = room.worldArea.x + x.toFloat(),
+                            y = room.worldArea.y + y.toFloat(),
+                            width = 1f,
+                            height = 1f,
+                            color = mapWaterColor,
+                        )
+                    }
+                }
+            }
             room.addedToMap = true
         }
     }
@@ -136,15 +149,9 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
         currentRoom = getCurrentRoom()
         initialMapDraw = true
         sharedMapRenderer.render(0f.seconds)
-        gameContext.switchMusicState(PlatformerGameContext.stateWalking)
     }
 
     override fun update(seconds: Float) {
-        if (gameContext.currentlyPlayingMusic == null) {
-            gameContext.fmodAssets.musicEventDescription.createInstance().also {
-                gameContext.currentlyPlayingMusic = it
-            }.start()
-        }
         currentRoom.render(seconds)
     }
 
@@ -155,25 +162,27 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
     }
 
 
-    private fun switchRoom(player: Entity) {
+    private fun switchRoom(player: Entity, offsetX: Float?, offsetY: Float?, dx: Float, dy: Float, forceLeave: Boolean) {
+        println("switch $offsetX $offsetY $dx $dy")
         currentRoom.apply {
             ecs.apply {
                 // TODO: really? maybe all of that should be arguments?
                 val playerPosition = player[PositionComponent].position
                 tempVec2f.set(
-                    worldArea.x + playerPosition.x,
-                    worldArea.y + playerPosition.y,
+                    worldArea.x + playerPosition.x + (offsetX ?: 0f),
+                    worldArea.y + playerPosition.y + (offsetY ?: 0f),
                 )
+                println("probe ${tempVec2f}")
                 // TODO: is there a way to do that better than O(N)? maybe we can prepare a world graph ahead of time
                 rooms.forEach {
-                    if (it.name != currentRoom.name && it.worldArea.contains(tempVec2f)) {
+                    if ((!forceLeave || it.name != currentRoom.name) && it.worldArea.contains(tempVec2f)) {
                         val worldPositionDiff =
                             Vec2(it.worldArea.x - currentRoom.worldArea.x, it.worldArea.y - currentRoom.worldArea.y)
                         // TODO: how to do that tidy, without exposing too much of Player outside of ECS?
                         // translate player's position to the new room's local coordinates
                         player[PositionComponent].position.set(
-                            playerPosition.x - worldPositionDiff.x,
-                            playerPosition.y - worldPositionDiff.y,
+                            playerPosition.x + (offsetX ?: 0f) - worldPositionDiff.x,
+                            playerPosition.y + (offsetY ?: 0f) - worldPositionDiff.y,
                         )
 
                         it.enter(
@@ -199,7 +208,21 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                         return
                     }
                 }
-                throw IllegalStateException("No room found at world coordinates (${tempVec2f.x}, ${tempVec2f.y}); moving from ${currentRoom.name} with bounds (${currentRoom.worldArea}), local coordinates: (${playerPosition.x}, ${playerPosition.y})")
+                if (offsetX == null && offsetY == null) {
+                    if (dx != 0f) {
+                        switchRoom(player, if (dx > 0) mapSize.x - tempVec2f.x + dx else mapSize.x2 - tempVec2f.x + dx, offsetY, dx, dy, forceLeave)
+                    } else if (dy != 0f) {
+                        switchRoom(player, offsetX, if (dy > 0f) mapSize.y - tempVec2f.y + dy else mapSize.y2 - tempVec2f.y + dy, dx, dy, forceLeave)
+                    } else {
+                        throw IllegalStateException("No room found at world coordinates (${tempVec2f.x}, ${tempVec2f.y}); moving from ${currentRoom.name} with bounds (${currentRoom.worldArea}), local coordinates: (${playerPosition.x}, ${playerPosition.y})")
+                    }
+                } else {
+                    if (mapSize.contains(tempVec2f)) {
+                        switchRoom(player, (offsetX ?: 0f) + dx, (offsetY ?: 0f) + dy, dx, dy, forceLeave)
+                    } else {
+                        throw IllegalStateException("No room found at world coordinates (${tempVec2f.x}, ${tempVec2f.y}); moving from ${currentRoom.name} with bounds (${currentRoom.worldArea}), local coordinates: (${playerPosition.x}, ${playerPosition.y})")
+                    }
+                }
             }
         }
     }
@@ -207,6 +230,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
     companion object {
         private val tempVec2f = MutableVec2f()
         private val mapColor = Color.WHITE.toMutableColor().apply { a = 1f }.toFloatBits()
+        private val mapWaterColor = Color.CYAN.toMutableColor().apply { a = 0.75f }.toFloatBits()
         var nextCheckpointId = 0
         var nextPearlId = 0
         var collectedPearls = 0

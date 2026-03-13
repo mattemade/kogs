@@ -8,7 +8,9 @@ import kotlinx.serialization.json.Json
 import net.mattemade.platformer.component.TaggedText
 import net.mattemade.platformer.ink.InkStory
 import net.mattemade.platformer.service.StoryDisplayService
+import net.mattemade.fmod.FMOD
 import net.mattemade.fmod.Fmod3DAttributes
+import net.mattemade.fmod.FmodEventDescription
 import net.mattemade.fmod.FmodEventInstance
 import net.mattemade.platformer.input.GameInput
 import net.mattemade.platformer.input.bindInputs
@@ -30,6 +32,7 @@ class PlatformerGameContext(
     val inkStoryFactory: net.mattemade.platformer.ink.InkStoryFactory,
 ) {
 
+    var currentlyPlayingMusicDescription: FmodEventDescription? = null
     var currentlyPlayingMusic: FmodEventInstance? = null
     val assets = PlatformerAssets(context, this, getFromUrl, fmodFolderPrefix, fmodLiveUpdate, overrideResourcesFrom)
     val fmodAssets by lazy { FmodAssets(context, fmodFolderPrefix, this) }
@@ -37,7 +40,12 @@ class PlatformerGameContext(
     val scheduler = Scheduler()
     var canvasZoom: Float = 1f
     var canvasInverseZoom: Float = 1f
-    val worldSize = Rect(x = 50000000000f, y = 50000000000f, width = -100000000000f, height = -100000000000f) // to ensure the world edges will be within
+    val worldSize = Rect(
+        x = 50000000000f,
+        y = 50000000000f,
+        width = -100000000000f,
+        height = -100000000000f
+    ) // to ensure the world edges will be within
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
@@ -145,17 +153,119 @@ class PlatformerGameContext(
     )
 
 
-    fun switchMusicState(state: String) {
-        currentlyPlayingMusic?.setParameterByIDWithLabel(fmodAssets.musicStateParameter, state, 0)
+    var musicType: String? = null
+        set(value) {
+            if (field != value) {
+                field = value; updateMusic()
+            }
+        }
+    var swimmingMusic: Boolean = false
+        set(value) {
+            if (field != value) {
+                field = value; updateState()
+            }
+        }
+    var lowStamina: Boolean = false
+        set(value) {
+            if (field != value) {
+                field = value; updateState()
+            }
+        }
+    var lowHealth: Boolean = false
+        set(value) {
+            if (field != value) {
+                field = value; updateState()
+            }
+        }
+    var enemiesInTheRoom: Boolean = false
+        set(value) {
+            if (field != value) {
+                field = value; updateState()
+            }
+        }
+    var fightingInTheRoom: Boolean = false
+        set(value) {
+            if (field != value) {
+                field = value; updateState()
+            }
+        }
+
+    fun updateMusic() {
+        when (musicType) {
+            "sky" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.testMusic)
+            "caves" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.cavesMusic)
+            "temple" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.ambienceMusic)
+            "silence" -> stopCurrentMusic()
+            else -> { /* no-op */ }
+        }
+    }
+
+    fun updateState() {
+        val state = if (lowHealth) {
+            if (swimmingMusic) {
+                if (fightingInTheRoom) {
+                    "Swimming, fighting, low health"
+                } else if (enemiesInTheRoom) {
+                    "Swimming, enemy nearby, low health"
+                } else {
+                    "Swimming, low health"
+                }
+            } else {
+                if (fightingInTheRoom) {
+                    "Walking, fighting, low health"
+                } else if (enemiesInTheRoom) {
+                    "Walking, enemy nearby, low health"
+                } else {
+                    "Walking, low health"
+                }
+            }
+        } else {
+            if (swimmingMusic) {
+                if (fightingInTheRoom) {
+                    "Swimming, fighting"
+                } else if (lowStamina) {
+                    "Swimming, low stamina"
+                } else if (enemiesInTheRoom) {
+                    "Swimming, enemy nearby"
+                } else {
+                    "Swimming"
+                }
+            } else {
+                if (fightingInTheRoom) {
+                    "Walking, fighting"
+                } else if (enemiesInTheRoom) {
+                    "Walking, enemy nearby"
+                } else {
+                    "Walking"
+                }
+            }
+        }
+
+        println("state: $state")
+        assets.fmod.studioSystem.setParameterByIDWithLabel(fmodAssets.playerStateParameter, state, 0)
+    }
+
+    fun stopCurrentMusic() {
+        currentlyPlayingMusic?.stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+        currentlyPlayingMusic?.release()
+        currentlyPlayingMusic = null
+        currentlyPlayingMusicDescription = null
+    }
+
+    fun whenCurrentDoesNotMatchStopItAndStartAnother(description: FmodEventDescription) {
+        if (description == currentlyPlayingMusicDescription) {
+            return
+        }
+
+        stopCurrentMusic()
+
+        currentlyPlayingMusicDescription = description
+        currentlyPlayingMusic = description.createInstance()
+        currentlyPlayingMusic?.start()
     }
 
     companion object {
         private val LOG_TAG = "mgmt"
-        val stateWalking = "Walking"
-        val stateWalkingWithEnemies = "Walking, enemies"
-        val stateLowHealth = "Walking, low health"
-        val stateSwimming = "Swimming"
-        val stateSwimmingLowHealth = "Swimming, low health"
 
         val sharedAttributes: Fmod3DAttributes by lazy {
             Fmod3DAttributes().apply {

@@ -1,6 +1,7 @@
 package net.mattemade.platformer.world
 
 import com.github.quillraven.fleks.Entity
+import com.github.quillraven.fleks.EntityCreateContext
 import com.github.quillraven.fleks.configureWorld
 import com.littlekt.graphics.Color
 import com.littlekt.graphics.Texture
@@ -44,6 +45,7 @@ import net.mattemade.platformer.system.InvincibilitySystem
 import net.mattemade.platformer.system.LoadOnPlayerDeathSystem
 import net.mattemade.platformer.system.LowStaminaDamageSystem
 import net.mattemade.platformer.system.MascotSystem
+import net.mattemade.platformer.system.MusicSwitchingSystem
 import net.mattemade.platformer.system.PushingSystem
 import net.mattemade.platformer.system.RenderingSystem
 import net.mattemade.platformer.system.RotationSystem
@@ -65,7 +67,7 @@ class Room(
     val worldArea: Rect,
     val name: String,
     val visibleOnMap: Boolean,
-    private val switchRoom: (player: Entity) -> Unit,
+    private val switchRoom: (player: Entity, offsetX: Float?, offsetY: Float?, dx: Float, dy: Float, forceLeave: Boolean) -> Unit,
     private val mapSize: Rect,
 ) : Releasing by Self() {
 
@@ -137,6 +139,7 @@ class Room(
             //add(FloatingSystem())
             add(RotationSystem())
             add(MascotSystem())
+            add(MusicSwitchingSystem(musicType = (map.properties["music"] as? TiledMap.Property.StringProp)?.value))
             add(RenderingSystem())
             add(StorySystem())
             add(UiRenderingSystem(worldArea = worldArea, mapVisible = visibleOnMap, mapTexture = { mapTexture }))
@@ -290,32 +293,7 @@ class Room(
         incrementGlobalCheckpoints = false // to not do it during room reset!
 
         playerEntity = ecs.entity {
-            it += SpriteComponent(
-                idleAnimation = gameContext.assets.animation("MC idle"),
-                walkAnimation = gameContext.assets.animation("MC walk"),
-                jumpAnimation = gameContext.assets.animation("MC jump"),
-                fallAnimation = gameContext.assets.animation("MC fall"),
-                swimAnimation = gameContext.assets.animation("MC swimming"),
-                wallSlideAnimation = gameContext.assets.animation("MC wall slide"),
-                swimIdleAnimation = gameContext.assets.animation("MC swim_idle"),
-                swimDashAnimation = gameContext.assets.animation("MC swim_dash"),
-                airDashAnimation = gameContext.assets.animation("MC air_dash"),
-                hurtAnimation = gameContext.assets.animation("MC hurt"),
-                animationEventCallback = { it, component ->
-                    when (it) {
-                        "step" -> component.playSound(gameContext.fmodAssets.step)
-                    }
-                },
-                // baking offset into the bounds, maybe it should be a separate property?
-                bounds = Rect(
-                    -0.45f.px,
-                    -0.9f.px,
-                    initialPlayerBounds.width * 0.91f,
-                    initialPlayerBounds.height * 0.91f
-                ),
-                tint = Color.ORANGE.toMutableColor().apply { a = 0.2f }.toFloatBits(),
-                priority = 1,
-            )
+            attachDress(it)
             it += PositionComponent().also {
                 it.position.set(initialPlayerBounds.cx, initialPlayerBounds.cy)
                 playerPosition = it.position
@@ -394,6 +372,7 @@ class Room(
                                         release()
                                     }
                                     gameContext.gameState.waterPearl = true
+                                    ecs.apply { playerEntity.configure { attachDress(it) } }
                                     gameContext.save()
                                 }
                             }
@@ -407,6 +386,7 @@ class Room(
                                         release()
                                     }
                                     gameContext.gameState.airPearl = true
+                                    ecs.apply { playerEntity.configure { attachDress(it) } }
                                     gameContext.save()
                                 }
                             }
@@ -414,7 +394,7 @@ class Room(
 
                         "sword" -> {
                             if (!gameContext.gameState.sword) {
-                                createPickup(spawn, "MC idle", tint = Color.YELLOW.toFloatBits()) {
+                                createPickup(spawn, "Sword idle", tint = Color.YELLOW.toFloatBits()) {
                                     gameContext.fmodAssets.pickUpgrade.createInstance().apply {
                                         start()
                                         release()
@@ -433,7 +413,7 @@ class Room(
                             if (gameContext.gameState.pearls[pearlId]) {
                                 PlatformingScene.collectedPearls++
                             } else {
-                                createPickup(spawn, "MC idle", tint = Color.WHITE.toFloatBits()) {
+                                createPickup(spawn, "Normal pearl", tint = Color.WHITE.toFloatBits()) {
                                     gameContext.fmodAssets.pickCollectiblePearl.createInstance().apply {
                                         start()
                                         release()
@@ -485,6 +465,91 @@ class Room(
                     }
                 }
             }
+        }
+    }
+
+    private fun EntityCreateContext.attachDress(entity: Entity) {
+        if (gameContext.gameState.airPearl) {
+            entity += SpriteComponent(
+                idleAnimation = gameContext.assets.animation("C idle"),
+                walkAnimation = gameContext.assets.animation("C walk"),
+                jumpAnimation = gameContext.assets.animation("C jump"),
+                fallAnimation = gameContext.assets.animation("C fall"),
+                swimAnimation = gameContext.assets.animation("C swimming"),
+                wallSlideAnimation = gameContext.assets.animation("C wall slide"),
+                swimIdleAnimation = gameContext.assets.animation("C swim_idle"),
+                swimDashAnimation = gameContext.assets.animation("C swim_dash"),
+                airDashAnimation = gameContext.assets.animation("C air_dash"),
+                hurtAnimation = gameContext.assets.animation("C hurt"),
+                animationEventCallback = { it, component ->
+                    when (it) {
+                        "step" -> component.playSound(gameContext.fmodAssets.step)
+                    }
+                },
+                // baking offset into the bounds, maybe it should be a separate property?
+                bounds = Rect(
+                    -0.45f.px,
+                    -0.9f.px,
+                    initialPlayerBounds.width * 0.91f,
+                    initialPlayerBounds.height * 0.91f
+                ),
+                tint = Color.ORANGE.toMutableColor().apply { a = 0.2f }.toFloatBits(),
+                priority = 1,
+            )
+        } else if (gameContext.gameState.waterPearl) {
+            entity += SpriteComponent(
+                idleAnimation = gameContext.assets.animation("B idle"),
+                walkAnimation = gameContext.assets.animation("B walk"),
+                jumpAnimation = gameContext.assets.animation("B jump"),
+                fallAnimation = gameContext.assets.animation("B fall"),
+                swimAnimation = gameContext.assets.animation("B swimming"),
+                wallSlideAnimation = gameContext.assets.animation("B wall slide"),
+                swimIdleAnimation = gameContext.assets.animation("B swim_idle"),
+                swimDashAnimation = gameContext.assets.animation("B swim_dash"),
+                airDashAnimation = gameContext.assets.animation("B air_dash"),
+                hurtAnimation = gameContext.assets.animation("B hurt"),
+                animationEventCallback = { it, component ->
+                    when (it) {
+                        "step" -> component.playSound(gameContext.fmodAssets.step)
+                    }
+                },
+                // baking offset into the bounds, maybe it should be a separate property?
+                bounds = Rect(
+                    -0.45f.px,
+                    -0.9f.px,
+                    initialPlayerBounds.width * 0.91f,
+                    initialPlayerBounds.height * 0.91f
+                ),
+                tint = Color.ORANGE.toMutableColor().apply { a = 0.2f }.toFloatBits(),
+                priority = 1,
+            )
+        } else {
+            entity += SpriteComponent(
+                idleAnimation = gameContext.assets.animation("A idle"),
+                walkAnimation = gameContext.assets.animation("A walk"),
+                jumpAnimation = gameContext.assets.animation("A jump"),
+                fallAnimation = gameContext.assets.animation("A fall"),
+                swimAnimation = gameContext.assets.animation("A swimming"),
+                wallSlideAnimation = gameContext.assets.animation("A wall slide"),
+                swimIdleAnimation = gameContext.assets.animation("A swim_idle"),
+                swimDashAnimation = gameContext.assets.animation("A swim_dash"),
+                airDashAnimation = gameContext.assets.animation("A air_dash"),
+                hurtAnimation = gameContext.assets.animation("A hurt"),
+                animationEventCallback = { it, component ->
+                    when (it) {
+                        "step" -> component.playSound(gameContext.fmodAssets.step)
+                    }
+                },
+                // baking offset into the bounds, maybe it should be a separate property?
+                bounds = Rect(
+                    -0.45f.px,
+                    -0.9f.px,
+                    initialPlayerBounds.width * 0.91f,
+                    initialPlayerBounds.height * 0.91f
+                ),
+                tint = Color.ORANGE.toMutableColor().apply { a = 0.2f }.toFloatBits(),
+                priority = 1,
+            )
         }
     }
 
@@ -700,16 +765,18 @@ class Room(
     fun render(dt: Float) {
         if (!gameContext.paused) {
             ecs.update(dt)
-            if (playerPosition.x < 0f || playerPosition.y < 0f || playerPosition.x > worldArea.width || playerPosition.y > worldArea.height || teleports.any {
-                    it.contains(
-                        playerPosition
-                    )
-                }) {
-                switchRoom(playerEntity)
+            if (playerPosition.x < 0f) {
+                switchRoom(playerEntity, null, null, -1f, 0f, false)
+            } else if (playerPosition.y < 0f) {
+                switchRoom(playerEntity, null, null, 0f, -1f, false)
+            } else if ( playerPosition.x > worldArea.width) {
+                switchRoom(playerEntity, null, null, 1f, 0f, false)
+            } else if (playerPosition.y > worldArea.height) {
+                switchRoom(playerEntity, null, null, 0f, 1f, false)
+            } else if (teleports.any { it.contains(playerPosition) }) {
+                switchRoom(playerEntity, null, null, 0f, 0f, true)
             }
         }
-
-
     }
 
     fun reset(full: Boolean = false) {

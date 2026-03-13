@@ -323,11 +323,16 @@ class RenderingSystem(
         gameContext.context.gl.clearColor(Color.BLACK)
         gameContext.context.gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
 
-        val ambientColor = (layer.properties[abmient] as? TiledMap.Property.ColorProp)?.value ?: Color.BLACK
-        shapeRenderer.filledRectangle(x = playerLightPosition.x - HALF_WORLD_UNIT_WIDTH, y = playerLightPosition.y - HALF_WORLD_UNIT_HEIGHT, width = WORLD_UNIT_WIDTH, height = WORLD_UNIT_HEIGHT, color = ambientColor.toFloatBits())
+        val ambientColor = layer.tintColor ?: Color.BLACK
+        shapeRenderer.filledRectangle(x = camera.position.x - HALF_WORLD_UNIT_WIDTH, y = camera.position.y - HALF_WORLD_UNIT_HEIGHT, width = WORLD_UNIT_WIDTH, height = WORLD_UNIT_HEIGHT, color = ambientColor.toFloatBits())
         //batch.setBlendFunction(BlendMode.Add)
         renderLayer(layer, batch)
-        shapeRenderer.filledEllipse(x = playerLightPosition.x, y = playerLightPosition.y, rx = 8f, ry = 8f, innerColor = innerPlayerLight, outerColor = outerPlayerLight)
+        //innerPlayerLight.set(r = 1f - ambientColor.r, g = 1f - ambientColor.g, b = 1f - ambientColor.b, a = 1f)
+        //outerPlayerLight.set(ambientColor)
+
+        val rx = (layer.properties[rxProperty] as? TiledMap.Property.FloatProp)?.value ?: 8f
+        val ry = (layer.properties[ryProperty] as? TiledMap.Property.FloatProp)?.value ?: 8f
+        shapeRenderer.filledEllipse(x = playerLightPosition.x, y = playerLightPosition.y, rx = rx, ry = ry, innerColor = innerPlayerLight.toFloatBits(), outerColor = outerPlayerLight.toFloatBits())
        // batch.setToPreviousBlendFunction()
     }
 
@@ -339,8 +344,10 @@ class RenderingSystem(
         private val fakeWalls = "FAKE WALLS"
         private val light = "light"
         private val abmient = "ambient"
-        private val innerPlayerLight = Color.WHITE.toFloatBits()
-        private val outerPlayerLight = Color.WHITE.toMutableColor().apply { a = 0f }.toFloatBits()
+        private val rxProperty = "rx"
+        private val ryProperty = "ry"
+        private val innerPlayerLight = Color.WHITE.toMutableColor().apply { a = 1f}
+        private val outerPlayerLight = Color.WHITE.toMutableColor().apply { a = 0f}
 
         private var sharedLightRenderer: PixelRender? = null
     }

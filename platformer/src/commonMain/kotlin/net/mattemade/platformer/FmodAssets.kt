@@ -4,6 +4,7 @@ import co.touchlab.stately.collections.ConcurrentMutableMap
 import com.littlekt.Context
 import net.mattemade.fmod.FMOD
 import net.mattemade.fmod.FmodBank
+import net.mattemade.fmod.FmodEventDescription
 import net.mattemade.utils.asset.AssetPack
 
 class FmodAssets(
@@ -15,6 +16,9 @@ class FmodAssets(
     private val studioSystem = gameContext.assets.fmod.studioSystem
 
     val map = ConcurrentMutableMap<String, FmodBank>()
+    val eventCache = ConcurrentMutableMap<String, FmodEventDescription>()
+
+    fun getEvent(name: String): FmodEventDescription = eventCache.getOrPut(name) { studioSystem.getEvent(name) }
 
     val preparation by selfPreparePlain(order = 0, action = {
         FMOD_BANKS.forEach { bankName ->
@@ -81,10 +85,8 @@ class FmodAssets(
     val checkPointActivated by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Checkpoint activates (health restored, game saved)") }
     val windBlowing by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Wind blows (loop)") }
 
-    val musicEventDescription by preparePlain(order = 2) {
-        studioSystem.getEvent("event:/Music/StemTest")
-    }
-    val musicStateParameter by preparePlain(order = 3) {
-        musicEventDescription.getParameterDescriptionByName("Player state").id
-    }
+    val testMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/StemTest") }
+    val cavesMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/Caves") }
+    val ambienceMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/Ambience Strings") }
+    val playerStateParameter by lazy { studioSystem.getParameterDescriptionByName("Player state").id }
 }

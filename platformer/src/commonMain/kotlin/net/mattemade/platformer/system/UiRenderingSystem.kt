@@ -161,7 +161,7 @@ class UiRenderingSystem(
 
     companion object {
         private val mapBackgroundColor = Color.BLACK.toMutableColor().apply { a = 0.5f }.toFloatBits()
-        private val roomBackgroundColor = Color.BLUE.toMutableColor().apply { a = 0.5f }.toFloatBits()
+        private val roomBackgroundColor = Color.DARK_YELLOW.toMutableColor().apply { r = 0.25f; g = 0.25f; a = 0.75f }.toFloatBits()
         private val playerColor = Color.RED.toFloatBits()
         var collectionText: String? = null
     }
