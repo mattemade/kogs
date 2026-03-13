@@ -119,12 +119,14 @@ kotlin {
                 implementation(libs.ktor.client.core)
                 implementation(libs.ktor.client.websockets)
                 implementation(libs.ktor.client.cio)
+                implementation(libs.blade.ink)
             }
         }
         val jvmTest by getting
         val jsMain by getting {
             dependencies {
                 implementation(libs.kotlinx.html.js)
+                implementation(npm("inkjs", "2.2.2"))
             }
         }
         val jsTest by getting

@@ -24,3 +24,16 @@ fmod/src/*/resources
 **/fmodMain/.cache
 **/fmodMain/.unsaved
 **/fmodMain/.user
+/platformer/.httpCache/.cacheIndex
+/platformer/.storage/.keyValueStorage.json
+/platformer/fmod.dll
+/platformer/fmodstudio.dll
+/platformer/local/
+/platformer/src/jsMain/resources/fmodstudio.js
+/platformer/src/jsMain/resources/fmodstudio.wasm
+/platformer/src/jsMain/resources/fmodstudioL.js
+/platformer/src/jsMain/resources/fmodstudioL.wasm
+/platformer/src/jsMain/resources/fmodstudioP.js
+/platformer/src/jsMain/resources/fmodstudioP.wasm
+/platformer/src/jsMain/resources/fmodstudioPL.js
+/platformer/src/jsMain/resources/fmodstudioPL.wasm

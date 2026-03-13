@@ -5,6 +5,9 @@ import com.littlekt.math.Rect
 import com.littlekt.util.seconds
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import net.mattemade.platformer.component.TaggedText
+import net.mattemade.platformer.ink.InkStory
+import net.mattemade.platformer.service.StoryDisplayService
 import net.mattemade.fmod.Fmod3DAttributes
 import net.mattemade.fmod.FmodEventInstance
 import net.mattemade.platformer.input.GameInput
@@ -24,11 +27,13 @@ class PlatformerGameContext(
     val fmodLiveUpdate: Boolean,
     val restartScene: () -> Unit,
     val startGame: () -> Unit,
+    val inkStoryFactory: net.mattemade.platformer.ink.InkStoryFactory,
 ) {
 
     var currentlyPlayingMusic: FmodEventInstance? = null
     val assets = PlatformerAssets(context, this, getFromUrl, fmodFolderPrefix, fmodLiveUpdate, overrideResourcesFrom)
     val fmodAssets by lazy { FmodAssets(context, fmodFolderPrefix, this) }
+    val storyDisplayService by lazy { StoryDisplayService(context, assets) }
     val scheduler = Scheduler()
     var canvasZoom: Float = 1f
     var canvasInverseZoom: Float = 1f
@@ -64,7 +69,18 @@ class PlatformerGameContext(
         gameInput.update(controlsActive)
     }
 
+    private var _story: InkStory? = null
+    val story: InkStory
+        get() {
+            if (_story == null) {
+                _story = inkStoryFactory.createStory(assets.storyString)
+            }
+            return _story!!
+        }
+
     fun save() {
+        val newState = story.getState()
+        gameState.story.state = newState
         val state = json.encodeToString(gameState)
         if (previousSavedState != state) {
             log("save|${gameState.checkpoint}|${gameState.sword}|${gameState.waterPearl}|${gameState.airPearl}|${PlatformingScene.collectedPearls}")
@@ -78,6 +94,7 @@ class PlatformerGameContext(
         if (reset) {
             previousSavedState = null
             gameState = GameState()
+            _story = null
             save()
             restartScene()
             return
@@ -86,11 +103,16 @@ class PlatformerGameContext(
         gameState = context.vfs.loadString("save")?.let {
             try {
                 previousSavedState = it
-                json.decodeFromString(it)
-            } catch (_: Exception) {
+                val decoded: GameState = json.decodeFromString(it)
+                decoded.story.state?.let { storyState ->
+                    story.loadState(storyState)
+                }
+                decoded
+            } catch (e: Exception) {
+                // this looks dangerous? or?
                 null
             }
-        } ?: GameState()
+        } ?: GameState().also { println("No save found, creating new GameState") }
         if (forceRestart) {
             restartScene()
         }
@@ -106,6 +128,15 @@ class PlatformerGameContext(
         var tutorials: MutableMap<String, Boolean> = mutableMapOf(),
         var currentRoom: String = FIRST_LEVEL_NAME,
         var checkpoint: Int = -1,
+        var story: StoryState = StoryState(),
+    )
+
+    @Serializable
+    data class StoryState(
+        var state: String? = null,
+        var history: List<TaggedText> = emptyList(),
+        var options: List<TaggedText> = emptyList(),
+        var goOn: Boolean = true,
     )
 
     @Serializable

@@ -21,6 +21,7 @@ import net.mattemade.fmod.FMOD_FS_createPreloadedFile
 import net.mattemade.fmod.FMOD_Module_Create
 import net.mattemade.fmod.FMOD_Studio_System_Create
 import net.mattemade.fmod.FmodStudioSystem
+import net.mattemade.platformer.ink.InkStory
 import net.mattemade.fmod.FmodStudioSystemCore
 import net.mattemade.platformer.resources.AnimationWithOffset
 import net.mattemade.platformer.resources.Music
@@ -49,6 +50,11 @@ class PlatformerAssets(
         RuntimeTextureAtlasPacker(context, useMiMaps = false, allowFiltering = true).releasing()
 
     val shaders by pack(order = 0) { Shaders(context) }
+    // this is pattern-matched by looking at other resources.
+    // I've no idea why it is "plain"
+    val storyString by preparePlain(order = 0) {
+        context.resourcesVfs["story/story.json"].readString()
+    }
     val fmod by pack(order = 0) {
         Fmod(context, fmodFolderPrefix, fmodLiveUpdate)
     }

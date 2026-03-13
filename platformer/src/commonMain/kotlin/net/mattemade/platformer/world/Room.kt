@@ -31,6 +31,7 @@ import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.component.StaminaComponent
 import net.mattemade.platformer.component.StaminaDamageComponent
 import net.mattemade.platformer.component.TimeToLiveComponent
+import net.mattemade.platformer.component.StoryComponent
 import net.mattemade.platformer.component.UiComponent
 import net.mattemade.platformer.px
 import net.mattemade.platformer.scene.PlatformingScene
@@ -48,6 +49,7 @@ import net.mattemade.platformer.system.RenderingSystem
 import net.mattemade.platformer.system.RotationSystem
 import net.mattemade.platformer.system.StaminaBreathingSystem
 import net.mattemade.platformer.system.StaminaRestorationSystem
+import net.mattemade.platformer.system.StorySystem
 import net.mattemade.platformer.system.TimeToLiveSystem
 import net.mattemade.platformer.system.UiControlsSystem
 import net.mattemade.platformer.system.UiRenderingSystem
@@ -136,6 +138,7 @@ class Room(
             add(RotationSystem())
             add(MascotSystem())
             add(RenderingSystem())
+            add(StorySystem())
             add(UiRenderingSystem(worldArea = worldArea, mapVisible = visibleOnMap, mapTexture = { mapTexture }))
         }
     }
@@ -335,6 +338,7 @@ class Room(
             it += StaminaDamageComponent()
             it += PushableComponent()
             it += PlayerComponent()
+            it += StoryComponent()
             physicsSystem.createPlayerBody(this, it, initialPlayerBounds)
         }
         /*mascotEntity = */ecs.entity {
@@ -650,6 +654,7 @@ class Room(
         staminaComponent: StaminaComponent,
         staminaDamageComponent: StaminaDamageComponent,
         invincibilityComponent: InvincibilityComponent?,
+        storyComponent: StoryComponent,
         physicsComponent: Box2DPhysicsComponent
     ) {
         reset(full = false)
@@ -674,6 +679,7 @@ class Room(
                 } else {
                     it -= InvincibilityComponent
                 }
+                it += storyComponent
             }
             physicsSystem.teleport(playerEntity, playerPosition, physicsComponent)
             contextComponent.swimming = false // next room should switch body parameters for swimming if needed

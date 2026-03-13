@@ -48,6 +48,7 @@ class PlatformerGame(
     private val overrideResourcesFrom: String? = null,
     private val fmodFolderPrefix: String,
     private val fmodLiveUpdate: Boolean,
+    private val inkStoryFactory: net.mattemade.platformer.ink.InkStoryFactory,
 ) : ContextListener(context),
     Releasing by Self() {
 
@@ -68,7 +69,7 @@ class PlatformerGame(
     private var fmodAssetsReady: Boolean = false
     private var gameStarted: Boolean = false
     private val gameContext =
-        PlatformerGameContext(context, log, encodeUrlComponent, getBlocking, overrideResourcesFrom, fmodFolderPrefix, fmodLiveUpdate, ::restartScene, ::startGame)
+        PlatformerGameContext(context, log, encodeUrlComponent, getBlocking, overrideResourcesFrom, fmodFolderPrefix, fmodLiveUpdate, ::restartScene, ::startGame, inkStoryFactory)
     private val pixelRender =
         PixelRender(
             context,
@@ -236,6 +237,7 @@ class PlatformerGame(
             screenSize.x = width
             screenSize.y = height
             resizeFinalRender(width, height)
+            gameContext.storyDisplayService.onResize(width, height)
         }
 
         onQuickUpdate {
@@ -251,6 +253,9 @@ class PlatformerGame(
 
                         directRender.updateShapeRenderer()
                         pixelRender.updateShapeRenderer()
+                        // I don't understand that quick update thing, it seems
+                        // to work if I just plug  my rendering here
+                        gameContext.storyDisplayService.render()
 
                         gameContext.log("loaded")
                         gameContext.load()
@@ -274,6 +279,8 @@ class PlatformerGame(
                 gameContext.update(dt)
                 pixelRender.render(dt)
                 directRender.render(dt)
+                // why is it indented? uhm, whatever.
+                gameContext.storyDisplayService.render()
             //}
 
             // unpause in the end of onRender, to let the previous update with huuuuuge dt to not affect the game

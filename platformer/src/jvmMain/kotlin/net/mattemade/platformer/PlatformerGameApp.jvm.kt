@@ -9,6 +9,7 @@ import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.runBlocking
 import net.mattemade.utils.network.SocketConnection
 import net.mattemade.utils.network.SocketMessage
+import net.mattemade.platformer.ink.BladeInkStoryFactory
 
 fun main() {
     createLittleKtApp {
@@ -38,6 +39,7 @@ fun main() {
 //            fmodFolderPrefix = "",
             fmodFolderPrefix = "src/commonMain/resources/",
             fmodLiveUpdate = true,
+            inkStoryFactory = BladeInkStoryFactory()
 //            overrideResourcesFrom = "1FpyVhINl7oAzrfB_t-r-wL9SKcYUfyZjVM-FYrejAuY"
         ).also { it.focus() }
     }

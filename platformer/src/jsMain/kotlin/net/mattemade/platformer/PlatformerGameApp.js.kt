@@ -8,6 +8,7 @@ import kotlinx.browser.document
 import kotlinx.browser.window
 import net.mattemade.utils.network.SocketConnection
 import net.mattemade.utils.network.SocketMessage
+import net.mattemade.platformer.ink.JsInkStoryFactory
 import org.khronos.webgl.Int8Array
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.WebSocket
@@ -59,6 +60,7 @@ fun main() {
             overrideResourcesFrom = sheetId,
             fmodFolderPrefix = "",
             fmodLiveUpdate = liveUpdate,
+            inkStoryFactory = JsInkStoryFactory(),
         )
         window.addEventListener("blur", { game.blur() })
         window.addEventListener("focus", { game.focus() })
