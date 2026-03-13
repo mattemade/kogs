@@ -42,30 +42,23 @@ actual class FmodStudioSystem(val id: Long) {
         initFlags: FmodInitFlag,
         extraDriverData: Long?
     ) {
-        FMODStudio.FMOD_Studio_System_Initialize(id, maxChannels, studioInitFlags, initFlags, extraDriverData ?: 0L)
+        FMODStudio.FMOD_Studio_System_Initialize(id, maxChannels, studioInitFlags, initFlags, extraDriverData ?: 0L).checkError()
     }
 
     actual fun loadBankFile(
         file: String,
         studioLoadingBankType: FmodStudioLoadingType
     ): FmodBank {
-        val result = FMODStudio.FMOD_Studio_System_LoadBankFile(id, file, studioLoadingBankType, outvalBuffer.clear())
-        if (result != net.mattemade.fmod.FMOD.OK) {
-            println("FMOD ERROR: ${FMOD.FMOD_ErrorString(result)}")
-        }
+        FMODStudio.FMOD_Studio_System_LoadBankFile(id, file, studioLoadingBankType, outvalBuffer.clear()).checkError()
         return FmodBank(id = outvalBuffer.get())
     }
 
     actual fun update() {
-        FMODStudio.FMOD_Studio_System_Update(id)
+        FMODStudio.FMOD_Studio_System_Update(id).checkError()
     }
 
     actual fun getEvent(eventName: String): FmodEventDescription {
-        FMODStudio.FMOD_Studio_System_GetEvent(id, eventName, outvalBuffer.clear()).also {
-            if (it != FMOD.FMOD_OK) {
-                println("FMOD ERROR: ${FMOD.FMOD_ErrorString(it)}")
-            }
-        }
+        FMODStudio.FMOD_Studio_System_GetEvent(id, eventName, outvalBuffer.clear()).checkError()
         return FmodEventDescription(id = outvalBuffer.get())
     }
 
@@ -75,7 +68,22 @@ actual class FmodStudioSystem(val id: Long) {
             listener,
             attributes.actual,
             attenuationPosition?.actual
-        )
+        ).checkError()
+    }
+
+    actual fun getParameterDescriptionByName(name: String): FmodParameterDescription {
+        val result = FmodParameterDescription()
+        FMODStudio.FMOD_Studio_System_GetParameterDescriptionByName(id, name, result.description).checkError()
+        return result
+    }
+
+    actual fun setParameterByID(id: FmodParameterId, value: Float, ignoreSeekSpeed: Int) {
+        FMODStudio.FMOD_Studio_System_SetParameterByID(this.id, id.id, value, ignoreSeekSpeed).checkError()
+    }
+
+    actual fun setParameterByIDWithLabel(id: FmodParameterId, label: String, ignoreSeekSpeed: Int) {
+        FMODStudio.FMOD_Studio_System_SetParameterByIDWithLabel(this.id, id.id, label, ignoreSeekSpeed)
+            .checkError()
     }
 }
 

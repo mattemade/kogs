@@ -168,9 +168,9 @@ internal constructor(
         val tilesetData = sharedTileSets.getOrPut(source) { root[source].decodeFromString<TiledTilesetData>() }
         // attempt to get texture from atlas and slice it directly without adding any bordering
         val imageFileName = tilesetData.image.pathInfo.baseName
-        val slices =
+        val idToSlices =
             if (imageFileName.isNotEmpty()) {
-                atlas
+                (atlas
                     ?.get(imageFileName)
                     ?.slice
                     ?.slice(tilesetData.tilewidth, tilesetData.tileheight, tilesetBorder)
@@ -189,11 +189,11 @@ internal constructor(
                             it.release()
                             result.getOrNull(0)?.let { slice -> textures += slice.texture }
                             result
-                        }
+                        }).mapIndexed { index, slice -> index to slice }
             } else { // decorative tile, it's just an image
                 tilesetData.tiles.mapNotNull { tile ->
                     tile.image?.let { imageName ->
-                        atlas?.get(imageName)?.slice ?: root[imageName].readTexture().slice()
+                        tile.id to (atlas?.get(imageName)?.slice ?: root[imageName].readTexture().slice())
                     }
                 }
             }
@@ -205,12 +205,12 @@ internal constructor(
             tileWidth = tilesetData.tilewidth,
             tileHeight = tilesetData.tileheight,
             tiles =
-                slices.mapIndexed { index, slice ->
+                idToSlices.mapIndexed { index, (id, slice) ->
                     val tileData = tilesetData.tiles.firstOrNull { it.id == index }
 
                     TiledTileset.Tile(
                         slice = slice,
-                        id = index + gid,
+                        id = id + gid,
                         width = tilesetData.tilewidth,
                         height = tilesetData.tileheight,
                         offsetX = offsetX,
@@ -218,7 +218,7 @@ internal constructor(
                         frames =
                             tileData?.animation?.map {
                                 TiledTileset.AnimatedTile(
-                                    slice = slices[it.tileid],
+                                    slice = idToSlices[index].second,
                                     id = it.tileid + gid,
                                     duration = it.duration.milliseconds,
                                     width = tilesetData.tilewidth,

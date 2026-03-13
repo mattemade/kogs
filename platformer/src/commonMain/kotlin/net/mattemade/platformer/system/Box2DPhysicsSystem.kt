@@ -147,7 +147,6 @@ class Box2DPhysicsSystem(
 
                 if (!swimming && currentlySwimming) { // started swimming
                     if (entity.getOrNull(PlayerComponent) != null) {
-                        gameContext.switchMusicState(PlatformerGameContext.stateSwimming)
                         physicsComponent.playSound(gameContext.fmodAssets.getInWater)
                     }
                     physicsComponent.landBodyFixture.filterData.maskBits = 0
@@ -164,7 +163,6 @@ class Box2DPhysicsSystem(
                     }*/
                 } else if (swimming && !currentlySwimming) { // finished swimming
                     if (entity.getOrNull(PlayerComponent) != null) {
-                        gameContext.switchMusicState(PlatformerGameContext.stateWalking)
                         physicsComponent.playSound(gameContext.fmodAssets.getOutOfWater)
                     }
                     physicsComponent.waterBodyFixture.filterData.maskBits = 0

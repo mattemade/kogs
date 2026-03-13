@@ -80,6 +80,10 @@ expect class FmodStudioSystem {
     fun getEvent(eventName: String): FmodEventDescription
 
     fun setListenerAttributes(listener: Int, attributes: Fmod3DAttributes, attenuationPosition: FmodVector? = null)
+
+    fun getParameterDescriptionByName(name: String): FmodParameterDescription
+    fun setParameterByID(id: FmodParameterId, value: Float, ignoreSeekSpeed: Int)
+    fun setParameterByIDWithLabel(id: FmodParameterId, label: String, ignoreSeekSpeed: Int)
 }
 
 expect class FmodStudioSystemCore {

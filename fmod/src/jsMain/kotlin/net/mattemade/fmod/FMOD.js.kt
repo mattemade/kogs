@@ -65,6 +65,20 @@ actual class FmodStudioSystem(private val actualSystem: dynamic) {
     actual fun setListenerAttributes(listener: Int, attributes: Fmod3DAttributes, attenuationPosition: FmodVector?) {
         checkError(actualSystem.setListenerAttributes(listener, attributes.actual, attenuationPosition?.actual))
     }
+
+    actual fun getParameterDescriptionByName(name: String): FmodParameterDescription {
+        val outval = js("{}")
+        checkError(actualSystem.getParameterDescriptionByName(name, outval))
+        return FmodParameterDescription(outval.id)
+    }
+
+    actual fun setParameterByID(id: FmodParameterId, value: Float, ignoreSeekSpeed: Int) {
+        checkError(actualSystem.setParameterByID(id.actualId, value, ignoreSeekSpeed))
+    }
+
+    actual fun setParameterByIDWithLabel(id: FmodParameterId, label: String, ignoreSeekSpeed: Int) {
+        checkError(actualSystem.setParameterByIDWithLabel(id.actualId, label, ignoreSeekSpeed))
+    }
 }
 
 actual class FmodStudioSystemCore(private val actualCore: dynamic) {
