@@ -244,7 +244,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
     companion object {
         private val tempVec2f = MutableVec2f()
         private val mapColor = Color.WHITE.toMutableColor().apply { a = 1f }.toFloatBits()
-        private val mapWaterColor = Color.CYAN.toMutableColor().apply { a = 0.75f }.toFloatBits()
+        private val mapWaterColor = Color.BLUE.toMutableColor().apply { a = 1f }.toFloatBits()
         var nextCheckpointId = 0
         var nextPearlId = 0
         var collectedPearls = 0

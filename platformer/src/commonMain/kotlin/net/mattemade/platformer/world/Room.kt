@@ -323,32 +323,8 @@ class Room(
             it += StoryComponent()
             physicsSystem.createPlayerBody(this, it, initialPlayerBounds)
         }
-        /*mascotEntity = */ecs.entity {
-            it += SpriteComponent(
-                idleAnimation = gameContext.assets.animation("Dragon idle"),
-                animationEventCallback = { it, _ -> println(it) },
-                // baking offset into the bounds, maybe it should be a separate property?
-                bounds = Rect(0f, 0f, 0f, 0f),
-                tint = Color.GRAY.toMutableColor().apply { a = 0.2f }.toFloatBits(),
-            )
-            it += PositionComponent()
-            it += RotationComponent()
-            it += ContextComponent()
-            it += MascotComponent(Vec2f(0f, 0f), playerEntity)
-        }
-        ecs.entity {
-            it += SpriteComponent(
-                idleAnimation = gameContext.assets.animation("Celestial mascot"),
-                animationEventCallback = { it, _ -> println(it) },
-                // baking offset into the bounds, maybe it should be a separate property?
-                bounds = Rect(0f, 0f, 0f, 0f),
-                tint = Color.GRAY.toMutableColor().apply { a = 0.2f }.toFloatBits(),
-            )
-            it += PositionComponent()
-            it += RotationComponent()
-            it += ContextComponent()
-            it += MascotComponent(Vec2f(0.2f, 1f), playerEntity)
-        }
+        maybeAddDragonMascot()
+        maybeAddCelestialMascot()
 
         if (firstPearlIdInThisRoom < 0 || fullReset) {
             firstPearlIdInThisRoom = PlatformingScene.nextPearlId
@@ -382,6 +358,7 @@ class Room(
                                         release()
                                     }
                                     gameContext.gameState.waterPearl = true
+                                    maybeAddDragonMascot()
                                     ecs.apply { playerEntity.configure { attachDress(it) } }
                                     gameContext.save()
                                     UiRenderingSystem.collectionText = null
@@ -397,6 +374,7 @@ class Room(
                                         release()
                                     }
                                     gameContext.gameState.airPearl = true
+                                    maybeAddCelestialMascot()
                                     ecs.apply { playerEntity.configure { attachDress(it) } }
                                     gameContext.save()
                                     UiRenderingSystem.collectionText = null
@@ -482,6 +460,42 @@ class Room(
         }
 
         incrementGlobalCounters = false // to not do it during room reset!
+    }
+
+    private fun maybeAddCelestialMascot() {
+        if (gameContext.gameState.airPearl) {
+            ecs.entity {
+                it += SpriteComponent(
+                    idleAnimation = gameContext.assets.animation("Celestial mascot"),
+                    animationEventCallback = { it, _ -> println(it) },
+                    // baking offset into the bounds, maybe it should be a separate property?
+                    bounds = Rect(0f, 0f, 0f, 0f),
+                    tint = Color.GRAY.toMutableColor().apply { a = 0.2f }.toFloatBits(),
+                )
+                it += PositionComponent()
+                it += RotationComponent()
+                it += ContextComponent()
+                it += MascotComponent(Vec2f(0.2f, 1f), playerEntity)
+            }
+        }
+    }
+
+    private fun maybeAddDragonMascot() {
+        if (gameContext.gameState.waterPearl) {
+            ecs.entity {
+                it += SpriteComponent(
+                    idleAnimation = gameContext.assets.animation("Dragon idle"),
+                    animationEventCallback = { it, _ -> println(it) },
+                    // baking offset into the bounds, maybe it should be a separate property?
+                    bounds = Rect(0f, 0f, 0f, 0f),
+                    tint = Color.GRAY.toMutableColor().apply { a = 0.2f }.toFloatBits(),
+                )
+                it += PositionComponent()
+                it += RotationComponent()
+                it += ContextComponent()
+                it += MascotComponent(Vec2f(0f, 0f), playerEntity)
+            }
+        }
     }
 
     private fun EntityCreateContext.attachDress(entity: Entity) {

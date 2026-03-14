@@ -108,20 +108,7 @@ class UiRenderingSystem(
                 height = heartSize.y,
             )
         }
-        shapeRenderer.filledRectangle(
-            x = 0.25f,
-            y = 0.85f,
-            width = 1.7f,
-            height = 0.25f,
-            color = Color.LIGHT_GRAY.toFloatBits()
-        )
-        shapeRenderer.filledRectangle(
-            x = 0.25f,
-            y = 0.85f,
-            width = 1.7f * player[StaminaComponent].stamina,
-            height = 0.25f,
-            color = Color.BLUE.toFloatBits()
-        )
+/*        */
 
         uiComponent.showTutorial?.let {
             fontRenderer.drawAllTextAtOnce(batch) {
@@ -182,10 +169,10 @@ class UiRenderingSystem(
 
             player.getOrNull(PositionComponent)?.let { position ->
                 shapeRenderer.filledRectangle(
-                    x = (roomPlacementOnMap.x + (position.position.x - 0.5f) * mapScale).px,
-                    y = (roomPlacementOnMap.y + (position.position.y - 1f) * mapScale).px,
-                    width = mapScale,
-                    height = mapScale * 2f,
+                    x = (roomPlacementOnMap.x + (position.position.x - 2f) * mapScale).px,
+                    y = (roomPlacementOnMap.y + (position.position.y - 2f) * mapScale).px,
+                    width = mapScale * 4f,
+                    height = mapScale * 4f,
                     color = playerColor
                 )
             }
@@ -199,7 +186,7 @@ class UiRenderingSystem(
         private val tempVec2 = Vec2.borrow()
         private val mapBackgroundColor = Color.BLACK.toMutableColor().apply { a = 0.5f }.toFloatBits()
         private val roomBackgroundColor =
-            Color.DARK_YELLOW.toMutableColor().apply { r = 0.25f; g = 0.25f; a = 0.75f }.toFloatBits()
+            Color.GREEN.toMutableColor().apply { a = 0.75f }.toFloatBits()
         private val playerColor = Color.RED.toFloatBits()
         var collectionText: String? = null
         private val collectionTextPlacement = Vec2.borrow()

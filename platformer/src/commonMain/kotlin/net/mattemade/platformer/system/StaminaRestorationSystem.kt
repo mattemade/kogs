@@ -25,6 +25,9 @@ class StaminaRestorationSystem(
             if (restoreAfterTicks == 0) {
                 if (stamina < maxStamina) {
                     stamina = minOf(maxStamina, stamina + restorationRate)
+                    if (stamina == maxStamina) {
+                        keepVisibleForExtraTime = 1f
+                    }
                 }
             } else {
                 restoreAfterTicks--

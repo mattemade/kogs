@@ -165,6 +165,11 @@ class TextureFiles(
     val fredokaMedium128 by "font/fredoka_medium_128_0.png".pack()
     val heartEmpty by "texture/HP_heart2_empty.png".pack()
     val heartFull by "texture/HP_heart2_full.png".pack()
+    val staminaBar by "texture/stamina_ratio.png".pack()
+
+    val staminaBarSlices by lazy {
+        staminaBar.slice(73, 65).flatten()
+    }
 }
 
 class SoundFiles(context: Context, private val resourceSheet: PlatformerResourceSheet) :

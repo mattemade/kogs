@@ -20,6 +20,7 @@ import com.littlekt.graphics.util.BlendMode
 import com.littlekt.math.MutableVec2f
 import com.littlekt.math.Vec2f
 import com.littlekt.math.clamp
+import com.littlekt.math.floorToInt
 import com.littlekt.math.geom.radians
 import com.littlekt.util.Scaler
 import com.littlekt.util.fastForEach
@@ -42,6 +43,7 @@ import net.mattemade.platformer.component.PlayerComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.platformer.component.SpriteComponent
+import net.mattemade.platformer.component.StaminaComponent
 import net.mattemade.platformer.px
 import net.mattemade.utils.msdf.MsdfFontRenderer
 import net.mattemade.utils.render.PixelRender
@@ -82,6 +84,7 @@ class RenderingSystem(
         if (mapFillsHeight) map.height - HALF_WORLD_UNIT_HEIGHT else minCameraPosition.y,
     )
     private val fontRenderer = MsdfFontRenderer(gameContext.assets.font.fredokaMsdf)
+    private val staminaBarAnimation = gameContext.assets.animation("Stamina").animation
 
     private val fmodListenerAttributes = PlatformerGameContext.sharedAttributes
 
@@ -306,6 +309,40 @@ class RenderingSystem(
                     )
                 }
             }
+
+            entity.getOrNull(StaminaComponent)?.let { staminaComponent ->
+                if (staminaComponent.keepVisibleForExtraTime > 0f) {
+                    staminaComponent.keepVisibleForExtraTime -= deltaTime
+                }
+
+
+                if (staminaComponent.stamina < 1f || staminaComponent.keepVisibleForExtraTime > 0f) {
+
+                    val staminaX = (position.x - 1.4f).px
+                    val staminaY = (position.y - 2.4f).px
+                    staminaBarAnimation.update(deltaTime.seconds)
+                    staminaBarAnimation.currentKeyFrame?.let {
+                        batch.draw(
+                            slice = it,
+                            x = staminaX,
+                            y = staminaY,
+                            width = it.width * UNITS_PER_PIXEL,
+                            height = it.height * UNITS_PER_PIXEL,
+                        )
+                    }
+                    val fillIndex = (gameContext.assets.textureFiles.staminaBarSlices.size-1) * (1f - staminaComponent.stamina)
+                    gameContext.assets.textureFiles.staminaBarSlices[fillIndex.floorToInt()].let {
+                        batch.draw(
+                            slice = it,
+                            x = staminaX,
+                            y = staminaY,
+                            width = it.width * UNITS_PER_PIXEL,
+                            height = it.height * UNITS_PER_PIXEL,
+                        )
+                    }
+                }
+            }
+
         }
     }
 

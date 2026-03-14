@@ -9,6 +9,7 @@ class StaminaComponent(
     var restoreAfterTicks: Int = 0,
     var restorationRate: Float = 0.005f,
     var staminaPressure: Boolean = false,
+    var keepVisibleForExtraTime: Float = 0f,
 ): Component<StaminaComponent> {
     override fun type() = StaminaComponent
     companion object: ComponentType<StaminaComponent>()
