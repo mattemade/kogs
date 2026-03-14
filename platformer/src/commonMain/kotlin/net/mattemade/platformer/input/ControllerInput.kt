@@ -127,12 +127,12 @@ fun Context.bindInputs(): InputMapController<ControllerInput> =
 
         addBinding(
             ControllerInput.RESTART,
-            listOf(Key.NUM0).any(),
+            listOf(Key.R).any(),
         )
 
         addBinding(
             ControllerInput.RESPAWN,
-            listOf(Key.NUM1).any(),
+            listOf(Key.L).any(),
         )
 
         addBinding(ControllerInput.ANY_KEYBOARD, anyKey)
