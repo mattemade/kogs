@@ -15,6 +15,7 @@ class EnemyComponent(
     var currentIntent: Intent? = null,
     var spottedPlayerPosition: Vec2? = null,
     var nearPlayer: Vec2? = null,
+    val superAggressive: Boolean = false,
 ): Component<EnemyComponent> {
     override fun type() = EnemyComponent
     companion object: ComponentType<EnemyComponent>()
@@ -53,7 +54,12 @@ class EnemyComponent(
         when (counter++) {
             0 -> {
                 entity[Box2DPhysicsComponent].gravityScaleOverride = 0f
-                Intent.WaitForPlayerAppear()
+                if (superAggressive) {
+                    Intent.Idle(0f)
+                } else {
+                    Intent.WaitForPlayerAppear()
+                }
+
             }
             1 -> {
                 val playerPosition = spottedPlayerPosition
@@ -65,13 +71,24 @@ class EnemyComponent(
             else -> {
                 spottedPlayerPosition = null
                 counter = 1
-                Intent.WaitForPlayerAppear()
+
+                if (superAggressive) {
+                    Intent.Idle(0f)
+                } else {
+                    Intent.WaitForPlayerAppear()
+                }
             }
         }
 
     private fun IteratingSystem.createCatSequence(entity: Entity): Intent =
         when (counter++) {
-            0 -> Intent.WaitForPlayerAppear()
+            0 -> {
+                if (superAggressive) {
+                    Intent.Idle(0f)
+                } else {
+                    Intent.WaitForPlayerAppear()
+                }
+            }
             1 -> {
                 val playerPosition = spottedPlayerPosition
                 val playerX = playerPosition?.x ?: 0f
@@ -79,20 +96,31 @@ class EnemyComponent(
                 val catX = catPosition.x
                 Intent.Move(4f * (playerX - catX).sign, 0f, limit = 5f, jumpOnWalls = 0.05f, fallFromEdges = true, triggerProximity = {
                     //(it as? Intent.Move)?.let { it.x = -it.x }
-                    Intent.JumpForward(8f * ((playerPosition?.x ?: 0f) - catPosition.x).sign, -0.1f, holdJumpFor = 0.025f, onEnd = it)
+                    Intent.JumpForward(8f * ((playerPosition?.x ?: 0f) - catPosition.x).sign, 0f, holdJumpFor = 0.025f, onEnd = it)
                 })
                 //Intent.JumpForward(6f * (playerX - catX).sign, 0f, holdJumpFor = 0.025f)
             }
             else -> {
-                spottedPlayerPosition = null
                 counter = 1
-                Intent.WaitForPlayerAppear()
+
+                if (superAggressive) {
+                    Intent.Idle(0f)
+                } else {
+                    spottedPlayerPosition = null
+                    Intent.WaitForPlayerAppear()
+                }
             }
         }
 
     private fun IteratingSystem.createSnakeSequence(entity: Entity): Intent =
         when (counter++) {
-            0 -> Intent.WaitForPlayerComeClose()
+            0 -> {
+                if (superAggressive) {
+                    Intent.Idle(0f)
+                } else {
+                    Intent.WaitForPlayerComeClose()
+                }
+            }
             1 -> {
                 val playerX = nearPlayer?.x ?: 0f
                 val snakeX = entity[Box2DPhysicsComponent].body.position.x
@@ -110,7 +138,12 @@ class EnemyComponent(
             }
             else -> {
                 counter = 1
-                Intent.WaitForPlayerComeClose()
+
+                if (superAggressive) {
+                    Intent.Idle(0f)
+                } else {
+                    Intent.WaitForPlayerComeClose()
+                }
             }
         }
 

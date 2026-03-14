@@ -10,6 +10,7 @@ import net.mattemade.platformer.PlatformerGameContext
 import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.EnemyComponent
 import net.mattemade.platformer.component.FloatUpComponent
+import net.mattemade.platformer.component.GauntletEnemyComponent
 import net.mattemade.platformer.component.HealthComponent
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
@@ -38,7 +39,8 @@ class ResourceEnemy(
         entity: Entity,
         physicsSystem: Box2DPhysicsSystem,
         cx: Float,
-        cy: Float
+        cy: Float,
+        forGauntlet: Boolean = false,
     ) {
         entity += SpriteComponent(
             idleAnimation = gameContext.assets.animation(idleName),
@@ -55,7 +57,6 @@ class ResourceEnemy(
                 size.x,
                 size.y
             ),
-            tint = Color.Companion.RED.toMutableColor().apply { a = 0.2f }.toFloatBits(),
             priority = 0,
         )
         entity += PositionComponent().also {
@@ -69,7 +70,10 @@ class ResourceEnemy(
         entity += ContextComponent()
         entity += HealthComponent(health = 4f, maxHealth = 4f)
         entity += PushableComponent()
-        entity += EnemyComponent(this@ResourceEnemy,)
+        if (forGauntlet) {
+            entity += GauntletEnemyComponent()
+        }
+        entity += EnemyComponent(this@ResourceEnemy, superAggressive = forGauntlet)
         physicsSystem.createEnemyBody(
             this,
             entity,

@@ -19,6 +19,7 @@ import kotlin.math.abs
 
 class MusicSwitchingSystem(
     private val musicType: String? = null,
+    var gauntlet: Boolean = false,
     private val gameContext: PlatformerGameContext = inject(),
     interval: Interval = Fixed(1 / 200f)
 ) : IteratingSystem(family { all(SpriteComponent) }, interval = interval) {
@@ -27,7 +28,9 @@ class MusicSwitchingSystem(
     private var enemies: Int = 0
 
     override fun onTick() {
-        gameContext.musicType = musicType
+        if (!gauntlet) {
+            gameContext.musicType = musicType
+        }
         enemies = 0
         super.onTick()
         gameContext.enemiesInTheRoom = enemies > 0

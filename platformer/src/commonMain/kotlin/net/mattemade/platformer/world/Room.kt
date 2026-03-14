@@ -18,6 +18,8 @@ import net.mattemade.platformer.component.Box2DPhysicsComponent
 import net.mattemade.platformer.component.CheckpointComponent
 import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.FloatUpComponent
+import net.mattemade.platformer.component.GauntletEnemyComponent
+import net.mattemade.platformer.component.GauntletLockComponent
 import net.mattemade.platformer.component.HealthComponent
 import net.mattemade.platformer.component.InvincibilityComponent
 import net.mattemade.platformer.component.JumpComponent
@@ -32,8 +34,8 @@ import net.mattemade.platformer.component.RotationComponent
 import net.mattemade.platformer.component.SpriteComponent
 import net.mattemade.platformer.component.StaminaComponent
 import net.mattemade.platformer.component.StaminaDamageComponent
-import net.mattemade.platformer.component.TimeToLiveComponent
 import net.mattemade.platformer.component.StoryComponent
+import net.mattemade.platformer.component.TimeToLiveComponent
 import net.mattemade.platformer.component.UiComponent
 import net.mattemade.platformer.px
 import net.mattemade.platformer.scene.PlatformingScene
@@ -83,32 +85,21 @@ class Room(
     var firstPearlIdInThisRoom: Int = -1
     var nextPearlId: Int = -1
     var incrementGlobalCounters: Boolean = true
-    val tileTypeMap =
-        listOf(
-            "solid",
-            "platform",
-            "water",
-            "fake",
-            "push-up",
-            "push-down",
-            "push-left",
-            "push-right",
-            "spike"
-        ).associateWith {
-            Array(map.width) { BooleanArray(map.height) }
-        }
+    val tileTypeMap = listOf(
+        "solid", "platform", "water", "fake", "push-up", "push-down", "push-left", "push-right", "spike"
+    ).associateWith {
+        Array(map.width) { BooleanArray(map.height) }
+    }
     val teleports = map.layers.mapNotNull {
         (it as? TiledObjectLayer)?.objects?.filter { it.name == "teleport" }?.map {
             Rect(
-                it.bounds.x * unitSize,
-                it.bounds.y * unitSize,
-                it.bounds.width * unitSize,
-                it.bounds.height * unitSize
+                it.bounds.x * unitSize, it.bounds.y * unitSize, it.bounds.width * unitSize, it.bounds.height * unitSize
             )
         }
     }.flatten()
 
     private lateinit var physicsSystem: Box2DPhysicsSystem
+    private lateinit var musicSwitchingSystem: MusicSwitchingSystem
 
     val ecs = configureWorld {
         injectables {
@@ -134,7 +125,9 @@ class Room(
             )
             add(InvincibilitySystem())
             add(EnemyBehaviourSystem())
-            add(Box2DPhysicsSystem(::spawnPlayerAttack, Vec2f(worldArea.width, worldArea.height)).also { physicsSystem = it }.releasing())
+            add(Box2DPhysicsSystem(::spawnPlayerAttack, Vec2f(worldArea.width, worldArea.height)).also {
+                physicsSystem = it
+            }.releasing())
             add(StaminaBreathingSystem())
             add(LowStaminaDamageSystem())
             add(StaminaRestorationSystem())
@@ -144,17 +137,45 @@ class Room(
             add(RotationSystem())
             add(MascotSystem())
             add(PickupFloatingSystem())
-            add(MusicSwitchingSystem(musicType = (map.properties["music"] as? TiledMap.Property.StringProp)?.value))
+            add(
+                MusicSwitchingSystem(
+                    musicType = (map.properties["music"] as? TiledMap.Property.StringProp)?.value,
+                    gauntlet = map.layerOrNull("gauntlet") != null && gameContext.gameState.roomStates[name]?.gauntletCompleted != true,
+                ).also { musicSwitchingSystem = it }
+            )
             add(RenderingSystem())
             add(StorySystem())
             add(UiRenderingSystem(worldArea = worldArea, mapVisible = visibleOnMap, mapTexture = { mapTexture }))
+        }
+
+        onAddEntity {
+            it.getOrNull(GauntletEnemyComponent)?.let {
+                gauntletEnemiesLeft++
+            }
+        }
+        onRemoveEntity { entity ->
+            entity.getOrNull(GauntletEnemyComponent)?.let {
+                if ((entity.getOrNull(HealthComponent)?.health ?: 1f) <= 0f) { // otherwise it's just a room cleanup
+                    gauntletEnemiesLeft--
+                    if (gauntletEnemiesLeft == 0) {
+                        gameContext.gameState.roomStates[name]?.let {
+                            it.gauntletCompleted = true
+                        }
+                        musicSwitchingSystem.gauntlet = false
+                        family { all(GauntletLockComponent) }.forEach {
+                            it.remove()
+                        }
+                    }
+                }
+            }
         }
     }
 
     private lateinit var uiEntity: Entity
     private lateinit var playerPosition: Vec2f
     private lateinit var playerEntity: Entity
-    //private lateinit var mascotEntity: Entity
+    private var gauntletEnemiesLeft = 0
+
     private var currentlyActiveCheckpointInThisRoom: Entity? = null
 
     init {
@@ -284,13 +305,7 @@ class Room(
             if (it is TiledObjectLayer) {
                 it.objects.forEach { spawn ->
                     when (spawn.name) {
-                        "checkpoint" -> {
-                            createCheckpoint(
-                                spawn,
-                                tint = Color.BLUE.toFloatBits(),
-                                tintActive = Color.CYAN.toFloatBits()
-                            )
-                        }
+                        "checkpoint" -> createCheckpoint(spawn)
                     }
                 }
             }
@@ -332,123 +347,24 @@ class Room(
         nextPearlId = firstPearlIdInThisRoom
 
         map.layers.forEach {
-            if (it is TiledObjectLayer) {
-                it.objects.forEach { spawn ->
-                    gameContext.assets.resourceSheet.enemies[spawn.name]?.let { enemySpec ->
-                        ecs.entity { entity ->
-                            with(enemySpec) {
-                                createEnemy(
-                                    gameContext,
-                                    entity,
-                                    physicsSystem,
-                                    spawn.bounds.cx * unitSize,
-                                    spawn.bounds.cy * unitSize
-                                )
-                            }
-                        }
-                    } ?: run {
+            if (it.name == "gauntlet") {
+                (it as? TiledObjectLayer)?.objects?.let { objects ->
+                    if (objects.isEmpty() || gameContext.gameState.roomStates[name]?.gauntletCompleted == true) return@let
 
-                    }
-                    when (spawn.name) {
-                        "water-pearl" -> {
-                            if (!gameContext.gameState.waterPearl) {
-                                createPickup(spawn, "Water pearl", tint = Color.BLUE.toFloatBits()) {
-                                    gameContext.fmodAssets.pickUpgrade.createInstance().apply {
-                                        start()
-                                        release()
-                                    }
-                                    gameContext.gameState.waterPearl = true
-                                    maybeAddDragonMascot()
-                                    ecs.apply { playerEntity.configure { attachDress(it) } }
-                                    gameContext.save()
-                                    UiRenderingSystem.collectionText = null
-                                }
-                            }
-                        }
-
-                        "air-pearl" -> {
-                            if (!gameContext.gameState.airPearl) {
-                                createPickup(spawn, "Air pearl", tint = Color.GREEN.toFloatBits()) {
-                                    gameContext.fmodAssets.pickUpgrade.createInstance().apply {
-                                        start()
-                                        release()
-                                    }
-                                    gameContext.gameState.airPearl = true
-                                    maybeAddCelestialMascot()
-                                    ecs.apply { playerEntity.configure { attachDress(it) } }
-                                    gameContext.save()
-                                    UiRenderingSystem.collectionText = null
-                                }
-                            }
-                        }
-
-                        "sword" -> {
-                            if (!gameContext.gameState.sword) {
-                                createPickup(spawn, "Sword idle", tint = Color.YELLOW.toFloatBits()) {
-                                    gameContext.fmodAssets.pickUpgrade.createInstance().apply {
-                                        start()
-                                        release()
-                                    }
-                                    gameContext.gameState.sword = true
-                                    gameContext.save()
-                                    UiRenderingSystem.collectionText = null
-                                }
-                            }
-                        }
-
-                        "pearl" -> {
-                            val pearlId = nextPearlId++
-                            if (incrementGlobalCounters) {
-                                PlatformingScene.nextPearlId++
-                            }
-                            while (gameContext.gameState.pearls.size <= pearlId) {
-                                gameContext.gameState.pearls.add(false)
-                            }
-                            if (!gameContext.gameState.pearls[pearlId]) {
-                                createPickup(spawn, "Normal pearl", tint = Color.WHITE.toFloatBits()) {
-                                    gameContext.fmodAssets.pickCollectiblePearl.createInstance().apply {
-                                        start()
-                                        release()
-                                    }
-                                    gameContext.gameState.pearls[pearlId] = true
-                                    PlatformingScene.collectedPearls++
-                                    UiRenderingSystem.collectionText = null // to let it update
-                                    gameContext.save()
-                                }
-                            }
-                        }
-
-                        "tutorial" -> {
-                            val id = spawn.properties["id"]?.string
-                            val text = spawn.properties["text"]?.string
-                            if (id != null && text != null && gameContext.gameState.tutorials[id] != true) {
-                                createPickup(
-                                    spawn,
-                                    "empty",
-                                    tint = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits()
-                                ) {
-
-                                    if (gameContext.gameState.tutorials[id] != true) { // in case player already covered that part somehow
-                                        gameContext.gameState.tutorials[id] = false
-                                        ecs.apply {
-                                            uiEntity[UiComponent].showTutorial = text
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        "tutorial-end" -> {
-                            spawn.properties["id"]?.string?.let { id ->
-                                if (gameContext.gameState.tutorials[id] != true) {
-                                    createPickup(
-                                        spawn,
-                                        "empty",
-                                        tint = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits()
-                                    ) {
-                                        gameContext.gameState.tutorials[id] = true
-                                        ecs.apply {
-                                            uiEntity[UiComponent].showTutorial = null
+                    objects.forEach {
+                        when (it.name) {
+                            "trigger" -> {
+                                gameContext.musicType = "silence"
+                                createExitTrigger(it, Color.RED.toFloatBits()) {
+                                    if (gameContext.gameState.sword) {
+                                        ecs.apply { it.remove() }
+                                        gameContext.musicType = "gauntlet"
+                                        // activate the locks and start the fight
+                                        objects.forEach {
+                                            when (it.name) {
+                                                "lock" -> createGauntletLock(it, Color.RED.toFloatBits())
+                                                else -> spawnFromObject(it, forGauntlet = true)
+                                            }
                                         }
                                     }
                                 }
@@ -456,10 +372,138 @@ class Room(
                         }
                     }
                 }
+                return@forEach // end of gauntlet case
+            }
+
+            if (it is TiledObjectLayer) {
+                it.objects.forEach { spawn ->
+                    spawnFromObject(spawn)
+                }
             }
         }
 
         incrementGlobalCounters = false // to not do it during room reset!
+    }
+
+    private fun spawnFromObject(spawn: TiledMap.Object, forGauntlet: Boolean = false) {
+        gameContext.assets.resourceSheet.enemies[spawn.name]?.let { enemySpec ->
+            ecs.entity { entity ->
+                with(enemySpec) {
+                    createEnemy(
+                        gameContext,
+                        entity,
+                        physicsSystem,
+                        spawn.bounds.cx * unitSize,
+                        spawn.bounds.cy * unitSize,
+                        forGauntlet,
+                    )
+                }
+            }
+            return
+        }
+
+        when (spawn.name) {
+            "water-pearl" -> {
+                if (!gameContext.gameState.waterPearl) {
+                    createPickup(spawn, "Water pearl", tint = Color.BLUE.toFloatBits()) {
+                        gameContext.fmodAssets.pickUpgrade.createInstance().apply {
+                            start()
+                            release()
+                        }
+                        gameContext.gameState.waterPearl = true
+                        maybeAddDragonMascot()
+                        ecs.apply { playerEntity.configure { attachDress(it) } }
+                        gameContext.save()
+                        UiRenderingSystem.collectionText = null
+                    }
+                }
+            }
+
+            "air-pearl" -> {
+                if (!gameContext.gameState.airPearl) {
+                    createPickup(spawn, "Air pearl", tint = Color.GREEN.toFloatBits()) {
+                        gameContext.fmodAssets.pickUpgrade.createInstance().apply {
+                            start()
+                            release()
+                        }
+                        gameContext.gameState.airPearl = true
+                        maybeAddCelestialMascot()
+                        ecs.apply { playerEntity.configure { attachDress(it) } }
+                        gameContext.save()
+                        UiRenderingSystem.collectionText = null
+                    }
+                }
+            }
+
+            "sword" -> {
+                if (!gameContext.gameState.sword) {
+                    createPickup(spawn, "Sword idle", tint = Color.YELLOW.toFloatBits()) {
+                        gameContext.fmodAssets.pickUpgrade.createInstance().apply {
+                            start()
+                            release()
+                        }
+                        gameContext.gameState.sword = true
+                        gameContext.save()
+                        UiRenderingSystem.collectionText = null
+                    }
+                }
+            }
+
+            "pearl" -> {
+                val pearlId = nextPearlId++
+                if (incrementGlobalCounters) {
+                    PlatformingScene.nextPearlId++
+                }
+                while (gameContext.gameState.pearls.size <= pearlId) {
+                    gameContext.gameState.pearls.add(false)
+                }
+                if (!gameContext.gameState.pearls[pearlId]) {
+                    createPickup(spawn, "Normal pearl", tint = Color.WHITE.toFloatBits()) {
+                        gameContext.fmodAssets.pickCollectiblePearl.createInstance().apply {
+                            start()
+                            release()
+                        }
+                        gameContext.gameState.pearls[pearlId] = true
+                        PlatformingScene.collectedPearls++
+                        UiRenderingSystem.collectionText = null // to let it update
+                        gameContext.save()
+                    }
+                }
+            }
+
+            "tutorial" -> {
+                val id = spawn.properties["id"]?.string
+                val text = spawn.properties["text"]?.string
+                if (id != null && text != null && gameContext.gameState.tutorials[id] != true) {
+                    createPickup(
+                        spawn, "empty", tint = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits()
+                    ) {
+
+                        if (gameContext.gameState.tutorials[id] != true) { // in case player already covered that part somehow
+                            gameContext.gameState.tutorials[id] = false
+                            ecs.apply {
+                                uiEntity[UiComponent].showTutorial = text
+                            }
+                        }
+                    }
+                }
+            }
+
+            "tutorial-end" -> {
+                spawn.properties["id"]?.string?.let { id ->
+                    if (gameContext.gameState.tutorials[id] != true) {
+                        createPickup(
+                            spawn, "empty", tint = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits()
+                        ) {
+                            gameContext.gameState.tutorials[id] = true
+                            ecs.apply {
+                                uiEntity[UiComponent].showTutorial = null
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun maybeAddCelestialMascot() {
@@ -470,7 +514,6 @@ class Room(
                     animationEventCallback = { it, _ -> println(it) },
                     // baking offset into the bounds, maybe it should be a separate property?
                     bounds = Rect(0f, 0f, 0f, 0f),
-                    tint = Color.GRAY.toMutableColor().apply { a = 0.2f }.toFloatBits(),
                 )
                 it += PositionComponent()
                 it += RotationComponent()
@@ -488,7 +531,6 @@ class Room(
                     animationEventCallback = { it, _ -> println(it) },
                     // baking offset into the bounds, maybe it should be a separate property?
                     bounds = Rect(0f, 0f, 0f, 0f),
-                    tint = Color.GRAY.toMutableColor().apply { a = 0.2f }.toFloatBits(),
                 )
                 it += PositionComponent()
                 it += RotationComponent()
@@ -518,12 +560,8 @@ class Room(
                 },
                 // baking offset into the bounds, maybe it should be a separate property?
                 bounds = Rect(
-                    -0.45f.px,
-                    -0.9f.px,
-                    initialPlayerBounds.width * 0.91f,
-                    initialPlayerBounds.height * 0.91f
+                    -0.45f.px, -0.9f.px, initialPlayerBounds.width * 0.91f, initialPlayerBounds.height * 0.91f
                 ),
-                tint = Color.ORANGE.toMutableColor().apply { a = 0.2f }.toFloatBits(),
                 priority = 1,
             )
         } else if (gameContext.gameState.waterPearl) {
@@ -545,12 +583,8 @@ class Room(
                 },
                 // baking offset into the bounds, maybe it should be a separate property?
                 bounds = Rect(
-                    -0.45f.px,
-                    -0.9f.px,
-                    initialPlayerBounds.width * 0.91f,
-                    initialPlayerBounds.height * 0.91f
+                    -0.45f.px, -0.9f.px, initialPlayerBounds.width * 0.91f, initialPlayerBounds.height * 0.91f
                 ),
-                tint = Color.ORANGE.toMutableColor().apply { a = 0.2f }.toFloatBits(),
                 priority = 1,
             )
         } else {
@@ -572,12 +606,8 @@ class Room(
                 },
                 // baking offset into the bounds, maybe it should be a separate property?
                 bounds = Rect(
-                    -0.45f.px,
-                    -0.9f.px,
-                    initialPlayerBounds.width * 0.91f,
-                    initialPlayerBounds.height * 0.91f
+                    -0.45f.px, -0.9f.px, initialPlayerBounds.width * 0.91f, initialPlayerBounds.height * 0.91f
                 ),
-                tint = Color.ORANGE.toMutableColor().apply { a = 0.2f }.toFloatBits(),
                 priority = 1,
             )
         }
@@ -595,35 +625,103 @@ class Room(
                     spawn.bounds.width * unitSize,
                     spawn.bounds.height * unitSize
                 ),
-                tint = tint,
             )
             entity += PositionComponent().also {
                 it.position.set(
-                    spawn.bounds.cx * unitSize,
-                    spawn.bounds.cy * unitSize
+                    spawn.bounds.cx * unitSize, spawn.bounds.cy * unitSize
                 )
             }
             entity += RotationComponent()
             entity += ContextComponent()
             entity += MoveComponent()
             entity += PickupComponent()
-            physicsSystem.createPickupBody(
+            physicsSystem.createTriggerBody(
                 this,
                 entity,
                 spawn.bounds.cx * unitSize,
                 spawn.bounds.cy * unitSize,
                 spawn.bounds.width * unitSize,
                 spawn.bounds.height * unitSize,
-            ) {
-                collect()
-                gameContext.scheduler.schedule().then {
-                    entity.remove()
-                }
-            }
+                onTouch = {
+                    collect()
+                    gameContext.scheduler.schedule().then {
+                        entity.remove()
+                    }
+                })
         }
     }
 
-    private fun createCheckpoint(spawn: TiledMap.Object, tint: Float, tintActive: Float) {
+    private fun createExitTrigger(spawn: TiledMap.Object, tint: Float, onExit: (entity: Entity) -> Unit) {
+        ecs.entity { entity ->
+            entity += SpriteComponent(
+                idleAnimation = gameContext.assets.animation("empty"),
+                animationEventCallback = { it, _ -> println(it) },
+                // baking offset into the bounds, maybe it should be a separate property?
+                bounds = Rect(
+                    spawn.bounds.width * unitSize * -0.5f,
+                    spawn.bounds.height * unitSize * -0.5f,
+                    spawn.bounds.width * unitSize,
+                    spawn.bounds.height * unitSize
+                ),
+            )
+            entity += PositionComponent().also {
+                it.position.set(
+                    spawn.bounds.cx * unitSize, spawn.bounds.cy * unitSize
+                )
+            }
+            entity += RotationComponent()
+            entity += ContextComponent()
+            entity += MoveComponent()
+            physicsSystem.createTriggerBody(
+                this,
+                entity,
+                spawn.bounds.cx * unitSize,
+                spawn.bounds.cy * unitSize,
+                spawn.bounds.width * unitSize,
+                spawn.bounds.height * unitSize,
+                onExit = {
+                    gameContext.scheduler.schedule().then {
+                        onExit(entity)
+                    }
+                })
+        }
+    }
+
+    private fun createGauntletLock(spawn: TiledMap.Object, tint: Float) {
+        ecs.entity { entity ->
+            entity += SpriteComponent(
+                idleAnimation = gameContext.assets.animation("empty"),
+                animationEventCallback = { it, _ -> println(it) },
+                // baking offset into the bounds, maybe it should be a separate property?
+                bounds = Rect(
+                    spawn.bounds.width * unitSize * -0.5f,
+                    spawn.bounds.height * unitSize * -0.5f,
+                    spawn.bounds.width * unitSize,
+                    spawn.bounds.height * unitSize
+                ),
+                tint = Color.RED.toFloatBits().let { Rect(it, it, it, it) },
+            )
+            entity += PositionComponent().also {
+                it.position.set(
+                    spawn.bounds.cx * unitSize, spawn.bounds.cy * unitSize
+                )
+            }
+            entity += RotationComponent()
+            entity += ContextComponent()
+            entity += MoveComponent()
+            entity += GauntletLockComponent()
+            physicsSystem.createTemporarySpike(
+                this,
+                entity,
+                spawn.bounds.x * unitSize,
+                spawn.bounds.y * unitSize,
+                spawn.bounds.width * unitSize,
+                spawn.bounds.height * unitSize,
+            )
+        }
+    }
+
+    private fun createCheckpoint(spawn: TiledMap.Object) {
         ecs.entity { entity ->
             val checkpointId = nextCheckpointId++
             if (incrementGlobalCounters) {
@@ -645,12 +743,11 @@ class Room(
                     spawn.bounds.width * unitSize,
                     spawn.bounds.height * unitSize
                 ),
-                tint = if (isActive) tintActive else tint,
+                tint = if (isActive) activeCheckpointTint else checkpointTint,
             )
             entity += PositionComponent().also {
                 it.position.set(
-                    spawn.bounds.cx * unitSize,
-                    spawn.bounds.cy * unitSize
+                    spawn.bounds.cx * unitSize, spawn.bounds.cy * unitSize
                 )
             }
             entity += RotationComponent()
@@ -672,12 +769,12 @@ class Room(
                 val component = entity[CheckpointComponent]
                 if (!component.isActivated) {
                     component.isActivated = true
-                    entity[SpriteComponent].tint = tintActive
+                    entity[SpriteComponent].tint = activeCheckpointTint
                 }
                 currentlyActiveCheckpointInThisRoom?.let {
                     if (it != entity) {
                         it[CheckpointComponent].isActivated = false
-                        it[SpriteComponent].tint = tint
+                        it[SpriteComponent].tint = checkpointTint
                     }
                 }
                 currentlyActiveCheckpointInThisRoom = entity
@@ -695,12 +792,8 @@ class Room(
                 animationEventCallback = { it, _ -> println(it) },
                 // baking offset into the bounds, maybe it should be a separate property?
                 bounds = Rect(
-                    -radius,
-                    -radius,
-                    radius * 2f,
-                    radius * 2f
+                    -radius, -radius, radius * 2f, radius * 2f
                 ),
-                tint = Color.Companion.YELLOW.toMutableColor().apply { a = 0.5f }.toFloatBits(),
                 priority = 0,
             )
             entity += PositionComponent().also { it.position.set(x, y) }
@@ -801,7 +894,7 @@ class Room(
                 switchRoom(playerEntity, null, null, -1f, 0f, false)
             } else if (playerPosition.y < 0f) {
                 switchRoom(playerEntity, null, null, 0f, -1f, false)
-            } else if ( playerPosition.x > worldArea.width) {
+            } else if (playerPosition.x > worldArea.width) {
                 switchRoom(playerEntity, null, null, 1f, 0f, false)
             } else if (playerPosition.y > worldArea.height) {
                 switchRoom(playerEntity, null, null, 0f, 1f, false)
@@ -817,5 +910,15 @@ class Room(
         }
         respawnEntities(full)
         UiRenderingSystem.collectionText = null
+        musicSwitchingSystem.gauntlet =
+            map.layerOrNull("gauntlet") != null && gameContext.gameState.roomStates[name]?.gauntletCompleted != true
+        gauntletEnemiesLeft = 0
+    }
+
+    companion object {
+        private val checkpointTint =
+            Color.BLUE.toMutableColor().apply { a = 0.5f }.toFloatBits().let { Rect(it, it, it, it) }
+        private val activeCheckpointTint =
+            Color.CYAN.toMutableColor().apply { a = 0.5f }.toFloatBits().let { Rect(it, it, it, it) }
     }
 }

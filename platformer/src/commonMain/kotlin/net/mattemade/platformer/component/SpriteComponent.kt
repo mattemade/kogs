@@ -20,7 +20,7 @@ data class SpriteComponent(
     val hurtAnimation: AnimationWithOffset = idleAnimation,
     val animationEventCallback: (String, Box2DPhysicsComponent) -> Unit,
     val bounds: Rect,
-    var tint: Float = Color.RED.toFloatBits(),
+    var tint: Rect? = null, // bottom, bottom, top, top
     val priority: Int = 0,
     var visible: Boolean = true,
 ) : Component<SpriteComponent> {

@@ -94,6 +94,9 @@ class EnemyBehaviourSystem(
         class FlyTo(val y: () -> Float, val dy: Float, val next: () -> Intent) : Intent {
             override fun IteratingSystem.switch(entity: Entity): Intent? {
                 val context = entity[ContextComponent]
+                if (context.swimming) {
+                    return this@FlyTo
+                }
                 val physics = entity[Box2DPhysicsComponent]
                 if (context.standing || physics.body.position.y >= y()) {
                     return next()
@@ -108,9 +111,15 @@ class EnemyBehaviourSystem(
             private var time: Float = 0f
 
             override fun IteratingSystem.switch(entity: Entity): Intent? {
+                val context = entity[ContextComponent]
+                if (context.swimming) {
+                    y = 0f
+                    x = 0f
+                    return this@FlyInSine
+                }
+
                 time += deltaTime * timeScale
                 y = sin(time) * dy
-                val context = entity[ContextComponent]
                 if (context.touchingRightWall && x > 0f || context.touchingLeftWall && x < 0f) {
                     x = -x
                 }
@@ -154,7 +163,9 @@ class EnemyBehaviourSystem(
                         }
                     } else if (context.touchingRightWall && x > 0f || context.touchingLeftWall && x < 0f) {
                         if (jumpOnWalls > 0f) {
-                            JumpForward(x, y, holdJumpFor = jumpOnWalls, onEnd = this@Move)
+                            JumpForward(x, y, holdJumpFor = jumpOnWalls, onEnd = this@Move, onNeverWasFree = {
+                                x = -x // jump was no successful - reverse the motion
+                            })
                         } else {
                             x = -x
                             keep = 0.5f // move the opposite way for some time
@@ -174,18 +185,27 @@ class EnemyBehaviourSystem(
             }
         }
 
-        class JumpForward(var x: Float, var y: Float, var holdJumpFor: Float = 0f, val onEnd: Intent? = null) : Intent {
+        class JumpForward(var x: Float, var y: Float, var holdJumpFor: Float = 0f, val onEnd: Intent? = null, val onNeverWasFree: (() -> Unit)? = null) : Intent {
 
             private var wasJumping = false
+            private var everWasFree = false
 
             override fun IteratingSystem.switch(entity: Entity): Intent? =
                 if (shouldStop(entity)) onEnd else this@JumpForward
 
             fun IteratingSystem.shouldStop(entity: Entity): Boolean {
+                val context = entity[ContextComponent]
+                if (!everWasFree) {
+                    everWasFree = !context.touchingLeftWall && !context.touchingRightWall
+                }
                 holdJumpFor -= deltaTime
-                wasJumping = wasJumping || !entity[ContextComponent].standing
-                val stoppedJumping = wasJumping && entity[ContextComponent].standing
-                return entity[ContextComponent].swimming || stoppedJumping
+                wasJumping = wasJumping || !context.standing
+                val stoppedJumping = wasJumping && context.standing
+                val result = context.swimming || stoppedJumping
+                if (result && !everWasFree) {
+                    onNeverWasFree?.invoke()
+                }
+                return result
             }
 
         }

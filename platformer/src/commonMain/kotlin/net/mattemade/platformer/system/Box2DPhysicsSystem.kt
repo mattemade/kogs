@@ -66,10 +66,8 @@ class Box2DPhysicsSystem(
     private val gameContext: PlatformerGameContext = inject(),
     interval: Interval = Fixed(1 / 200f)
 ) : IteratingSystem(
-    family { all(Box2DPhysicsComponent, PositionComponent, RotationComponent, ContextComponent) },
-    interval = interval
-),
-    ContactListener, Releasing by Self() {
+    family { all(Box2DPhysicsComponent, PositionComponent, RotationComponent, ContextComponent) }, interval = interval
+), ContactListener, Releasing by Self() {
 
     private val landVelocity by lazy { gameContext.fmodAssets.land.getParameterDescriptionByName("Velocity").id }
 
@@ -94,12 +92,14 @@ class Box2DPhysicsSystem(
                     categoryBits = ROOM_BOUNDS_MASK
                 }
                 shape = ChainShape().apply {
-                    createLoop(arrayOf(
-                        Vec2(0f, 0f),
-                        Vec2(roomSize.x, 0f),
-                        Vec2(roomSize.x, roomSize.y),
-                        Vec2(0f, roomSize.y),
-                    ), 4)
+                    createLoop(
+                        arrayOf(
+                            Vec2(0f, 0f),
+                            Vec2(roomSize.x, 0f),
+                            Vec2(roomSize.x, roomSize.y),
+                            Vec2(0f, roomSize.y),
+                        ), 4
+                    )
                 }
                 userData = Wall // but only for enemies, by collision bits
             })
@@ -157,13 +157,18 @@ class Box2DPhysicsSystem(
                         jumpBuffer = 0
                         coyoteTimeInTicks = JumpComponent.COYOTE_TICKS
                         canHoldJumpForTicks = JumpComponent.MAX_JUMP_TICKS
-                    }
-                    /*entity.getOrNull(MoveComponent)?.let {
+                    }/*entity.getOrNull(MoveComponent)?.let {
                         it.forceStopWaterDash = true // do not continue dashing between substances
                     }*/
                 } else if (swimming && !currentlySwimming) { // finished swimming
                     if (entity.getOrNull(PlayerComponent) != null) {
                         physicsComponent.playSound(gameContext.fmodAssets.getOutOfWater)
+                        swimmingSound?.let { sound ->
+                            sound.stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+                            sound.release()
+                            entity[Box2DPhysicsComponent].attachedSounds.removeAll { it.first === sound }
+                            swimmingSound = null
+                        }
                     }
                     physicsComponent.waterBodyFixture.filterData.maskBits = 0
                     physicsComponent.landBodyFixture.filterData.maskBits = physicsComponent.collisionMask
@@ -193,6 +198,7 @@ class Box2DPhysicsSystem(
                             it.forceStopAirDash = true // do not continue dashing in the air when jumping up or down
                         }
                     }
+
                 }
                 swimming = currentlySwimming
 
@@ -303,9 +309,7 @@ class Box2DPhysicsSystem(
     }
 
     private fun waterBasedMovement(
-        physicsComponent: Box2DPhysicsComponent,
-        context: ContextComponent,
-        entity: Entity
+        physicsComponent: Box2DPhysicsComponent, context: ContextComponent, entity: Entity
     ) {
         if (entity.getOrNull(KnockbackComponent) != null) {
             applyMomentaryForces(entity, physicsComponent) // they are also applied in the end of normal routine!
@@ -328,17 +332,14 @@ class Box2DPhysicsSystem(
 
                 rotationComponent.apply {
                     if (!fixedRotation) {
-                        currentRotation =
-                            (move.dashDirection.angleTo(NO_ROTATION).radians + HALF_PI_F + PI2_F) % PI2_F
-                        targetRotation =
-                            (move.dashDirection.angleTo(NO_ROTATION).radians + HALF_PI_F + PI2_F) % PI2_F
+                        currentRotation = (move.dashDirection.angleTo(NO_ROTATION).radians + HALF_PI_F + PI2_F) % PI2_F
+                        targetRotation = (move.dashDirection.angleTo(NO_ROTATION).radians + HALF_PI_F + PI2_F) % PI2_F
                     }
                 }
             } else if (move.moveDirection.x != 0f || move.moveDirection.y != 0f) {
                 rotationComponent.apply {
                     if (!fixedRotation) {
-                        targetRotation =
-                            (move.moveDirection.angleTo(NO_ROTATION).radians + HALF_PI_F + PI2_F) % PI2_F
+                        targetRotation = (move.moveDirection.angleTo(NO_ROTATION).radians + HALF_PI_F + PI2_F) % PI2_F
                     }
                 }
             }
@@ -372,9 +373,7 @@ class Box2DPhysicsSystem(
     }
 
     private fun landBasedMovement(
-        physicsComponent: Box2DPhysicsComponent,
-        context: ContextComponent,
-        entity: Entity
+        physicsComponent: Box2DPhysicsComponent, context: ContextComponent, entity: Entity
     ) {
         if (entity.getOrNull(KnockbackComponent) != null) {
             applyMomentaryForces(entity, physicsComponent) // they are also applied in the end of normal routine!
@@ -383,39 +382,40 @@ class Box2DPhysicsSystem(
 
         entity.getOrNull(MoveComponent)?.let {
             physicsComponent.apply {
-                //println("left wall ${context.touchingLeftWall} ${context.touchingRightWall}")
-                val movingToWall =
-                    (context.touchingLeftWall && (it.dashDirection.x < 0f || it.moveDirection.x < 0f || context.wallSlide)) || (context.touchingRightWall && (it.dashDirection.x > 0f || it.moveDirection.x > 0f || context.wallSlide))
-                val dashingToWall =
-                    (context.touchingLeftWall && it.dashDirection.x < 0f) || (context.touchingRightWall && it.dashDirection.x > 0f)
-                val dashingFromWall =
-                    (context.touchingLeftWall && it.dashDirection.x > 0f) || (context.touchingRightWall && it.dashDirection.x < 0f)
-                if (movingToWall && !dashingFromWall && (body.linearVelocityY > 0f || dashingToWall) && body.linearVelocityX == 0f) {
-                    if (gameContext.gameState.airPearl) {
-                        body.linearVelocityY = 1f
-                        context.wallSlide = true
-                        if (context.slidingSound == null) {
-                            context.slidingSound =
-                                physicsComponent.playSoundAttached(gameContext.fmodAssets.wallSlideLoop)
+                entity.getOrNull(PlayerComponent)?.let { _ -> // only player can wall slide
+                    val movingToWall =
+                        (context.touchingLeftWall && (it.dashDirection.x < 0f || it.moveDirection.x < 0f || context.wallSlide)) || (context.touchingRightWall && (it.dashDirection.x > 0f || it.moveDirection.x > 0f || context.wallSlide))
+                    val dashingToWall =
+                        (context.touchingLeftWall && it.dashDirection.x < 0f) || (context.touchingRightWall && it.dashDirection.x > 0f)
+                    val dashingFromWall =
+                        (context.touchingLeftWall && it.dashDirection.x > 0f) || (context.touchingRightWall && it.dashDirection.x < 0f)
+                    if (movingToWall && !dashingFromWall && (body.linearVelocityY > 0f || dashingToWall) && body.linearVelocityX == 0f) {
+                        if (gameContext.gameState.airPearl) {
+                            body.linearVelocityY = 1f
+                            context.wallSlide = true
+                            if (context.slidingSound == null) {
+                                context.slidingSound =
+                                    physicsComponent.playSoundAttached(gameContext.fmodAssets.wallSlideLoop)
+                            }
+                            if (dashingFromWall) {
+                                it.forceStopAirDash = true
+                            }
                         }
-                        if (dashingFromWall) {
-                            it.forceStopAirDash = true
+                    } else if (context.wallSlide) {
+                        entity[JumpComponent].apply {
+                            coyoteTimeInTicks =
+                                JumpComponent.COYOTE_TICKS // just to allow jump off the wall without using double jump
+                            wasJumping = true // just to force applying lower gravity
                         }
+                        context.wallSlide = false
+                        context.slidingSound?.apply {
+                            physicsComponent.attachedSounds.removeAll { it.first === this }
+                            stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
+                            release()
+                            context.slidingSound = null
+                        }
+                        body.isAwake = true
                     }
-                } else if (context.wallSlide) {
-                    entity[JumpComponent].apply {
-                        coyoteTimeInTicks =
-                            JumpComponent.COYOTE_TICKS // just to allow jump off the wall without using double jump
-                        wasJumping = true // just to force applying lower gravity
-                    }
-                    context.wallSlide = false
-                    context.slidingSound?.apply {
-                        physicsComponent.attachedSounds.removeAll { it.first === this }
-                        stop(FMOD.FMOD_STUDIO_STOP_ALLOWFADEOUT)
-                        release()
-                        context.slidingSound = null
-                    }
-                    body.isAwake = true
                 }
             }
 
@@ -447,13 +447,12 @@ class Box2DPhysicsSystem(
                 coyoteTimeInTicks--
                 canJumpFromGround = coyoteTimeInTicks > 0
             }
-            physicsComponent.body.gravityScale =
-                physicsComponent.gravityScaleOverride ?: when {
-                    context.wallSlide -> 0f
-                    jumping -> GRAVITY_IN_JUMP
-                    wasJumping -> GRAVITY_IN_JUMPFALL
-                    else -> GRAVITY_IN_FALL
-                }
+            physicsComponent.body.gravityScale = physicsComponent.gravityScaleOverride ?: when {
+                context.wallSlide -> 0f
+                jumping -> GRAVITY_IN_JUMP
+                wasJumping -> GRAVITY_IN_JUMPFALL
+                else -> GRAVITY_IN_FALL
+            }
         }
         entity.getOrNull(MoveComponent)?.let { move ->
             physicsComponent.body.applyImpulse(
@@ -483,8 +482,7 @@ class Box2DPhysicsSystem(
     }
 
     private fun applyMomentaryForces(
-        entity: Entity,
-        physicsComponent: Box2DPhysicsComponent
+        entity: Entity, physicsComponent: Box2DPhysicsComponent
     ) {
         entity.getOrNull(MomentaryForceComponent)?.let {
             it.forces.forEach { force ->
@@ -545,8 +543,7 @@ class Box2DPhysicsSystem(
                         }
                         shape = PolygonShape().apply {
                             setAsBox( // SMALLER THAN THE MAIN BODY!!!
-                                initialPlayerBounds.width * 0.5f * 0.4f,
-                                initialPlayerBounds.height * 0.5f * 0.7f
+                                initialPlayerBounds.width * 0.5f * 0.4f, initialPlayerBounds.height * 0.5f * 0.7f
                             )
                         }
                         userData = entity
@@ -563,8 +560,7 @@ class Box2DPhysicsSystem(
                     }
                     shape = PolygonShape().apply {
                         setAsBox( // SAME AS THE HITBOX!!!
-                            initialPlayerBounds.width * 0.5f * 0.9f,
-                            initialPlayerBounds.height * 0.5f * 0.9f
+                            initialPlayerBounds.width * 0.5f * 0.9f, initialPlayerBounds.height * 0.5f * 0.9f
                         )
                     }
                     userData = entity
@@ -703,10 +699,8 @@ class Box2DPhysicsSystem(
                         }
                         shape = PolygonShape().apply {
                             setAsBox(
-                                width * 0.25f * 0.8f,
-                                0.1f, // just a tiny block at the bottom
-                                center = Vec2(-width * 0.25f, height * 0.5f),
-                                angle = Angle.ZERO
+                                width * 0.25f * 0.8f, 0.1f, // just a tiny block at the bottom
+                                center = Vec2(-width * 0.25f, height * 0.5f), angle = Angle.ZERO
                             )
                         }
                         userData = LeftFoot(entity)
@@ -719,10 +713,8 @@ class Box2DPhysicsSystem(
                         }
                         shape = PolygonShape().apply {
                             setAsBox(
-                                width * 0.25f * 0.8f,
-                                0.1f, // just a tiny block at the bottom
-                                center = Vec2(width * 0.5f, height * 0.5f),
-                                angle = Angle.ZERO
+                                width * 0.25f * 0.8f, 0.1f, // just a tiny block at the bottom
+                                center = Vec2(width * 0.5f, height * 0.5f), angle = Angle.ZERO
                             )
                         }
                         userData = RightFoot(entity)
@@ -743,9 +735,9 @@ class Box2DPhysicsSystem(
                             maskBits = ENEMY_PLAYER_DETECTOR_COLLISIONS
                         }
                         shape = CircleShape(5f)
-                        userData = Box2DPhysicsSystem.Action {
+                        userData = Action(onTouch = {
                             entity[EnemyComponent].spottedPlayerPosition = it[Box2DPhysicsComponent].body.position
-                        }
+                        })
                     })
 
                     createFixture(FixtureDef().apply {
@@ -755,9 +747,9 @@ class Box2DPhysicsSystem(
                             maskBits = ENEMY_PLAYER_DETECTOR_COLLISIONS
                         }
                         shape = CircleShape(2f)
-                        userData = Box2DPhysicsSystem.Action {
+                        userData = Action(onTouch = {
                             entity[EnemyComponent].nearPlayer = it[Box2DPhysicsComponent].body.position
-                        }
+                        })
                     })
                 },
                 collisionMask = ENEMY_BODY_COLLISION,
@@ -780,15 +772,19 @@ class Box2DPhysicsSystem(
     fun createCheckpoint(
         entityCreateContext: EntityCreateContext,
         entity: Entity,
-        x: Float, y: Float, width: Float, height: Float, id: Int, onTouch: () -> Unit
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+        id: Int,
+        onTouch: () -> Unit
     ) {
         entityCreateContext.apply {
             entity += Box2DPhysicsComponent(
                 body = physics.createBody(BodyDef().apply {
                     type = BodyType.STATIC
                     position.set(x, y)
-                }),
-                collisionMask = CHECKPOINT_COLLISIONS
+                }), collisionMask = CHECKPOINT_COLLISIONS
             ).apply {
                 landBodyFixture = body.createFixture(FixtureDef().apply {
                     isSensor = true
@@ -798,8 +794,7 @@ class Box2DPhysicsSystem(
                     }
                     shape = PolygonShape().apply {
                         setAsBox(
-                            width * 0.48f,
-                            height * 0.48f
+                            width * 0.48f, height * 0.48f
                         )
                     }
                     userData = Checkpoint(id, onTouch)
@@ -810,14 +805,15 @@ class Box2DPhysicsSystem(
 
     }
 
-    fun createPickupBody(
+    fun createTriggerBody(
         entityCreateContext: EntityCreateContext,
         entity: Entity,
         x: Float,
         y: Float,
         width: Float,
         height: Float,
-        onTouch: () -> Unit
+        onTouch: () -> Unit = {},
+        onExit: () -> Unit = {},
     ) {
         with(entityCreateContext) {
             entity += Box2DPhysicsComponent(
@@ -840,15 +836,44 @@ class Box2DPhysicsSystem(
                     }
                     shape = PolygonShape().apply {
                         setAsBox(
-                            width * 0.48f,
-                            height * 0.48f
+                            width * 0.48f, height * 0.48f
                         )
                     }
-                    userData = Action(onTouch = { onTouch() })
+                    userData = Action(onTouch = { onTouch() }, onExit = { onExit() })
                 })!!
                 waterBodyFixture = landBodyFixture
             }
         }
+    }
+
+
+    fun createTemporarySpike(
+        entityCreateContext: EntityCreateContext, entity: Entity,
+        x: Float,
+        y: Float,
+        width: Float,
+        height: Float,
+    ) {
+        with(entityCreateContext) {
+            entity += Box2DPhysicsComponent(
+                body = physics.createBody(BodyDef().apply {
+                    position.set(x + width * 0.5f, y + height * 0.5f)
+                    fixedRotation = true
+                }).apply {
+                    createFixture(FixtureDef().apply {
+                        filter = Filter().apply {
+                            categoryBits = WALL_MASK
+                        }
+                        shape = PolygonShape().apply {
+                            setAsBox(width * 0.5f, height * 0.5f)
+                        }
+                        this.userData = Wall
+                    })
+                },
+                collisionMask = WALL_MASK,
+            )
+        }
+
     }
 
     // free-shape chains of solid surface
@@ -970,8 +995,7 @@ class Box2DPhysicsSystem(
                             )
                         } else {
                             other.entity[MomentaryForceComponent].forces += Vec2f(
-                                7f * sign(position.x - this.x),
-                                -7f
+                                7f * sign(position.x - this.x), -7f
                             )
                         }
                     }
@@ -992,8 +1016,7 @@ class Box2DPhysicsSystem(
                     }
 
                     is Action -> other.onTouch(this)
-                    is EnemyHazard -> {
-                        /* no-op, since it would allow to walk on spikes after, as they won't trigger beginContact anymore */
+                    is EnemyHazard -> {/* no-op, since it would allow to walk on spikes after, as they won't trigger beginContact anymore */
                     }
                 }
             }
@@ -1015,27 +1038,28 @@ class Box2DPhysicsSystem(
         body.linearVelocityX = 0f
         val position = body.position
         if (entity[ContextComponent].swimming) {
-            tempVec2f.set(position.x - fromX, position.y - fromY)
-                .setLength(10f)
+            tempVec2f.set(position.x - fromX, position.y - fromY).setLength(10f)
             entity[MomentaryForceComponent].forces += Vec2f(
                 tempVec2f.x,
                 tempVec2f.y,
             )
         } else {
             entity[MomentaryForceComponent].forces += Vec2f(
-                10f * sign(position.x - fromX),
-                -10f
+                10f * sign(position.x - fromX), -10f
             )
         }
     }
 
     override fun endContact(contact: Contact) {
-
+        contact.with<Entity> { other ->
+            when (other) {
+                is Action -> other.onExit?.invoke(this)
+            }
+        }
     }
 
     override fun postSolve(
-        contact: Contact,
-        impulse: ContactImpulse
+        contact: Contact, impulse: ContactImpulse
     ) {
 
     }
@@ -1061,7 +1085,9 @@ class Box2DPhysicsSystem(
     private class EnemyHazard(val damage: Float, val bodyPosition: Vec2, val entity: Entity)
     private class PlayerAttack(val damage: Float, val x: Float, val y: Float)
     private class Checkpoint(val id: Int, val onTouch: () -> Unit)
-    private class Action(val onTouch: (otherEntity: Entity) -> Unit)
+    private class Action(
+        val onTouch: (otherEntity: Entity) -> Unit, val onExit: ((otherEntity: Entity) -> Unit)? = null
+    )
 
     companion object {
         private val tempVec2 = Vec2()
@@ -1116,11 +1142,7 @@ class Box2DPhysicsSystem(
             var edge = this
             while (edge != null) {
                 edge.contact?.let {
-                    if (it.isTouching && (
-                                (it.getFixtureA()?.userData is T && it.getFixtureB()?.userData is K)
-                                        || (it.getFixtureB()?.userData is T && it.getFixtureA()?.userData is K)
-                                )
-                    ) {
+                    if (it.isTouching && ((it.getFixtureA()?.userData is T && it.getFixtureB()?.userData is K) || (it.getFixtureB()?.userData is T && it.getFixtureA()?.userData is K))) {
                         return it
                     }
                 }

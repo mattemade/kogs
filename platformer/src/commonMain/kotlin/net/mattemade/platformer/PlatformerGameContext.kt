@@ -150,6 +150,7 @@ class PlatformerGameContext(
     @Serializable
     data class RoomState(
         var isVisited: Boolean = false,
+        var gauntletCompleted: Boolean? = null,
     )
 
 
@@ -195,6 +196,7 @@ class PlatformerGameContext(
             "sky" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.testMusic)
             "caves" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.cavesMusic)
             "temple" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.ambienceMusic)
+            "gauntlet" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.gauntletMusic)
             "silence" -> stopCurrentMusic()
             else -> { /* no-op */ }
         }

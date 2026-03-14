@@ -88,5 +88,6 @@ class FmodAssets(
     val testMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/StemTest")!! }
     val cavesMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/Caves")!! }
     val ambienceMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/Ambience Strings")!! }
+    val gauntletMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/BossBattle")!! }
     val playerStateParameter by lazy { studioSystem.getParameterDescriptionByName("Player state").id }
 }
