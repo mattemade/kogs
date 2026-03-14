@@ -16,9 +16,9 @@ class FmodAssets(
     private val studioSystem = gameContext.assets.fmod.studioSystem
 
     val map = ConcurrentMutableMap<String, FmodBank>()
-    val eventCache = ConcurrentMutableMap<String, FmodEventDescription>()
+    val eventCache = ConcurrentMutableMap<String, FmodEventDescription?>()
 
-    fun getEvent(name: String): FmodEventDescription = eventCache.getOrPut(name) { studioSystem.getEvent(name) }
+    fun getEvent(name: String): FmodEventDescription? = eventCache.getOrPut(name) { studioSystem.getEvent(name) }
 
     val preparation by selfPreparePlain(order = 0, action = {
         FMOD_BANKS.forEach { bankName ->
@@ -51,42 +51,42 @@ class FmodAssets(
         }
     }
 
-    val jump by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump") }
-    val jumpDownThroughPlatform by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump down through platform") }
-    val land by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Land") }
-    val step by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Footsteps") }
-    val doubleJump by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Double jump") }
-    val wallSlideLoop by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Wall slide (loop)") }
-    val damaged by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Damaged") }
+    val jump by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump")!! }
+    val jumpDownThroughPlatform by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump down through platform")!! }
+    val land by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Land")!! }
+    val step by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Footsteps")!! }
+    val doubleJump by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Double jump")!! }
+    val wallSlideLoop by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Wall slide (loop)")!! }
+    val damaged by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Damaged")!! }
 
-    val pickUpgrade by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Upgrade") }
-    val pickCollectiblePearl by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Pick collectible pearl") }
+    val pickUpgrade by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Upgrade")!! }
+    val pickCollectiblePearl by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Pick collectible pearl")!! }
 
-    val firstAttack by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/First attack") }
-    val secondAttack by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Second attack") }
-    val thirdAttack by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Third attack") }
+    val firstAttack by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/First attack")!! }
+    val secondAttack by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Second attack")!! }
+    val thirdAttack by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Third attack")!! }
 
-    val airDash by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Air dash (start + loop)") }
-    val waterDash by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Water dash (start + loop)") }
+    val airDash by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Air dash (start + loop)")!! }
+    val waterDash by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Water dash (start + loop)")!! }
 
-    val swim by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Swim (loop)") }
-    val getInWater by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Start swimming") }
-    val getOutOfWater by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Stop swimming") }
+    val swim by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Swim (loop)")!! }
+    val getInWater by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Start swimming")!! }
+    val getOutOfWater by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Stop swimming")!! }
 
-    val hitEnemy by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Hit enemy") }
-    val enemyDefeated by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Enemy is defeated") }
-    val crabMoves by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump") }
-    val jellyfishMoves by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump") }
-    val batWingFlap by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump") }
-    val batShriek by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump") }
-    val catJump by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump") }
-    val catScratch by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump") }
+    val hitEnemy by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Hit enemy")!! }
+    val enemyDefeated by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Enemy is defeated")!! }
+    val crabMoves by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump")!! }
+    val jellyfishMoves by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump")!! }
+    val batWingFlap by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump")!! }
+    val batShriek by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump")!! }
+    val catJump by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump")!! }
+    val catScratch by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Jump")!! }
 
-    val checkPointActivated by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Checkpoint activates (health restored, game saved)") }
-    val windBlowing by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Wind blows (loop)") }
+    val checkPointActivated by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Checkpoint activates (health restored, game saved)")!! }
+    val windBlowing by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Wind blows (loop)")!! }
 
-    val testMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/StemTest") }
-    val cavesMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/Caves") }
-    val ambienceMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/Ambience Strings") }
+    val testMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/StemTest")!! }
+    val cavesMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/Caves")!! }
+    val ambienceMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/Ambience Strings")!! }
     val playerStateParameter by lazy { studioSystem.getParameterDescriptionByName("Player state").id }
 }

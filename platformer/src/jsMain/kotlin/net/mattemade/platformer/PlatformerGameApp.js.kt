@@ -43,7 +43,7 @@ fun main() {
         height = 540
         title = PlatformerGame.TITLE
         canvasId = CANVAS_ID
-        //selfInitializeAudioContext = false // we are relying of FMOD instead
+        selfInitializeAudioContext = false // we are relying of FMOD instead
     }.start {
         Logger.setLevels(Logger.Level.NONE)
 

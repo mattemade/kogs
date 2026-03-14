@@ -42,24 +42,26 @@ actual class FmodStudioSystem(val id: Long) {
         initFlags: FmodInitFlag,
         extraDriverData: Long?
     ) {
-        FMODStudio.FMOD_Studio_System_Initialize(id, maxChannels, studioInitFlags, initFlags, extraDriverData ?: 0L).checkError()
+        FMODStudio.FMOD_Studio_System_Initialize(id, maxChannels, studioInitFlags, initFlags, extraDriverData ?: 0L).checkSuccess()
     }
 
     actual fun loadBankFile(
         file: String,
         studioLoadingBankType: FmodStudioLoadingType
     ): FmodBank {
-        FMODStudio.FMOD_Studio_System_LoadBankFile(id, file, studioLoadingBankType, outvalBuffer.clear()).checkError()
+        FMODStudio.FMOD_Studio_System_LoadBankFile(id, file, studioLoadingBankType, outvalBuffer.clear()).checkSuccess()
         return FmodBank(id = outvalBuffer.get())
     }
 
     actual fun update() {
-        FMODStudio.FMOD_Studio_System_Update(id).checkError()
+        FMODStudio.FMOD_Studio_System_Update(id).checkSuccess()
     }
 
-    actual fun getEvent(eventName: String): FmodEventDescription {
-        FMODStudio.FMOD_Studio_System_GetEvent(id, eventName, outvalBuffer.clear()).checkError()
-        return FmodEventDescription(id = outvalBuffer.get())
+    actual fun getEvent(eventName: String): FmodEventDescription? {
+        if (FMODStudio.FMOD_Studio_System_GetEvent(id, eventName, outvalBuffer.clear()).checkSuccess()) {
+            return FmodEventDescription(id = outvalBuffer.get())
+        }
+        return null
     }
 
     actual fun setListenerAttributes(listener: Int, attributes: Fmod3DAttributes, attenuationPosition: FmodVector?) {
@@ -68,32 +70,32 @@ actual class FmodStudioSystem(val id: Long) {
             listener,
             attributes.actual,
             attenuationPosition?.actual
-        ).checkError()
+        ).checkSuccess()
     }
 
     actual fun getParameterDescriptionByName(name: String): FmodParameterDescription {
         val result = FmodParameterDescription()
-        FMODStudio.FMOD_Studio_System_GetParameterDescriptionByName(id, name, result.description).checkError()
+        FMODStudio.FMOD_Studio_System_GetParameterDescriptionByName(id, name, result.description).checkSuccess()
         return result
     }
 
     actual fun setParameterByID(id: FmodParameterId, value: Float, ignoreSeekSpeed: Int) {
-        FMODStudio.FMOD_Studio_System_SetParameterByID(this.id, id.id, value, ignoreSeekSpeed).checkError()
+        FMODStudio.FMOD_Studio_System_SetParameterByID(this.id, id.id, value, ignoreSeekSpeed).checkSuccess()
     }
 
     actual fun setParameterByIDWithLabel(id: FmodParameterId, label: String, ignoreSeekSpeed: Int) {
         FMODStudio.FMOD_Studio_System_SetParameterByIDWithLabel(this.id, id.id, label, ignoreSeekSpeed)
-            .checkError()
+            .checkSuccess()
     }
 }
 
 actual class FmodStudioSystemCore(val id: Long) {
     actual fun setDSPBufferSize(bufferLength: Int, numBuffers: Int) {
-        FMOD.FMOD_System_SetDSPBufferSize(id, bufferLength, numBuffers).checkError()
+        FMOD.FMOD_System_SetDSPBufferSize(id, bufferLength, numBuffers).checkSuccess()
     }
 
     actual fun getCPUUsage(cpu: FmodCpu) {
-        FMOD.FMOD_System_GetCPUUsage(id, cpu.usage).checkError()
+        FMOD.FMOD_System_GetCPUUsage(id, cpu.usage).checkSuccess()
     }
 
     actual fun getDriverInfo(
@@ -110,7 +112,7 @@ actual class FmodStudioSystemCore(val id: Long) {
             systemRate,
             speakerMode,
             speakerModeChannels
-        ).checkError()
+        ).checkSuccess()
         return FmodDriverInfo(systemRate.get(), speakerMode.get(), speakerModeChannels.get())
     }
 
@@ -119,52 +121,52 @@ actual class FmodStudioSystemCore(val id: Long) {
         speakerMode: FmodSpeakerMode,
         numSpeakers: Int
     ) {
-        FMOD.FMOD_System_SetSoftwareFormat(id, sampleRate, speakerMode, numSpeakers).checkError()
+        FMOD.FMOD_System_SetSoftwareFormat(id, sampleRate, speakerMode, numSpeakers).checkSuccess()
     }
 
     actual fun mixerSuspend() {
-        FMOD.FMOD_System_MixerSuspend(id).checkError()
+        FMOD.FMOD_System_MixerSuspend(id).checkSuccess()
     }
 
     actual fun mixerResume() {
-        FMOD.FMOD_System_MixerResume(id).checkError()
+        FMOD.FMOD_System_MixerResume(id).checkSuccess()
     }
 }
 
 actual class FmodBank(val id: Long) {
     actual val loadingState: FmodStudioLoadingState
         get() = FMODStudio.FMOD_Studio_Bank_GetLoadingState(id, intBuffer.clear()).run {
-            checkError()
+            checkSuccess()
             intBuffer.get()
         }
     actual val sampleLoadingState: FmodStudioLoadingState
         get() = FMODStudio.FMOD_Studio_Bank_GetSampleLoadingState(id, intBuffer.clear()).run {
-            checkError()
+            checkSuccess()
             intBuffer.get()
         }
 
     actual fun loadSampleData() {
-        FMODStudio.FMOD_Studio_Bank_LoadSampleData(id).checkError()
+        FMODStudio.FMOD_Studio_Bank_LoadSampleData(id).checkSuccess()
     }
 
     actual fun unloadSampleData() {
-        FMODStudio.FMOD_Studio_Bank_UnloadSampleData(id).checkError()
+        FMODStudio.FMOD_Studio_Bank_UnloadSampleData(id).checkSuccess()
     }
 }
 
 actual class FmodEventDescription(val id: Long) {
     actual fun createInstance(): FmodEventInstance {
-        FMODStudio.FMOD_Studio_EventDescription_CreateInstance(id, outvalBuffer.clear()).checkError()
+        FMODStudio.FMOD_Studio_EventDescription_CreateInstance(id, outvalBuffer.clear()).checkSuccess()
         return FmodEventInstance(outvalBuffer.get())
     }
 
     actual fun loadSampleData() {
-        FMODStudio.FMOD_Studio_EventDescription_LoadSampleData(id).checkError()
+        FMODStudio.FMOD_Studio_EventDescription_LoadSampleData(id).checkSuccess()
     }
 
     actual fun getParameterDescriptionByName(name: String): FmodParameterDescription {
         val result = FmodParameterDescription()
-        FMODStudio.FMOD_Studio_EventDescription_GetParameterDescriptionByName(id, name, result.description).checkError()
+        FMODStudio.FMOD_Studio_EventDescription_GetParameterDescriptionByName(id, name, result.description).checkSuccess()
         return result
     }
 }
@@ -180,22 +182,22 @@ actual class FmodParameterDescription {
 
 actual class FmodEventInstance(val id: Long) {
     actual fun start() {
-        FMODStudio.FMOD_Studio_EventInstance_Start(id).checkError()
+        FMODStudio.FMOD_Studio_EventInstance_Start(id).checkSuccess()
     }
 
     actual fun stop(mode: FmodStudioStopType) {
-        FMODStudio.FMOD_Studio_EventInstance_Stop(id, mode).checkError()
+        FMODStudio.FMOD_Studio_EventInstance_Stop(id, mode).checkSuccess()
     }
 
     actual fun release() {
-        FMODStudio.FMOD_Studio_EventInstance_Release(id).checkError()
+        FMODStudio.FMOD_Studio_EventInstance_Release(id).checkSuccess()
     }
 
     actual fun setCallback(
         callback: FmodCallback,
         callbackMask: FmodCallbackType
     ) {
-        FMODStudio.FMOD_Studio_EventInstance_SetCallback(id, callback.realCallback, callbackMask).checkError()
+        FMODStudio.FMOD_Studio_EventInstance_SetCallback(id, callback.realCallback, callbackMask).checkSuccess()
     }
 
     actual fun setParameterByID(
@@ -203,22 +205,22 @@ actual class FmodEventInstance(val id: Long) {
         value: Float,
         ignoreSeekSpeed: Int
     ) {
-        FMODStudio.FMOD_Studio_EventInstance_SetParameterByID(this.id, id.id, value, ignoreSeekSpeed).checkError()
+        FMODStudio.FMOD_Studio_EventInstance_SetParameterByID(this.id, id.id, value, ignoreSeekSpeed).checkSuccess()
     }
 
     actual fun setParameterByIDWithLabel(id: FmodParameterId, label: String, ignoreSeekSpeed: Int) {
         FMODStudio.FMOD_Studio_EventInstance_SetParameterByIDWithLabel(this.id, id.id, label, ignoreSeekSpeed)
-            .checkError()
+            .checkSuccess()
     }
 
 
     actual fun getPlaybackState(): FmodPlaybackState {
-        FMODStudio.FMOD_Studio_EventInstance_GetPlaybackState(this.id, intBuffer.clear()).checkError()
+        FMODStudio.FMOD_Studio_EventInstance_GetPlaybackState(this.id, intBuffer.clear()).checkSuccess()
         return intBuffer.get()
     }
 
     actual fun set3DAttributes(attributes: Fmod3DAttributes) {
-        FMODStudio.FMOD_Studio_EventInstance_Set3DAttributes(id, attributes.actual).checkError()
+        FMODStudio.FMOD_Studio_EventInstance_Set3DAttributes(id, attributes.actual).checkSuccess()
     }
 
 }
@@ -251,10 +253,12 @@ actual class FmodCallback actual constructor(externalCallback: FmodCallbackExter
     }
 }
 
-private inline fun Int.checkError() {
+private inline fun Int.checkSuccess(): Boolean {
     if (this != net.mattemade.fmod.FMOD.OK) {
         println("FMOD ERROR: ${FMOD.FMOD_ErrorString(this)}")
+        return false
     }
+    return true
 }
 
 actual class Fmod3DAttributes {

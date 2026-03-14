@@ -77,7 +77,7 @@ expect class FmodStudioSystem {
     //fun loadBankMemory(memoryPointer: FmodMemoryPointer, memoryLength: Long, memoryMode: FmodStudioLoadMemoryMode)
     fun update()
 
-    fun getEvent(eventName: String): FmodEventDescription
+    fun getEvent(eventName: String): FmodEventDescription?
 
     fun setListenerAttributes(listener: Int, attributes: Fmod3DAttributes, attenuationPosition: FmodVector? = null)
 
