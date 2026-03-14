@@ -394,7 +394,10 @@ class Box2DPhysicsSystem(
                     if (gameContext.gameState.airPearl) {
                         body.linearVelocityY = 1f
                         context.wallSlide = true
-                        context.slidingSound = physicsComponent.playSoundAttached(gameContext.fmodAssets.wallSlideLoop)
+                        if (context.slidingSound == null) {
+                            context.slidingSound =
+                                physicsComponent.playSoundAttached(gameContext.fmodAssets.wallSlideLoop)
+                        }
                         if (dashingFromWall) {
                             it.forceStopAirDash = true
                         }

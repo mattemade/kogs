@@ -153,6 +153,8 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
             it.reset(full = true)
         }
         currentRoom = getCurrentRoom()
+        gameContext.gameState.roomStates.getOrPut(currentRoom.name) { PlatformerGameContext.RoomState() }.isVisited = true
+        updateCollectionCounter()
         initialMapDraw = true
         sharedMapRenderer.render(0f.seconds)
     }
