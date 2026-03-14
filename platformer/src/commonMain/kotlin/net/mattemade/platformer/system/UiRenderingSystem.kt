@@ -11,10 +11,12 @@ import com.littlekt.graphics.g2d.SpriteBatch
 import com.littlekt.graphics.g2d.shape.ShapeRenderer
 import com.littlekt.graphics.toFloatBits
 import com.littlekt.math.Rect
+import com.littlekt.math.Vec2f
 import com.littlekt.math.floor
 import com.littlekt.math.floorToInt
 import com.littlekt.util.Scaler
 import com.littlekt.util.viewport.ScalingViewport
+import net.mattemade.gui.api.math.Vec2
 import net.mattemade.platformer.HALF_WORLD_UNIT_HEIGHT
 import net.mattemade.platformer.HALF_WORLD_UNIT_WIDTH
 import net.mattemade.platformer.PIXEL_PER_UNIT_FLOAT
@@ -57,7 +59,12 @@ class UiRenderingSystem(
     }
     private val batch = SpriteBatch(context)
     private val shapeRenderer = ShapeRenderer(batch, slice = gameContext.assets.textureFiles.whitePixel)
-    private val fontRenderer = MsdfFontRenderer(gameContext.assets.font.fredokaMsdf)
+    private val fontRenderer = MsdfFontRenderer(gameContext.assets.font.verdanaBoldMsdf)
+    private val heartEmpty = gameContext.assets.textureFiles.heartEmpty
+    private val heartFull = gameContext.assets.textureFiles.heartFull
+    private val heartSize =
+        Vec2f(heartFull.width.toFloat() / PIXEL_PER_UNIT_FLOAT, heartFull.height.toFloat() / PIXEL_PER_UNIT_FLOAT)
+    private val heartDistance = heartSize.x + UNITS_PER_PIXEL
 
     override fun onTick() {
         //context.gl.clearColor(Color.BLACK)
@@ -71,22 +78,50 @@ class UiRenderingSystem(
         renderUi(player, uiComponent)
         if (uiComponent.showMap) {
             renderMap(player)
-            if (collectionText == null) {
-                collectionText = "${PlatformingScene.collectedPearls} / ${PlatformingScene.nextPearlId} pearls"
-            }
             fontRenderer.drawAllTextAtOnce(batch) {
-                draw(collectionText!!, 1f, WORLD_UNIT_HEIGHT - 1f, 1f, batch)
+
+                if (collectionText == null) {
+                    val swordText = if (gameContext.gameState.sword) "Sword      " else ""
+                    val waterPearlText = if (gameContext.gameState.waterPearl) "Water Pearl      " else ""
+                    val airPearlText = if (gameContext.gameState.airPearl) "Air Pearl      " else ""
+                    collectionText =
+                        "$swordText$waterPearlText$airPearlText${PlatformingScene.collectedPearls} / ${PlatformingScene.nextPearlId} pearls      ${PlatformingScene.visitedRooms * 100 / PlatformingScene.totalRooms}% explored".also {
+                            measure(it, 0.5f, collectionTextPlacement)
+                            collectionTextPlacement.x = HALF_WORLD_UNIT_WIDTH - collectionTextPlacement.x * 0.5f
+                            collectionTextPlacement.y = WORLD_UNIT_HEIGHT - 1f
+                        }
+                }
+                draw(collectionText!!, collectionTextPlacement.x, collectionTextPlacement.y, 0.5f, batch)
             }
         }
         batch.end()
     }
 
     private fun renderUi(player: Entity, uiComponent: UiComponent) {
-        for (i in 0 until player[HealthComponent].health.floorToInt()) {
-            shapeRenderer.filledRectangle(x = 0.25f + i * 0.6f, y = 0.25f, width = 0.5f, height = 0.5f, color = Color.RED.toFloatBits())
+        val (health, maxHealth) = player[HealthComponent]
+        for (i in 0 until maxHealth.floorToInt()) {
+            batch.draw(
+                slice = if (i < health) heartFull else heartEmpty,
+                x = 0.25f + i * heartDistance,
+                y = 0.25f,
+                width = heartSize.x,
+                height = heartSize.y,
+            )
         }
-        shapeRenderer.filledRectangle(x = 0.25f, y = 0.85f, width = 1.7f, height = 0.25f, color = Color.LIGHT_GRAY.toFloatBits())
-        shapeRenderer.filledRectangle(x = 0.25f, y = 0.85f, width = 1.7f * player[StaminaComponent].stamina, height = 0.25f, color = Color.BLUE.toFloatBits())
+        shapeRenderer.filledRectangle(
+            x = 0.25f,
+            y = 0.85f,
+            width = 1.7f,
+            height = 0.25f,
+            color = Color.LIGHT_GRAY.toFloatBits()
+        )
+        shapeRenderer.filledRectangle(
+            x = 0.25f,
+            y = 0.85f,
+            width = 1.7f * player[StaminaComponent].stamina,
+            height = 0.25f,
+            color = Color.BLUE.toFloatBits()
+        )
 
         uiComponent.showTutorial?.let {
             fontRenderer.drawAllTextAtOnce(batch) {
@@ -115,7 +150,8 @@ class UiRenderingSystem(
                     (WORLD_UNIT_WIDTH - doubleOffset) / texture.width,
                     (WORLD_UNIT_HEIGHT - doubleOffset) / texture.height
                 )
-                mapScale = (mapScale * PIXEL_PER_UNIT_FLOAT).floor() * UNITS_PER_PIXEL // to maintain pixel-perfect integer map scaling
+                mapScale =
+                    (mapScale * PIXEL_PER_UNIT_FLOAT).floor() * UNITS_PER_PIXEL // to maintain pixel-perfect integer map scaling
                 val width = texture.width * mapScale
                 val height = texture.height * mapScale
                 val horizontalOffset = (WORLD_UNIT_WIDTH - width) * 0.5f
@@ -160,10 +196,13 @@ class UiRenderingSystem(
     private val Float.yOnMap: Float get() = mapPlacement.y + (this - gameContext.worldSize.y) * mapScale
 
     companion object {
+        private val tempVec2 = Vec2.borrow()
         private val mapBackgroundColor = Color.BLACK.toMutableColor().apply { a = 0.5f }.toFloatBits()
-        private val roomBackgroundColor = Color.DARK_YELLOW.toMutableColor().apply { r = 0.25f; g = 0.25f; a = 0.75f }.toFloatBits()
+        private val roomBackgroundColor =
+            Color.DARK_YELLOW.toMutableColor().apply { r = 0.25f; g = 0.25f; a = 0.75f }.toFloatBits()
         private val playerColor = Color.RED.toFloatBits()
         var collectionText: String? = null
+        private val collectionTextPlacement = Vec2.borrow()
     }
 
 }

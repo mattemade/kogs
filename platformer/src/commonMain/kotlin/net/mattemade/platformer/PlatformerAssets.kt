@@ -163,6 +163,8 @@ class TextureFiles(
     val whitePixel by "texture/white_pixel.png".pack()
     val bungee256 by "font/bungee_256_uppercase_0.png".pack()
     val fredokaMedium128 by "font/fredoka_medium_128_0.png".pack()
+    val heartEmpty by "texture/HP_heart2_empty.png".pack()
+    val heartFull by "texture/HP_heart2_full.png".pack()
 }
 
 class SoundFiles(context: Context, private val resourceSheet: PlatformerResourceSheet) :
@@ -286,6 +288,8 @@ class Fonts(context: Context, private val textures: TextureFiles) : AssetPack(co
         }
 
     val fredokaMsdf by loadMsdfFont("fredoka", 1.2f, 0.236f)
+    val verdanaMsdf by loadMsdfFont("verdana", 1.215332f, 0.2099609f)
+    val verdanaBoldMsdf by loadMsdfFont("verdanab", 1.215332f, 0.2099609f)
     val jbMonoMsdf by loadMsdfFont("jbmono", 1.32f, 0.3f)
 }
 

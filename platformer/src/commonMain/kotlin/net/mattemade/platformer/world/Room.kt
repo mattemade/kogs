@@ -24,6 +24,7 @@ import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MascotComponent
 import net.mattemade.platformer.component.MomentaryForceComponent
 import net.mattemade.platformer.component.MoveComponent
+import net.mattemade.platformer.component.PickupComponent
 import net.mattemade.platformer.component.PlayerComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.PushableComponent
@@ -46,6 +47,7 @@ import net.mattemade.platformer.system.LoadOnPlayerDeathSystem
 import net.mattemade.platformer.system.LowStaminaDamageSystem
 import net.mattemade.platformer.system.MascotSystem
 import net.mattemade.platformer.system.MusicSwitchingSystem
+import net.mattemade.platformer.system.PickupFloatingSystem
 import net.mattemade.platformer.system.PushingSystem
 import net.mattemade.platformer.system.RenderingSystem
 import net.mattemade.platformer.system.RotationSystem
@@ -78,7 +80,9 @@ class Room(
     var addedToMap: Boolean = false
     var firstCheckpointIdInThisRoom: Int = -1
     var nextCheckpointId: Int = -1
-    var incrementGlobalCheckpoints: Boolean = true
+    var firstPearlIdInThisRoom: Int = -1
+    var nextPearlId: Int = -1
+    var incrementGlobalCounters: Boolean = true
     val tileTypeMap =
         listOf(
             "solid",
@@ -139,6 +143,7 @@ class Room(
             //add(FloatingSystem())
             add(RotationSystem())
             add(MascotSystem())
+            add(PickupFloatingSystem())
             add(MusicSwitchingSystem(musicType = (map.properties["music"] as? TiledMap.Property.StringProp)?.value))
             add(RenderingSystem())
             add(StorySystem())
@@ -274,7 +279,7 @@ class Room(
             it += UiComponent()
         }
 
-        incrementGlobalCheckpoints = incrementGlobalCheckpoints || fullReset
+        incrementGlobalCounters = incrementGlobalCounters || fullReset
         map.layers.forEach {
             if (it is TiledObjectLayer) {
                 it.objects.forEach { spawn ->
@@ -290,7 +295,6 @@ class Room(
                 }
             }
         }
-        incrementGlobalCheckpoints = false // to not do it during room reset!
 
         playerEntity = ecs.entity {
             attachDress(it)
@@ -345,6 +349,12 @@ class Room(
             it += ContextComponent()
             it += MascotComponent(Vec2f(0.2f, 1f), playerEntity)
         }
+
+        if (firstPearlIdInThisRoom < 0 || fullReset) {
+            firstPearlIdInThisRoom = PlatformingScene.nextPearlId
+        }
+        nextPearlId = firstPearlIdInThisRoom
+
         map.layers.forEach {
             if (it is TiledObjectLayer) {
                 it.objects.forEach { spawn ->
@@ -374,6 +384,7 @@ class Room(
                                     gameContext.gameState.waterPearl = true
                                     ecs.apply { playerEntity.configure { attachDress(it) } }
                                     gameContext.save()
+                                    UiRenderingSystem.collectionText = null
                                 }
                             }
                         }
@@ -388,6 +399,7 @@ class Room(
                                     gameContext.gameState.airPearl = true
                                     ecs.apply { playerEntity.configure { attachDress(it) } }
                                     gameContext.save()
+                                    UiRenderingSystem.collectionText = null
                                 }
                             }
                         }
@@ -401,18 +413,20 @@ class Room(
                                     }
                                     gameContext.gameState.sword = true
                                     gameContext.save()
+                                    UiRenderingSystem.collectionText = null
                                 }
                             }
                         }
 
                         "pearl" -> {
-                            val pearlId = PlatformingScene.nextPearlId++
+                            val pearlId = nextPearlId++
+                            if (incrementGlobalCounters) {
+                                PlatformingScene.nextPearlId++
+                            }
                             while (gameContext.gameState.pearls.size <= pearlId) {
                                 gameContext.gameState.pearls.add(false)
                             }
-                            if (gameContext.gameState.pearls[pearlId]) {
-                                PlatformingScene.collectedPearls++
-                            } else {
+                            if (!gameContext.gameState.pearls[pearlId]) {
                                 createPickup(spawn, "Normal pearl", tint = Color.WHITE.toFloatBits()) {
                                     gameContext.fmodAssets.pickCollectiblePearl.createInstance().apply {
                                         start()
@@ -466,6 +480,8 @@ class Room(
                 }
             }
         }
+
+        incrementGlobalCounters = false // to not do it during room reset!
     }
 
     private fun EntityCreateContext.attachDress(entity: Entity) {
@@ -575,6 +591,8 @@ class Room(
             }
             entity += RotationComponent()
             entity += ContextComponent()
+            entity += MoveComponent()
+            entity += PickupComponent()
             physicsSystem.createPickupBody(
                 this,
                 entity,
@@ -594,7 +612,7 @@ class Room(
     private fun createCheckpoint(spawn: TiledMap.Object, tint: Float, tintActive: Float) {
         ecs.entity { entity ->
             val checkpointId = nextCheckpointId++
-            if (incrementGlobalCheckpoints) {
+            if (incrementGlobalCounters) {
                 PlatformingScene.nextCheckpointId++
             }
             val isActive = gameContext.gameState.checkpoint == checkpointId
@@ -784,5 +802,6 @@ class Room(
             addedToMap = false
         }
         respawnEntities(full)
+        UiRenderingSystem.collectionText = null
     }
 }

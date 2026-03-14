@@ -6,7 +6,7 @@ import com.littlekt.math.MutableVec2f
 
 class MoveComponent(
     val maxMoveSpeed: Float = 1f,
-    var speed: Float = 0f,
+    var speed: Float = 1f,
     val moveDirection: MutableVec2f = MutableVec2f(),
     val dashDirection: MutableVec2f = MutableVec2f(),
     var fallThrough: Boolean = false,

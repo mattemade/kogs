@@ -43,6 +43,8 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
             mapSize.y = minOf(mapSize.y, it.worldArea.y)
             mapSize.x2 = maxOf(currentX2, it.worldArea.x2)
             mapSize.y2 = maxOf(currentY2, it.worldArea.y2)
+
+            totalRooms++
         }
         Room(
             map = gameContext.assets.levels.map[it.file]!!,
@@ -93,8 +95,25 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
         }
     }
 
+    init {
+        updateCollectionCounter()
+    }
+
     private fun addRoomToMap(room: Room, shapeRenderer: ShapeRenderer) {
         if (!room.addedToMap && room.visibleOnMap) {
+            room.tileTypeMap["water"]?.forEachIndexed { x, row ->
+                row.forEachIndexed { y, value ->
+                    if (value) {
+                        shapeRenderer.filledRectangle(
+                            x = room.worldArea.x + x.toFloat(),
+                            y = room.worldArea.y + y.toFloat(),
+                            width = 1f,
+                            height = 1f,
+                            color = mapWaterColor,
+                        )
+                    }
+                }
+            }
             room.tileTypeMap["solid"]?.forEachIndexed { x, row ->
                 row.forEachIndexed { y, value ->
                     if (value) {
@@ -121,19 +140,6 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                     }
                 }
             }
-            room.tileTypeMap["water"]?.forEachIndexed { x, row ->
-                row.forEachIndexed { y, value ->
-                    if (value) {
-                        shapeRenderer.filledRectangle(
-                            x = room.worldArea.x + x.toFloat(),
-                            y = room.worldArea.y + y.toFloat(),
-                            width = 1f,
-                            height = 1f,
-                            color = mapWaterColor,
-                        )
-                    }
-                }
-            }
             room.addedToMap = true
         }
     }
@@ -149,6 +155,11 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
         currentRoom = getCurrentRoom()
         initialMapDraw = true
         sharedMapRenderer.render(0f.seconds)
+    }
+
+    private fun updateCollectionCounter() {
+        visitedRooms = rooms.count { it.visibleOnMap && gameContext.gameState.roomStates[it.name]?.isVisited == true }
+        collectedPearls = gameContext.gameState.pearls.count { it }
     }
 
     override fun update(seconds: Float) {
@@ -205,6 +216,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                         gameContext.gameState.roomStates.getOrPut(it.name) { PlatformerGameContext.RoomState() }.isVisited = true
                         gameContext.gameState.currentRoom = it.name
                         sharedMapRenderer.render(0f.seconds)
+                        updateCollectionCounter()
                         return
                     }
                 }
@@ -234,5 +246,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
         var nextCheckpointId = 0
         var nextPearlId = 0
         var collectedPearls = 0
+        var totalRooms = 0
+        var visitedRooms = 0
     }
 }

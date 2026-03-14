@@ -819,20 +819,21 @@ class Box2DPhysicsSystem(
         with(entityCreateContext) {
             entity += Box2DPhysicsComponent(
                 body = physics.createBody(BodyDef().apply {
-                    type = BodyType.STATIC
+                    type = BodyType.DYNAMIC
                     position.set(x, y)
-                    gravityScale = GRAVITY_IN_FALL
+                    gravityScale = 0f
                 }).apply {
                     isFixedRotation = false
                 },
-                collisionMask = PEARL_COLLISIONS,
+                collisionMask = PICKUP_COLLISIONS,
+                gravityScaleOverride = 0f,
             ).apply {
                 // land body
                 landBodyFixture = body.createFixture(FixtureDef().apply {
                     isSensor = true
                     filter = Filter().apply {
-                        categoryBits = PEARL_MASK
-                        maskBits = PEARL_COLLISIONS
+                        categoryBits = PICKUP_MASK
+                        maskBits = PICKUP_COLLISIONS
                     }
                     shape = PolygonShape().apply {
                         setAsBox(
@@ -1087,17 +1088,17 @@ class Box2DPhysicsSystem(
 
         private val CHECKPOINT_MASK = NEXT_MASK
 
-        private val PEARL_MASK = NEXT_MASK
+        private val PICKUP_MASK = NEXT_MASK
 
         private val PLAYER_BODY_COLLISIONS =
-            WALL_MASK or CHECKPOINT_MASK or PEARL_MASK or SPIKE_MASK or ENEMY_VISION_MASK or ENEMY_PROXIMITY_MASK
+            WALL_MASK or CHECKPOINT_MASK or PICKUP_MASK or SPIKE_MASK or ENEMY_VISION_MASK or ENEMY_PROXIMITY_MASK
         private val PLAYER_HITBOX_COLLISIONS = ENEMY_BODY_MASK or SPIKE_MASK
         private val PLAYER_LIMB_COLLISIONS = WALL_MASK or WATER_MASK or SPIKE_MASK or ENEMY_BODY_MASK
         private val ENEMY_BODY_COLLISION =
             WALL_MASK or ROOM_BOUNDS_MASK or PLAYER_HITBOX_MASK or PLAYER_TORSO_MASK or PLAYER_ATTACK_MASK or ENEMY_BODY_MASK or SPIKE_MASK or PLAYER_FOOT_MASK or ENEMY_HANDS_MASK
         private val ENEMY_LIBS_COLLISIONS = WALL_MASK or ROOM_BOUNDS_MASK or WATER_MASK or SPIKE_MASK or ENEMY_BODY_MASK
         private val CHECKPOINT_COLLISIONS = PLAYER_BODY_MASK
-        private val PEARL_COLLISIONS = PLAYER_BODY_MASK
+        private val PICKUP_COLLISIONS = PLAYER_BODY_MASK
         private val PLAYER_ATTACK_COLLISIONS = ENEMY_BODY_MASK
         private val ENEMY_PLAYER_DETECTOR_COLLISIONS = PLAYER_BODY_MASK
 

@@ -253,9 +253,6 @@ class PlatformerGame(
 
                         directRender.updateShapeRenderer()
                         pixelRender.updateShapeRenderer()
-                        // I don't understand that quick update thing, it seems
-                        // to work if I just plug  my rendering here
-                        gameContext.storyDisplayService.render()
 
                         gameContext.log("loaded")
                         gameContext.load()

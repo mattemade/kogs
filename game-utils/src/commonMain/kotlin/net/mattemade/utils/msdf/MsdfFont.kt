@@ -4,9 +4,6 @@ import com.littlekt.graphics.Texture
 import com.littlekt.graphics.g2d.Batch
 import com.littlekt.graphics.g2d.TextureSlice
 import com.littlekt.graphics.slice
-import com.littlekt.graphics.sliceByBounds
-import com.littlekt.math.ceilToInt
-import com.littlekt.math.floorToInt
 import net.mattemade.gui.api.math.Vec2
 
 class MsdfFont(
@@ -26,10 +23,22 @@ class MsdfFont(
             .associateBy { it.character })
 
 
-    fun draw(text: String, x: Float, y: Float, scale: Float, batch: Batch) {
+    fun draw(
+        text: String,
+        x: Float,
+        y: Float,
+        scale: Float,
+        batch: Batch,
+        characterLimit: Int = Int.MAX_VALUE,
+    ) {
         var cursorX = x
         var cursorY = y + (lineHeight - descender) * scale
-        text.forEach {
+        var charactersLeft = characterLimit
+        for (it in text) {
+            if (charactersLeft-- <= 0) {
+                break
+            }
+
             if (it == '\n') {
                 cursorX = x
                 cursorY += lineHeight * scale
@@ -48,11 +57,21 @@ class MsdfFont(
         }
     }
 
-    fun measure(text: String, scale: Float, to: Vec2) {
+    fun measure(
+        text: String,
+        scale: Float,
+        to: Vec2,
+        characterLimit: Int = Int.MAX_VALUE,
+    ) {
         var cursorX = 0f
         var lines = 1
+        var charactersLeft = characterLimit
         to.x = 0f
-        text.forEach {
+        for (it in text) {
+            if (charactersLeft-- <= 0) {
+                break
+            }
+
             if (it == '\n') {
                 to.x = maxOf( to.x, cursorX)
                 cursorX = 0f
@@ -63,7 +82,7 @@ class MsdfFont(
                 }
             }
         }
-        to.x = maxOf( to.x, cursorX)
+        to.x = maxOf(to.x, cursorX)
         to.y = lines * lineHeight * scale
     }
 
@@ -98,8 +117,8 @@ class MsdfFont(
             slice = atlas.slice().apply {
                 setSlice(
                     u = csvLineSplit[6].toFloat() / atlas.width,
-                    v2 = csvLineSplit[7].toFloat()  / atlas.height,
-                    u2 = csvLineSplit[8].toFloat()  / atlas.width,
+                    v2 = csvLineSplit[7].toFloat() / atlas.height,
+                    u2 = csvLineSplit[8].toFloat() / atlas.width,
                     v = csvLineSplit[9].toFloat() / atlas.height,
                 )
             }
