@@ -23,6 +23,7 @@ import net.mattemade.platformer.system.Box2DPhysicsSystem
 
 class ResourceEnemy(
     val name: String,
+    val hp: Float,
     val idleName: String,
     val walkName: String = idleName,
     val jumpName: String = idleName,
@@ -68,7 +69,7 @@ class ResourceEnemy(
         entity += FloatUpComponent()
         entity += MomentaryForceComponent()
         entity += ContextComponent()
-        entity += HealthComponent(health = 4f, maxHealth = 4f)
+        entity += HealthComponent(health = hp, maxHealth = hp)
         entity += PushableComponent()
         if (forGauntlet) {
             entity += GauntletEnemyComponent()

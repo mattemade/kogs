@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>platformer template</title>
+  <title>Pearl of the Deep</title>
   <style>
     body {
       background: #000000;
@@ -31,14 +31,5 @@
     <canvas id="canvas" width="1" height="1"></canvas>
   </div>
 </body>
-<!-- Uncomment the below script tag if you want simple FPS tracking on screen -->
-<script type="text/javascript" src="stats.min.js" onload="if (navigator.gpu) {
-var stats = new Stats();
-document.getElementById('content').appendChild(stats.dom);
-requestAnimationFrame(function loop() {
-stats.update();
-requestAnimationFrame(loop)
-});
-}"></script>
 <script type="text/javascript" src="platformer.js"></script>
 </html>

@@ -193,10 +193,12 @@ class PlatformerGameContext(
 
     fun updateMusic() {
         when (musicType) {
-            "sky" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.testMusic)
+            "sky" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.skyMusic)
             "caves" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.cavesMusic)
-            "temple" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.ambienceMusic)
-            "gauntlet" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.gauntletMusic)
+            "strings" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.ambienceMusic)
+            "temple" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.templeMusic)
+            "gauntlet" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.bossBattle)
+            "boss" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.bossBattle)
             "silence" -> stopCurrentMusic()
             else -> { /* no-op */ }
         }

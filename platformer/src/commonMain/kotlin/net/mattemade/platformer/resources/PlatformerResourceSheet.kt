@@ -152,6 +152,7 @@ class PlatformerResourceSheet(data: List<String>) {
                             line["Idle animation"]?.let { idleRegion ->
                                 enemies[name] = ResourceEnemy(
                                     name,
+                                    hp = line["HP"]?.toFloatOrNull() ?: 1f,
                                     idleName = idleRegion,
                                     walkName = line["Walk animation"]?.takeIf(String::isNotEmpty) ?: idleRegion,
                                     jumpName = line["Jump animation"]?.takeIf(String::isNotEmpty) ?: idleRegion,

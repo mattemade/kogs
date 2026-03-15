@@ -40,14 +40,13 @@ class FmodAssets(
 
     val sampleDataPreparation by selfPreparePlain(order = 1, action = {
         map.forEach { (key, value) ->
-            if (!key.contains("Ocean")) {
+            if (key.contains("Game")) {
                 value.loadSampleData()
             }
         }
     }) {
         map.all { (key, value) ->
-            key.contains("Ocean") ||
-                    value.sampleLoadingState == FMOD.STUDIO_LOADING_STATE_LOADED
+            !key.contains("Game") || value.sampleLoadingState == FMOD.STUDIO_LOADING_STATE_LOADED
         }
     }
 
@@ -85,9 +84,10 @@ class FmodAssets(
     val checkPointActivated by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Checkpoint activates (health restored, game saved)")!! }
     val windBlowing by preparePlain(order = 2) { studioSystem.getEvent("event:/Main character SFX/Wind blows (loop)")!! }
 
-    val testMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/StemTest")!! }
+    val skyMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/Sky")!! }
     val cavesMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/Caves")!! }
     val ambienceMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/Ambience Strings")!! }
-    val gauntletMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/BossBattle")!! }
+    val bossBattle by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/BossBattle")!! }
+    val templeMusic by preparePlain(order = 2) { studioSystem.getEvent("event:/Music/Temple")!! }
     val playerStateParameter by lazy { studioSystem.getParameterDescriptionByName("Player state").id }
 }

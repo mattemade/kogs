@@ -520,9 +520,11 @@ class Room(
                         createPickup(
                             spawn, "empty", tint = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits()
                         ) {
-                            gameContext.gameState.tutorials[id] = true
-                            ecs.apply {
-                                uiEntity[UiComponent].showTutorial = null
+                            if (gameContext.gameState.tutorials[id] == false) { // only if it was activated!!!
+                                gameContext.gameState.tutorials[id] = true
+                                ecs.apply {
+                                    uiEntity[UiComponent].showTutorial = null
+                                }
                             }
                         }
                     }
@@ -905,7 +907,8 @@ class Room(
                 it += storyComponent
             }
             physicsSystem.teleport(playerEntity, playerPosition, physicsComponent)
-            contextComponent.swimming = false // next room should switch body parameters for swimming if needed
+            // NO DON'T DO IT!! water should be continuous between rooms!
+            //contextComponent.swimming = false // next room should switch body parameters for swimming if needed
 
             val currentlyActiveCheckpointInThisRoom = currentlyActiveCheckpointInThisRoom
             if (currentlyActiveCheckpointInThisRoom != null) {
@@ -949,9 +952,19 @@ class Room(
     }
 
     companion object {
-        private val checkpointTint =
-            Color.BLUE.toMutableColor().apply { a = 0.5f }.toFloatBits().let { Rect(it, it, it, it) }
-        private val activeCheckpointTint =
-            Color.CYAN.toMutableColor().apply { a = 0.5f }.toFloatBits().let { Rect(it, it, it, it) }
+        private val checkpointTint = Rect(
+            Color.BLUE.toMutableColor().apply { a = 0.5f }.toFloatBits(),
+            Color.BLUE.toMutableColor().apply { a = 0.5f }.toFloatBits(),
+            Color.BLUE.toMutableColor().apply { a = 0f }.toFloatBits(),
+            Color.BLUE.toMutableColor().apply { a = 0f }.toFloatBits(),
+            )
+            //Color.BLUE.toMutableColor().apply { a = 0.5f }.toFloatBits().let { Rect(it, it, it, it) }
+        private val activeCheckpointTint =Rect(
+                Color.GREEN.toMutableColor().apply { a = 0.5f }.toFloatBits(),
+                Color.GREEN.toMutableColor().apply { a = 0.5f }.toFloatBits(),
+                Color.GREEN.toMutableColor().apply { a = 0f }.toFloatBits(),
+                Color.GREEN.toMutableColor().apply { a = 0f }.toFloatBits(),
+            )
+            //Color.CYAN.toMutableColor().apply { a = 0.5f }.toFloatBits().let { Rect(it, it, it, it) }
     }
 }
