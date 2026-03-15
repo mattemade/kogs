@@ -48,7 +48,7 @@ class EnemyComponent(
         Intent.Move(-0.2f, 0f, limit = Float.MAX_VALUE, swim = true)
 
     private fun IteratingSystem.createJellyfishSequence(entity: Entity): Intent =
-        Intent.FlyInSine(x = 0f, dy = 0.4f, timeScale = 2f)
+        Intent.FlyInSine(x = 0f, dy = 0.4f, timeScale = 2f, swimOnly = true)
 
     private fun IteratingSystem.createBatSequence(entity: Entity): Intent =
         when (counter++) {

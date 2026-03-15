@@ -112,8 +112,9 @@ class EnemyBehaviourSystem(
 
             override fun IteratingSystem.switch(entity: Entity): Intent? {
                 val context = entity[ContextComponent]
-                if (context.swimming) {
+                if (context.swimming && !swimOnly) {
                     y = 0f
+                    dy = 0f
                     x = 0f
                     return this@FlyInSine
                 }
@@ -122,10 +123,6 @@ class EnemyBehaviourSystem(
                 y = sin(time) * dy
                 if (context.touchingRightWall && x > 0f || context.touchingLeftWall && x < 0f) {
                     x = -x
-                }
-                if (swimOnly && !context.swimming) {
-                    x = 0f
-                    dy = 0f
                 }
                 return this@FlyInSine
             }

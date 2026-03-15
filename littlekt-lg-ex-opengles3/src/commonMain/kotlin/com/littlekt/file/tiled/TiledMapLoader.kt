@@ -206,7 +206,7 @@ internal constructor(
             tileHeight = tilesetData.tileheight,
             tiles =
                 idToSlices.mapIndexed { index, (id, slice) ->
-                    val tileData = tilesetData.tiles.firstOrNull { it.id == index }
+                    val tileData = tilesetData.tiles.firstOrNull { it.id == id }
 
                     TiledTileset.Tile(
                         slice = slice,
@@ -218,7 +218,7 @@ internal constructor(
                         frames =
                             tileData?.animation?.map {
                                 TiledTileset.AnimatedTile(
-                                    slice = idToSlices[index].second,
+                                    slice = idToSlices.first { (id, _) -> id == it.tileid }.second,
                                     id = it.tileid + gid,
                                     duration = it.duration.milliseconds,
                                     width = tilesetData.tilewidth,

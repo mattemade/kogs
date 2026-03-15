@@ -319,19 +319,9 @@ class RenderingSystem(
 
 
                 if (staminaComponent.stamina < 1f || staminaComponent.keepVisibleForExtraTime > 0f) {
-
                     val staminaX = (position.x - 1.4f).px
                     val staminaY = (position.y - 2.4f).px
-                    staminaBarAnimation.update(deltaTime.seconds)
-                    staminaBarAnimation.currentKeyFrame?.let {
-                        batch.draw(
-                            slice = it,
-                            x = staminaX,
-                            y = staminaY,
-                            width = it.width * UNITS_PER_PIXEL,
-                            height = it.height * UNITS_PER_PIXEL,
-                        )
-                    }
+
                     val fillIndex = (gameContext.assets.textureFiles.staminaBarSlices.size-1) * (1f - staminaComponent.stamina)
                     gameContext.assets.textureFiles.staminaBarSlices[fillIndex.floorToInt()].let {
                         batch.draw(
@@ -342,6 +332,18 @@ class RenderingSystem(
                             height = it.height * UNITS_PER_PIXEL,
                         )
                     }
+
+                    staminaBarAnimation.update(deltaTime.seconds)
+                    staminaBarAnimation.currentKeyFrame?.let {
+                        batch.draw(
+                            slice = it,
+                            x = staminaX,
+                            y = staminaY,
+                            width = it.width * UNITS_PER_PIXEL,
+                            height = it.height * UNITS_PER_PIXEL,
+                        )
+                    }
+
                 }
             }
 
