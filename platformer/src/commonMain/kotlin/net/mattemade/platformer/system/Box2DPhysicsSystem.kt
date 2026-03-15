@@ -61,7 +61,7 @@ import org.jbox2d.dynamics.World as B2dWorld
 
 class Box2DPhysicsSystem(
     //private val physics: B2dWorld = inject(),
-    private val spawnPlayerAttack: (x: Float, y: Float, vx: Float, vy: Float, damage: Float) -> Unit,
+    private val spawnPlayerAttack: (x: Float, y: Float, vx: Float, vy: Float, dx: Float, dy: Float, damage: Float) -> Unit,
     private val roomSize: Vec2f,
     private val gameContext: PlatformerGameContext = inject(),
     interval: Interval = Fixed(1 / 200f)
@@ -294,12 +294,16 @@ class Box2DPhysicsSystem(
                 } else {
                     tempVec2f.set(-1f, 0f)
                 }
+                val dx = tempVec2f.x
+                val dy = tempVec2f.y
                 tempVec2f.add(physicsComponent.body.position.x, physicsComponent.body.position.y)
                 spawnPlayerAttack(
                     tempVec2f.x,
                     tempVec2f.y,
                     physicsComponent.body.linearVelocityX,
                     if (context.swimming) physicsComponent.body.linearVelocityY else 0f,
+                    dx,
+                    dy,
                     it.requestingPhysicsToSpawnAttack
                 )
                 it.requestingPhysicsToSpawnAttack = 0f

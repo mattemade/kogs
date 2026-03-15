@@ -10,6 +10,8 @@ import com.littlekt.graphics.g2d.tilemap.tiled.TiledMap
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledObjectLayer
 import com.littlekt.graphics.g2d.tilemap.tiled.TiledTilesLayer
 import com.littlekt.graphics.toFloatBits
+import com.littlekt.math.MutableVec2f
+import com.littlekt.math.PI_F
 import com.littlekt.math.Rect
 import com.littlekt.math.Vec2f
 import net.mattemade.platformer.PlatformerGameContext
@@ -60,6 +62,7 @@ import net.mattemade.platformer.system.StorySystem
 import net.mattemade.platformer.system.TimeToLiveSystem
 import net.mattemade.platformer.system.UiControlsSystem
 import net.mattemade.platformer.system.UiRenderingSystem
+import net.mattemade.utils.math.NO_ROTATION
 import net.mattemade.utils.releasing.Releasing
 import net.mattemade.utils.releasing.Self
 import net.mattemade.utils.tiled.BoundsListener
@@ -819,11 +822,12 @@ class Room(
         }
     }
 
-    private fun spawnPlayerAttack(x: Float, y: Float, vx: Float, vy: Float, damage: Float) {
+    private fun spawnPlayerAttack(x: Float, y: Float, vx: Float, vy: Float, dx: Float, dy: Float, damage: Float) {
         ecs.entity { entity ->
+            println("attack $x $y")
             val radius = 1f
             entity += SpriteComponent(
-                idleAnimation = gameContext.assets.animation("MC idle"),
+                idleAnimation = gameContext.assets.animation("Attack"),
                 animationEventCallback = { it, _ -> println(it) },
                 // baking offset into the bounds, maybe it should be a separate property?
                 bounds = Rect(
@@ -832,7 +836,8 @@ class Room(
                 priority = 0,
             )
             entity += PositionComponent().also { it.position.set(x, y) }
-            entity += RotationComponent(maxRotationVelocity = 0.1f)
+            val rotation = tempVec2f.set(dx, dy).angleTo(NO_ROTATION).radians + PI_F
+            entity += RotationComponent(targetRotation = rotation, currentRotation = rotation)
             entity += MomentaryForceComponent().apply { forces.add(Vec2f(vx, vy)) }
             entity += ContextComponent()
             entity += TimeToLiveComponent(0.2f)
@@ -966,5 +971,6 @@ class Room(
                 Color.GREEN.toMutableColor().apply { a = 0f }.toFloatBits(),
             )
             //Color.CYAN.toMutableColor().apply { a = 0.5f }.toFloatBits().let { Rect(it, it, it, it) }
+        private val tempVec2f = MutableVec2f()
     }
 }
