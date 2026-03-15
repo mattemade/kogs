@@ -277,7 +277,7 @@ class PlatformerGame(
                 pixelRender.render(dt)
                 directRender.render(dt)
                 // why is it indented? uhm, whatever.
-                gameContext.storyDisplayService.render()
+                gameContext.storyDisplayService.render(dt.seconds)
             //}
 
             // unpause in the end of onRender, to let the previous update with huuuuuge dt to not affect the game

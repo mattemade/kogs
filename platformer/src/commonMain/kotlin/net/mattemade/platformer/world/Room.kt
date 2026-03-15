@@ -2,6 +2,7 @@ package net.mattemade.platformer.world
 
 import com.github.quillraven.fleks.Entity
 import com.github.quillraven.fleks.EntityCreateContext
+import com.github.quillraven.fleks.IntervalSystem
 import com.github.quillraven.fleks.configureWorld
 import com.littlekt.graphics.Color
 import com.littlekt.graphics.Texture
@@ -101,11 +102,23 @@ class Room(
     private lateinit var physicsSystem: Box2DPhysicsSystem
     private lateinit var musicSwitchingSystem: MusicSwitchingSystem
 
+    private val systemsToStopOnStory: MutableList<IntervalSystem> = mutableListOf()
+
+    // I ABSOLUTELY consulted a chatbot for this one, I am not denying it.
+    // Turned out the Kotlin syntax for generics was just Java's
+    // (I was trying something that looked more like Scala)
+    // Now I feel silly.
+    private fun <T : IntervalSystem> prepareToStop(system: T): T {
+        systemsToStopOnStory.add(system)
+        return system
+    }
+
     val ecs = configureWorld {
         injectables {
             add(gameContext)
             add(gameContext.context)
             add(map)
+            add(systemsToStopOnStory as List<IntervalSystem>)
         }
         systems {
             add(TimeToLiveSystem())
@@ -124,15 +137,16 @@ class Room(
                 )
             )
             add(InvincibilitySystem())
-            add(EnemyBehaviourSystem())
-            add(Box2DPhysicsSystem(::spawnPlayerAttack, Vec2f(worldArea.width, worldArea.height)).also {
+            add(prepareToStop(EnemyBehaviourSystem()))
+            add(prepareToStop(Box2DPhysicsSystem(::spawnPlayerAttack, Vec2f(worldArea.width, worldArea.height))).also {
                 physicsSystem = it
             }.releasing())
-            add(StaminaBreathingSystem())
+            add(prepareToStop(StaminaBreathingSystem()))
             add(LowStaminaDamageSystem())
             add(StaminaRestorationSystem())
             add(LoadOnPlayerDeathSystem())
             add(EnemyDeathSystem())
+            add(StorySystem())
             //add(FloatingSystem())
             add(RotationSystem())
             add(MascotSystem())
@@ -144,7 +158,6 @@ class Room(
                 ).also { musicSwitchingSystem = it }
             )
             add(RenderingSystem())
-            add(StorySystem())
             add(UiRenderingSystem(worldArea = worldArea, mapVisible = visibleOnMap, mapTexture = { mapTexture }))
         }
 
@@ -476,13 +489,25 @@ class Room(
                 val text = spawn.properties["text"]?.string
                 if (id != null && text != null && gameContext.gameState.tutorials[id] != true) {
                     createPickup(
-                        spawn, "empty", tint = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits()
-                    ) {
-
+                        spawn,
+                        "empty",
+                        tint = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits(),
+                        // if you need the tutorials removed, then technically, for now,
+                        // you can leave as true. But this is not something that the
+                        // story triggers need.
+                        // Perhaps I should have _not_ piggybacked on the turorial
+                        // rectangles after all. Too late now :(
+                        removeOnTouch = false
+                    ) { other ->
                         if (gameContext.gameState.tutorials[id] != true) { // in case player already covered that part somehow
                             gameContext.gameState.tutorials[id] = false
                             ecs.apply {
                                 uiEntity[UiComponent].showTutorial = text
+                            }
+                        }
+                        ecs.apply {
+                            playerEntity.getOrNull(StoryComponent.Companion)?.let { story ->
+                                story.triggers.add("trigger:tutorial:$id")
                             }
                         }
                     }
@@ -613,7 +638,13 @@ class Room(
         }
     }
 
-    private fun createPickup(spawn: TiledMap.Object, animationName: String, tint: Float, collect: () -> Unit) {
+    private fun createPickup(
+        spawn: TiledMap.Object,
+        animationName: String,
+        tint: Float,
+        removeOnTouch: Boolean = true,
+        collect: (otherEntity: Entity) -> Unit
+    ) {
         ecs.entity { entity ->
             entity += SpriteComponent(
                 idleAnimation = gameContext.assets.animation(animationName),
@@ -642,10 +673,12 @@ class Room(
                 spawn.bounds.cy * unitSize,
                 spawn.bounds.width * unitSize,
                 spawn.bounds.height * unitSize,
-                onTouch = {
-                    collect()
-                    gameContext.scheduler.schedule().then {
-                        entity.remove()
+                onTouch = { other ->
+                    collect(other)
+                    if (removeOnTouch) {
+                        gameContext.scheduler.schedule().then {
+                            entity.remove()
+                        }
                     }
                 })
         }

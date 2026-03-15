@@ -22,6 +22,8 @@ class GameInput(
     val pause = stateOf(ControllerInput.PAUSE)
     val restart = stateOf(ControllerInput.RESTART)
     val respawn = stateOf(ControllerInput.RESPAWN)
+    val moveUp = stateOf(ControllerInput.MOVE_UP)
+    val moveDown = stateOf(ControllerInput.MOVE_DOWN)
 
 
     private fun stateOf(type: ControllerInput): State = State(input, touchButtonStates, type).also { states += it }

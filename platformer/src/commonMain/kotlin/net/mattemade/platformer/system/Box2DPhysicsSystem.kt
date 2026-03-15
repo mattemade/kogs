@@ -812,8 +812,8 @@ class Box2DPhysicsSystem(
         y: Float,
         width: Float,
         height: Float,
-        onTouch: () -> Unit = {},
-        onExit: () -> Unit = {},
+        onTouch: (otherEntity: Entity) -> Unit = {},
+        onExit: (otherEntity: Entity) -> Unit = {},
     ) {
         with(entityCreateContext) {
             entity += Box2DPhysicsComponent(
@@ -839,7 +839,7 @@ class Box2DPhysicsSystem(
                             width * 0.48f, height * 0.48f
                         )
                     }
-                    userData = Action(onTouch = { onTouch() }, onExit = { onExit() })
+                    userData = Action(onTouch = { onTouch(it) }, onExit = { onExit(it) })
                 })!!
                 waterBodyFixture = landBodyFixture
             }
