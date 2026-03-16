@@ -20,6 +20,7 @@ import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.JumpComponent
 import net.mattemade.platformer.component.MoveComponent
 import net.mattemade.platformer.component.PlayerComponent
+import net.mattemade.platformer.component.StoryComponent
 import kotlin.math.absoluteValue
 import kotlin.math.sign
 
@@ -46,6 +47,20 @@ class ControlsSystem(
             return
         } else if (input.respawn.justPressed) {
             gameContext.load(forceRestart = true)
+            return
+        }
+
+        if (gameContext.storyDisplayService.isStoryVisible) {
+            val storyComponent = entity[StoryComponent]
+            if (input.moveUp.justPressed) {
+                storyComponent.selectionDiff++
+            }
+            if (input.moveDown.justPressed) {
+                storyComponent.selectionDiff--
+            }
+            if (input.jump.justPressed || input.attack.justPressed) {
+                storyComponent.select = true
+            }
             return
         }
 

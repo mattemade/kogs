@@ -494,22 +494,11 @@ class Room(
                         spawn,
                         "empty",
                         tint = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits(),
-                        // if you need the tutorials removed, then technically, for now,
-                        // you can leave as true. But this is not something that the
-                        // story triggers need.
-                        // Perhaps I should have _not_ piggybacked on the turorial
-                        // rectangles after all. Too late now :(
-                        removeOnTouch = false
                     ) { other ->
                         if (gameContext.gameState.tutorials[id] != true) { // in case player already covered that part somehow
                             gameContext.gameState.tutorials[id] = false
                             ecs.apply {
                                 uiEntity[UiComponent].showTutorial = text
-                            }
-                        }
-                        ecs.apply {
-                            playerEntity.getOrNull(StoryComponent.Companion)?.let { story ->
-                                story.triggers.add("trigger:tutorial:$id")
                             }
                         }
                     }
@@ -528,6 +517,21 @@ class Room(
                                     uiEntity[UiComponent].showTutorial = null
                                 }
                             }
+                        }
+                    }
+                }
+            }
+            "story" -> {
+                spawn.properties["id"]?.string?.let { id ->
+                    if (gameContext.gameState.stories[id] != true) {
+                        createPickup(
+                            spawn, "empty", tint = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits()
+                        ) {
+                            gameContext.gameState.stories[id] = true
+                            ecs.apply {
+                                playerEntity[StoryComponent].triggers += id
+                            }
+                            gameContext.save()
                         }
                     }
                 }

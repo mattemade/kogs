@@ -100,10 +100,10 @@ class PlatformerGameContext(
     }
 
     fun load(forceRestart: Boolean = false, reset: Boolean = false) {
+        _story = null
         if (reset) {
             previousSavedState = null
             gameState = GameState()
-            _story = null
             save()
             restartScene()
             return
@@ -119,6 +119,7 @@ class PlatformerGameContext(
                 decoded
             } catch (e: Exception) {
                 // this looks dangerous? or?
+                e.printStackTrace()
                 null
             }
         } ?: GameState().also { println("No save found, creating new GameState") }
@@ -135,6 +136,7 @@ class PlatformerGameContext(
         var sword: Boolean = false,
         var pearls: MutableList<Boolean> = mutableListOf(),
         var tutorials: MutableMap<String, Boolean> = mutableMapOf(),
+        var stories: MutableMap<String, Boolean> = mutableMapOf(),
         var currentRoom: String = FIRST_LEVEL_NAME,
         var checkpoint: Int = -1,
         var story: StoryState = StoryState(),
