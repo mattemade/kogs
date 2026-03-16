@@ -256,6 +256,7 @@ class PlatformerGame(
 
                         gameContext.log("loaded")
                         gameContext.load()
+                        gameContext.musicType = "title"
                         scene = SplashScene(gameContext)
                         platformingScene // just to initialize it
                     }

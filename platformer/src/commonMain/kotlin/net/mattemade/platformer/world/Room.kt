@@ -157,7 +157,7 @@ class Room(
             add(
                 MusicSwitchingSystem(
                     musicType = (map.properties["music"] as? TiledMap.Property.StringProp)?.value,
-                    gauntlet = map.layerOrNull("gauntlet") != null && gameContext.gameState.roomStates[name]?.gauntletCompleted != true,
+                    activeGauntletNearby = map.layerOrNull("gauntlet") != null && gameContext.gameState.roomStates[name]?.gauntletCompleted != true,
                 ).also { musicSwitchingSystem = it }
             )
             add(RenderingSystem())
@@ -177,7 +177,7 @@ class Room(
                         gameContext.gameState.roomStates[name]?.let {
                             it.gauntletCompleted = true
                         }
-                        musicSwitchingSystem.gauntlet = false
+                        musicSwitchingSystem.activeGauntletNearby = false
                         family { all(GauntletLockComponent) }.forEach {
                             it.remove()
                         }
@@ -370,11 +370,10 @@ class Room(
                     objects.forEach {
                         when (it.name) {
                             "trigger" -> {
-                                gameContext.musicType = "silence"
                                 createExitTrigger(it, Color.RED.toFloatBits()) {
                                     if (gameContext.gameState.sword) {
+                                        musicSwitchingSystem.gauntletInProgress = true
                                         ecs.apply { it.remove() }
-                                        gameContext.musicType = "gauntlet"
                                         // activate the locks and start the fight
                                         objects.forEach {
                                             when (it.name) {
@@ -951,7 +950,7 @@ class Room(
         }
         respawnEntities(full)
         UiRenderingSystem.collectionText = null
-        musicSwitchingSystem.gauntlet =
+        musicSwitchingSystem.activeGauntletNearby =
             map.layerOrNull("gauntlet") != null && gameContext.gameState.roomStates[name]?.gauntletCompleted != true
         gauntletEnemiesLeft = 0
     }

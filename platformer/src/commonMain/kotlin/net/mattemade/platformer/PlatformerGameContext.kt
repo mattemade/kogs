@@ -16,6 +16,7 @@ import net.mattemade.platformer.input.GameInput
 import net.mattemade.platformer.input.bindInputs
 import net.mattemade.platformer.scene.PlatformingScene
 import net.mattemade.utils.Scheduler
+import kotlin.math.absoluteValue
 import kotlin.random.Random
 import kotlin.time.Duration
 
@@ -190,15 +191,34 @@ class PlatformerGameContext(
                 field = value; updateState()
             }
         }
+    private var currentInStory = 0f
+    var inStory: Float = 0f
+        set(value) {
+            if (field != value) {
+                scheduler.forceStop(inStoryChaningTag)
+                val currentInStory = currentInStory
+                val diff = value - currentInStory
+                val timeToSwitch = 1f * diff.absoluteValue // up to 1 seconds
+                scheduler.schedule(inStoryChaningTag).then(timeToSwitch) {
+                    this.currentInStory = currentInStory + diff * it
+                    assets.fmod.studioSystem.setParameterByID(fmodAssets.inStoryParameter, currentInStory + diff * it, 0)
+                }
+                field = value
+            }
+        }
+
 
     fun updateMusic() {
+        println("music; $musicType")
         when (musicType) {
             "sky" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.skyMusic)
             "caves" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.cavesMusic)
             "strings" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.ambienceMusic)
             "temple" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.templeMusic)
-            "gauntlet" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.bossBattle)
+            "gauntlet" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.gauntletMusic)
             "boss" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.bossBattle)
+            "title" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.titleMusic)
+            "credits" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.creditsMusic)
             "silence" -> stopCurrentMusic()
             else -> { /* no-op */ }
         }
@@ -270,6 +290,7 @@ class PlatformerGameContext(
 
     companion object {
         private val LOG_TAG = "mgmt"
+        private val inStoryChaningTag = "instorychanging"
 
         val sharedAttributes: Fmod3DAttributes by lazy {
             Fmod3DAttributes().apply {
