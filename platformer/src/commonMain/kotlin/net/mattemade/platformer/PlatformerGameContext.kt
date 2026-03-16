@@ -218,7 +218,7 @@ class PlatformerGameContext(
             "temple" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.templeMusic)
             "gauntlet" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.gauntletMusic)
             "boss" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.bossBattle)
-            "title" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.titleMusic)
+            //"title" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.titleMusic)
             "credits" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.creditsMusic)
             "silence" -> stopCurrentMusic()
             else -> { /* no-op */ }
