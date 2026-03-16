@@ -37,7 +37,7 @@ class PlatformerGameContext(
     var currentlyPlayingMusic: FmodEventInstance? = null
     val assets = PlatformerAssets(context, this, getFromUrl, fmodFolderPrefix, fmodLiveUpdate, overrideResourcesFrom)
     val fmodAssets by lazy { FmodAssets(context, fmodFolderPrefix, this) }
-    val storyDisplayService by lazy { StoryDisplayService(context, assets, this) }
+    //val storyDisplayService by lazy { StoryDisplayService(context, assets, this) }
     val scheduler = Scheduler()
     var canvasZoom: Float = 1f
     var canvasInverseZoom: Float = 1f
@@ -78,15 +78,8 @@ class PlatformerGameContext(
         gameInput.update(controlsActive)
     }
 
-    private var currentStoryId: String? = null
-    private var _story: InkStory? = null
-    val story: InkStory?
-        get() {
-            if (_story == null && currentStoryId != null) {
-                _story = inkStoryFactory.createStory(assets.stories[currentStoryId]!!)
-            }
-            return _story
-        }
+    var canStartStory: Boolean = false
+    var story: InkStory? = null
 
     fun save() {
         val newState = story?.getState()
@@ -94,22 +87,23 @@ class PlatformerGameContext(
         val state = json.encodeToString(gameState)
         if (previousSavedState != state) {
             log("save|${gameState.checkpoint}|${gameState.sword}|${gameState.waterPearl}|${gameState.airPearl}|${PlatformingScene.collectedPearls}")
-            println("saving $state")
+//            println("saving $state")
             context.vfs.store("save", state)
             previousSavedState = state
         }
     }
 
     fun setStory(id: String) {
-        _story = null
-        currentStoryId = id
+        if (!canStartStory) { // hack against accidental story restart when loading from triggering room
+            return
+        }
+        story = inkStoryFactory.createStory(assets.stories[id]!!)
         gameState.story.state = story?.getState() // IDK
     }
 
     fun load(forceRestart: Boolean = false, reset: Boolean = false) {
-        currentStoryId = null
-        _story = null
-        storyDisplayService.isStoryVisible = false
+        story = null
+        canStartStory = false
         if (reset) {
             previousSavedState = null
             gameState = GameState()
@@ -210,7 +204,7 @@ class PlatformerGameContext(
 
 
     fun updateMusic() {
-        println("music; $musicType")
+//        println("music; $musicType")
         when (musicType) {
             "sky" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.skyMusic)
             "caves" -> whenCurrentDoesNotMatchStopItAndStartAnother(fmodAssets.cavesMusic)
@@ -266,7 +260,7 @@ class PlatformerGameContext(
             }
         }
 
-        println("state: $state")
+//        println("state: $state")
         assets.fmod.studioSystem.setParameterByIDWithLabel(fmodAssets.playerStateParameter, state, 0)
     }
 

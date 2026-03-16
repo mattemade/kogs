@@ -35,6 +35,8 @@ class ControlsSystem(
 }, interval = interval) {
 
     private val input = gameContext.gameInput
+    private var movedUp = false
+    private var movedDown = false
 
     override fun onTick() {
         gameContext.updateInputs() // TODO: how to ensure it's never called more than once?
@@ -50,14 +52,23 @@ class ControlsSystem(
             return
         }
 
-        if (gameContext.storyDisplayService.isStoryVisible) {
+        if (gameContext.story != null) {
             val storyComponent = entity[StoryComponent]
-            if (input.moveUp.justPressed) {
+            if (input.moveUp.justPressed || (!movedUp && input.movement.y < 0f)) {
+                movedUp = true
                 storyComponent.selectionDiff++
             }
-            if (input.moveDown.justPressed) {
+
+            if (input.moveDown.justPressed || (!movedDown && input.movement.y > 0f)) {
+                movedDown = true
                 storyComponent.selectionDiff--
             }
+
+            if (input.movement.y == 0f) {
+                movedUp = false
+                movedDown = false
+            }
+
             if (input.jump.justPressed || input.attack.justPressed) {
                 storyComponent.select = true
             }

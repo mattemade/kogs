@@ -237,7 +237,7 @@ class PlatformerGame(
             screenSize.x = width
             screenSize.y = height
             resizeFinalRender(width, height)
-            gameContext.storyDisplayService.onResize(width, height)
+            //gameContext.storyDisplayService.onResize(width, height)
         }
 
         onQuickUpdate {
@@ -278,7 +278,7 @@ class PlatformerGame(
                 pixelRender.render(dt)
                 directRender.render(dt)
                 // why is it indented? uhm, whatever.
-                gameContext.storyDisplayService.render(dt.seconds)
+                //gameContext.storyDisplayService.render(dt.seconds)
             //}
 
             // unpause in the end of onRender, to let the previous update with huuuuuge dt to not affect the game

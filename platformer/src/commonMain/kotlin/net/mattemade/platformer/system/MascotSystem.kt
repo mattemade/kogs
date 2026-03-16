@@ -13,6 +13,7 @@ import net.mattemade.platformer.component.ContextComponent
 import net.mattemade.platformer.component.MascotComponent
 import net.mattemade.platformer.component.PositionComponent
 import net.mattemade.platformer.component.RotationComponent
+import net.mattemade.platformer.px
 import kotlin.math.abs
 import kotlin.math.sqrt
 

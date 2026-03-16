@@ -50,7 +50,7 @@ class ResourceEnemy(
             fallAnimation = gameContext.assets.animation(fallName),
             swimAnimation = gameContext.assets.animation(swimName),
             wallSlideAnimation = gameContext.assets.animation(wallSlideName),
-            animationEventCallback = { it, _ -> println(it) },
+            animationEventCallback = { it, _ -> /*println(it)*/ },
             // baking offset into the bounds, maybe it should be a separate property?
             bounds = Rect(
                 -halfSize.x,

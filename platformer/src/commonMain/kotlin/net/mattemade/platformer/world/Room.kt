@@ -42,6 +42,7 @@ import net.mattemade.platformer.component.TimeToLiveComponent
 import net.mattemade.platformer.component.UiComponent
 import net.mattemade.platformer.px
 import net.mattemade.platformer.scene.PlatformingScene
+import net.mattemade.platformer.system.AlternativeStoryRenderingSystem
 import net.mattemade.platformer.system.AttackSystem
 import net.mattemade.platformer.system.Box2DPhysicsSystem
 import net.mattemade.platformer.system.ControlsSystem
@@ -162,6 +163,7 @@ class Room(
             )
             add(RenderingSystem())
             add(UiRenderingSystem(worldArea = worldArea, mapVisible = visibleOnMap, mapTexture = { mapTexture }))
+            add(AlternativeStoryRenderingSystem())
         }
 
         onAddEntity {
@@ -538,12 +540,14 @@ class Room(
                         createPickup(
                             spawn, "empty", tint = Color.WHITE.toMutableColor().apply { a = 0.2f }.toFloatBits()
                         ) {
-                            gameContext.gameState.stories[id] = true
-                            ecs.apply {
-                                gameContext.setStory(id)
-                                //playerEntity[StoryComponent].triggers += id
+                            if (gameContext.canStartStory) {
+                                gameContext.gameState.stories[id] = true
+                                ecs.apply {
+                                    gameContext.setStory(id)
+                                    //playerEntity[StoryComponent].triggers += id
+                                }
+                                //gameContext.save()
                             }
-                            //gameContext.save()
                         }
                     }
                 }
@@ -556,14 +560,14 @@ class Room(
             ecs.entity {
                 it += SpriteComponent(
                     idleAnimation = gameContext.assets.animation("Celestial mascot"),
-                    animationEventCallback = { it, _ -> println(it) },
+                    animationEventCallback = { it, _ -> /*println(it)*/ },
                     // baking offset into the bounds, maybe it should be a separate property?
                     bounds = Rect(0f, 0f, 0f, 0f),
                 )
                 it += PositionComponent()
                 it += RotationComponent()
                 it += ContextComponent()
-                it += MascotComponent(Vec2f(0.2f, 1f), playerEntity)
+                it += MascotComponent(Vec2f(0.2f.px, 1f), playerEntity)
             }
         }
     }
@@ -573,7 +577,7 @@ class Room(
             ecs.entity {
                 it += SpriteComponent(
                     idleAnimation = gameContext.assets.animation("Dragon idle"),
-                    animationEventCallback = { it, _ -> println(it) },
+                    animationEventCallback = { it, _ -> /*println(it)*/ },
                     // baking offset into the bounds, maybe it should be a separate property?
                     bounds = Rect(0f, 0f, 0f, 0f),
                 )
@@ -668,7 +672,7 @@ class Room(
         ecs.entity { entity ->
             entity += SpriteComponent(
                 idleAnimation = gameContext.assets.animation(animationName),
-                animationEventCallback = { it, _ -> println(it) },
+                animationEventCallback = { it, _ -> /*println(it)*/ },
                 // baking offset into the bounds, maybe it should be a separate property?
                 bounds = Rect(
                     spawn.bounds.width * unitSize * -0.48f,
@@ -708,7 +712,7 @@ class Room(
         ecs.entity { entity ->
             entity += SpriteComponent(
                 idleAnimation = gameContext.assets.animation("empty"),
-                animationEventCallback = { it, _ -> println(it) },
+                animationEventCallback = { it, _ -> /*println(it)*/ },
                 // baking offset into the bounds, maybe it should be a separate property?
                 bounds = Rect(
                     spawn.bounds.width * unitSize * -0.5f,
@@ -744,7 +748,7 @@ class Room(
         ecs.entity { entity ->
             entity += SpriteComponent(
                 idleAnimation = gameContext.assets.animation("empty"),
-                animationEventCallback = { it, _ -> println(it) },
+                animationEventCallback = { it, _ -> /*println(it)*/ },
                 // baking offset into the bounds, maybe it should be a separate property?
                 bounds = Rect(
                     spawn.bounds.width * unitSize * -0.5f,
@@ -788,7 +792,7 @@ class Room(
             }
             entity += SpriteComponent(
                 idleAnimation = gameContext.assets.animation("empty"),
-                animationEventCallback = { it, _ -> println(it) },
+                animationEventCallback = { it, _ -> /*println(it)*/ },
                 // baking offset into the bounds, maybe it should be a separate property?
                 bounds = Rect(
                     spawn.bounds.width * unitSize * -0.48f,
@@ -839,11 +843,11 @@ class Room(
 
     private fun spawnPlayerAttack(x: Float, y: Float, vx: Float, vy: Float, dx: Float, dy: Float, damage: Float) {
         ecs.entity { entity ->
-            println("attack $x $y")
+//            println("attack $x $y")
             val radius = 1f
             entity += SpriteComponent(
                 idleAnimation = gameContext.assets.animation("Attack"),
-                animationEventCallback = { it, _ -> println(it) },
+                animationEventCallback = { it, _ -> /*println(it)*/ },
                 // baking offset into the bounds, maybe it should be a separate property?
                 bounds = Rect(
                     -radius, -radius, radius * 2f, radius * 2f

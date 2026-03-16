@@ -75,7 +75,7 @@ class SplashScene(val gameContext: PlatformerGameContext) : Scene, Releasing by 
     }
 
     companion object {
-        private val clickToStartText = "Click or touch to start"
+        private val clickToStartText = "Click to start"
         private val tempVec2f = MutableVec2f()
         private val tempVec2 = Vec2.borrow()
         private val mapColor = Color.WHITE.toMutableColor().apply { a = 1f }.toFloatBits()

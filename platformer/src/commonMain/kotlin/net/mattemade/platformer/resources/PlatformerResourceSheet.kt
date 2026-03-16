@@ -31,7 +31,7 @@ class PlatformerResourceSheet(data: List<String>) {
 
     init {
         data.forEach {
-            println(it)
+//            println(it)
         }
 
         var index = 0

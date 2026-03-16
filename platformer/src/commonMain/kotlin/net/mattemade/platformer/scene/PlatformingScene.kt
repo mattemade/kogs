@@ -176,7 +176,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
 
 
     private fun switchRoom(player: Entity, offsetX: Float?, offsetY: Float?, dx: Float, dy: Float, forceLeave: Boolean) {
-        println("switch $offsetX $offsetY $dx $dy")
+//        println("switch $offsetX $offsetY $dx $dy")
         currentRoom.apply {
             ecs.apply {
                 // TODO: really? maybe all of that should be arguments?
@@ -185,7 +185,7 @@ class PlatformingScene(val gameContext: PlatformerGameContext) : Scene, Releasin
                     worldArea.x + playerPosition.x + (offsetX ?: 0f),
                     worldArea.y + playerPosition.y + (offsetY ?: 0f),
                 )
-                println("probe ${tempVec2f}")
+//                println("probe ${tempVec2f}")
                 // TODO: is there a way to do that better than O(N)? maybe we can prepare a world graph ahead of time
                 rooms.forEach {
                     if ((!forceLeave || it.name != currentRoom.name) && it.worldArea.contains(tempVec2f)) {

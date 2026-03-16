@@ -166,8 +166,27 @@ class TextureFiles(
     val heartFull by "texture/HP_heart2_full.png".pack()
     val staminaBar by "texture/stamina_ratio.png".pack()
 
+    val leilana1 by "texture/leilana_plain.png".pack()
+    val leilana2 by "texture/leilana_blue.png".pack()
+    val leilana3 by "texture/leilana.png".pack()
+    val dragon by "texture/dragon guardian.png".pack()
+    val celestial by "texture/celestial guardian.png".pack()
+    val dream by "texture/dream guardian.png".pack()
+    val leilanaBox by "texture/vnbox_leilana.png".pack()
+    val dragonBox by "texture/vnbox_dragon_guardian.png".pack()
+    val celestialBox by "texture/vnbox_celestial_guardian.png".pack()
+    val dreamBox by "texture/vnbox_dream_guardian.png".pack()
+    val forwardButton by "texture/button_forward.png".pack()
+    val empty by "texture/alpha_zero.png".pack()
+    val decisionBox1  by "texture/decision_box_1.png".pack()
+    val decisionBox2 by "texture/decision_box_2.png".pack()
+    val decisionBox3 by "texture/decision_box_3.png".pack()
+
     val staminaBarSlices by lazy {
         staminaBar.slice(73, 65).flatten()
+    }
+    val decisionBoxes by lazy {
+        listOf(decisionBox1, decisionBox2, decisionBox3)
     }
 }
 

@@ -4,6 +4,7 @@ import com.littlekt.graphics.Texture
 import com.littlekt.graphics.g2d.Batch
 import com.littlekt.graphics.g2d.TextureSlice
 import com.littlekt.graphics.slice
+import korlibs.io.util.isPrintable
 import net.mattemade.gui.api.math.Vec2
 
 class MsdfFont(
@@ -30,6 +31,7 @@ class MsdfFont(
         scale: Float,
         batch: Batch,
         characterLimit: Int = Int.MAX_VALUE,
+        tint: Float = batch.colorBits,
     ) {
         var cursorX = x
         var cursorY = y + (lineHeight - descender) * scale
@@ -50,11 +52,65 @@ class MsdfFont(
                         y = cursorY + spec.quadBottomBound * scale,
                         width = spec.quadWidth * scale,
                         height = spec.quadHeight * scale,
+                        colorBits = tint,
                     )
                     cursorX += spec.horizontalAdvance * scale
                 }
             }
         }
+    }
+
+    fun softWrap(text: String, scale: Float, widthLimit: Float): List<String> {
+        val result = mutableListOf<String>()
+        var cursor = 0
+        var remainder = text
+
+        while (cursor < text.length) {
+            val nextWrap = whereToWrap(remainder, scale, widthLimit)
+            result += text.substring(cursor, cursor + nextWrap)
+            cursor += nextWrap + 1
+            if (cursor < text.length) {
+                remainder = text.substring(cursor, text.length)
+            }
+        }
+
+
+        return result
+    }
+
+    fun whereToWrap(text: String, scale: Float, widthLimit: Float): Int {
+        val fit = howManyFitInto(text, scale, widthLimit)
+        if (fit < text.length) {
+            for (i in fit downTo 0) {
+                if (text[i].isWhitespace()) {
+                    return i
+                }
+            }
+            return -1
+        } else {
+            return fit
+        }
+    }
+
+    fun howManyFitInto(text: String, scale: Float, widthLimit: Float): Int {
+        var cursorX = 0f
+        var lines = 1
+        var result = 0
+        for (it in text) {
+            if (it == '\n') {
+                cursorX = 0f
+                lines++
+            } else {
+                specs[it]?.let { spec ->
+                    cursorX += spec.horizontalAdvance * scale
+                }
+                if (cursorX >= widthLimit) {
+                    return result
+                }
+            }
+            result++
+        }
+        return result
     }
 
     fun measure(
