@@ -554,6 +554,7 @@ class Box2DPhysicsSystem(
                     })
                 },
                 collisionMask = PLAYER_BODY_COLLISIONS,
+                gameContext = gameContext,
             ).apply {
                 // land body
                 landBodyFixture = body.createFixture(FixtureDef().apply {
@@ -642,6 +643,7 @@ class Box2DPhysicsSystem(
                     gravityScale = 0f
                 }),
                 collisionMask = PLAYER_ATTACK_COLLISIONS,
+                gameContext = gameContext,
             ).apply {
                 // land body
                 landBodyFixture = body.createFixture(FixtureDef().apply {
@@ -757,6 +759,7 @@ class Box2DPhysicsSystem(
                     })
                 },
                 collisionMask = ENEMY_BODY_COLLISION,
+                gameContext = gameContext,
             ).apply {
                 // land body
                 landBodyFixture = body.createFixture(FixtureDef().apply {
@@ -788,7 +791,8 @@ class Box2DPhysicsSystem(
                 body = physics.createBody(BodyDef().apply {
                     type = BodyType.STATIC
                     position.set(x, y)
-                }), collisionMask = CHECKPOINT_COLLISIONS
+                }), collisionMask = CHECKPOINT_COLLISIONS,
+                gameContext = gameContext,
             ).apply {
                 landBodyFixture = body.createFixture(FixtureDef().apply {
                     isSensor = true
@@ -830,6 +834,7 @@ class Box2DPhysicsSystem(
                 },
                 collisionMask = PICKUP_COLLISIONS,
                 gravityScaleOverride = 0f,
+                gameContext = gameContext,
             ).apply {
                 // land body
                 landBodyFixture = body.createFixture(FixtureDef().apply {
@@ -875,6 +880,7 @@ class Box2DPhysicsSystem(
                     })
                 },
                 collisionMask = WALL_MASK,
+                gameContext = gameContext,
             )
         }
 

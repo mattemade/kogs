@@ -37,7 +37,7 @@ class PlatformerGameContext(
     var currentlyPlayingMusic: FmodEventInstance? = null
     val assets = PlatformerAssets(context, this, getFromUrl, fmodFolderPrefix, fmodLiveUpdate, overrideResourcesFrom)
     val fmodAssets by lazy { FmodAssets(context, fmodFolderPrefix, this) }
-    val storyDisplayService by lazy { StoryDisplayService(context, assets) }
+    val storyDisplayService by lazy { StoryDisplayService(context, assets, this) }
     val scheduler = Scheduler()
     var canvasZoom: Float = 1f
     var canvasInverseZoom: Float = 1f
@@ -78,17 +78,18 @@ class PlatformerGameContext(
         gameInput.update(controlsActive)
     }
 
+    private var currentStoryId: String? = null
     private var _story: InkStory? = null
-    val story: InkStory
+    val story: InkStory?
         get() {
-            if (_story == null) {
-                _story = inkStoryFactory.createStory(assets.storyString)
+            if (_story == null && currentStoryId != null) {
+                _story = inkStoryFactory.createStory(assets.stories[currentStoryId]!!)
             }
-            return _story!!
+            return _story
         }
 
     fun save() {
-        val newState = story.getState()
+        val newState = story?.getState()
         gameState.story.state = newState
         val state = json.encodeToString(gameState)
         if (previousSavedState != state) {
@@ -99,8 +100,16 @@ class PlatformerGameContext(
         }
     }
 
-    fun load(forceRestart: Boolean = false, reset: Boolean = false) {
+    fun setStory(id: String) {
         _story = null
+        currentStoryId = id
+        gameState.story.state = story?.getState() // IDK
+    }
+
+    fun load(forceRestart: Boolean = false, reset: Boolean = false) {
+        currentStoryId = null
+        _story = null
+        storyDisplayService.isStoryVisible = false
         if (reset) {
             previousSavedState = null
             gameState = GameState()
@@ -110,18 +119,8 @@ class PlatformerGameContext(
         }
 
         gameState = context.vfs.loadString("save")?.let {
-            try {
-                previousSavedState = it
-                val decoded: GameState = json.decodeFromString(it)
-                decoded.story.state?.let { storyState ->
-                    story.loadState(storyState)
-                }
-                decoded
-            } catch (e: Exception) {
-                // this looks dangerous? or?
-                e.printStackTrace()
-                null
-            }
+            previousSavedState = it
+            json.decodeFromString(it)
         } ?: GameState().also { println("No save found, creating new GameState") }
         if (forceRestart) {
             restartScene()

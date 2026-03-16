@@ -181,6 +181,10 @@ class Room(
                         family { all(GauntletLockComponent) }.forEach {
                             it.remove()
                         }
+
+                        if (musicSwitchingSystem.isBoss) {
+                            gameContext.setStory("outro")
+                        }
                     }
                 }
             }
@@ -368,12 +372,16 @@ class Room(
                     if (objects.isEmpty() || gameContext.gameState.roomStates[name]?.gauntletCompleted == true) return@let
 
                     objects.forEach {
+                        val trigger = it
                         when (it.name) {
                             "trigger" -> {
                                 createExitTrigger(it, Color.RED.toFloatBits()) {
                                     if (gameContext.gameState.sword) {
                                         musicSwitchingSystem.gauntletInProgress = true
                                         ecs.apply { it.remove() }
+                                        (trigger.properties["storyId"] as? TiledMap.Property.StringProp)?.value?.let {
+                                            gameContext.setStory(it)
+                                        }
                                         // activate the locks and start the fight
                                         objects.forEach {
                                             when (it.name) {
@@ -402,6 +410,9 @@ class Room(
 
     private fun spawnFromObject(spawn: TiledMap.Object, forGauntlet: Boolean = false) {
         gameContext.assets.resourceSheet.enemies[spawn.name]?.let { enemySpec ->
+            if (enemySpec.name == "boss") {
+                musicSwitchingSystem.isBoss = true
+            }
             ecs.entity { entity ->
                 with(enemySpec) {
                     createEnemy(
@@ -458,7 +469,7 @@ class Room(
                             release()
                         }
                         gameContext.gameState.sword = true
-                        gameContext.save()
+                        //gameContext.save()
                         UiRenderingSystem.collectionText = null
                     }
                 }
@@ -529,9 +540,10 @@ class Room(
                         ) {
                             gameContext.gameState.stories[id] = true
                             ecs.apply {
-                                playerEntity[StoryComponent].triggers += id
+                                gameContext.setStory(id)
+                                //playerEntity[StoryComponent].triggers += id
                             }
-                            gameContext.save()
+                            //gameContext.save()
                         }
                     }
                 }

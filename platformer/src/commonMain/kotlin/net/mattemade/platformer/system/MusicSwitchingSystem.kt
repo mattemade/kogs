@@ -18,6 +18,7 @@ class MusicSwitchingSystem(
     private val musicType: String? = null,
     var activeGauntletNearby: Boolean = false,
     var gauntletInProgress: Boolean = false,
+    var isBoss: Boolean = false,
     private val gameContext: PlatformerGameContext = inject(),
     interval: Interval = Fixed(1 / 200f)
 ) : IteratingSystem(family { all(SpriteComponent) }, interval = interval) {
@@ -29,7 +30,11 @@ class MusicSwitchingSystem(
         gameContext.musicType =
             if (activeGauntletNearby) {
                 if (gauntletInProgress) {
-                    gauntlet
+                    if (isBoss) {
+                        boss
+                    } else {
+                        gauntlet
+                    }
                 } else {
                     silence
                 }
@@ -78,5 +83,6 @@ class MusicSwitchingSystem(
     companion object {
         val silence = "silence"
         val gauntlet = "gauntlet"
+        val boss = "boss"
     }
 }

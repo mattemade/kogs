@@ -50,10 +50,9 @@ class PlatformerAssets(
         RuntimeTextureAtlasPacker(context, useMiMaps = false, allowFiltering = true).releasing()
 
     val shaders by pack(order = 0) { Shaders(context) }
-    // this is pattern-matched by looking at other resources.
-    // I've no idea why it is "plain"
-    val storyString by preparePlain(order = 0) {
-        context.resourcesVfs["story/story.json"].readString()
+
+    val stories by preparePlain(order = 0) {
+        listOf("intro", "sword", "water", "air", "dream", "outro").associateWith { context.resourcesVfs["story/$it.json"].readString() }
     }
     val fmod by pack(order = 0) {
         Fmod(context, fmodFolderPrefix, fmodLiveUpdate)
