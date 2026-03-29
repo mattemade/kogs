@@ -92,6 +92,7 @@ kotlin {
 
     val multiplatformDependencies = listOf(
         ":game-utils",
+        ":concurrent",
     )
 
     sourceSets {

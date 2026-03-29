@@ -3,20 +3,22 @@ package com.littlekt
 import com.littlekt.audio.globalAudioContext
 import com.littlekt.graphics.Color
 import kotlinx.browser.document
+import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.events.Event
 import org.w3c.dom.events.EventListener
 
 /** Properties related to creating a [LittleKtApp] */
 actual class LittleKtProps {
+    var canvas: HTMLCanvasElement = document.getElementById("canvas") as HTMLCanvasElement
     var width: Int = 960
     var height: Int = 540
-    var canvasId: String = "canvas"
     var title: String = "LitteKt"
     var assetsDir: String = "./"
     var backgroundColor: Color = Color.CLEAR
     var selfInitializeAudioContext: Boolean = true
 }
 
+internal lateinit var sharedCanvas: HTMLCanvasElement
 /**
  * Creates a new [LittleKtApp] containing [LittleKtProps] as the [ContextConfiguration] for building
  * a [Context].
@@ -58,9 +60,10 @@ actual fun createLittleKtApp(action: LittleKtProps.() -> Unit): LittleKtApp {
         }
     }
 
+    sharedCanvas = props.canvas
     return LittleKtApp(
         WebGLContext(
-            JsConfiguration(props.title, props.canvasId, props.assetsDir, props.backgroundColor)
+            JsConfiguration(props.title, props.canvas, props.assetsDir, props.backgroundColor)
         )
     )
 }
@@ -71,7 +74,7 @@ actual fun createLittleKtApp(action: LittleKtProps.() -> Unit): LittleKtApp {
  */
 class JsConfiguration(
     override val title: String = "LittleKt - JS",
-    val canvasId: String = "canvas",
+    val canvas: HTMLCanvasElement,
     val rootPath: String = "./",
     val backgroundColor: Color = Color.CLEAR,
 ) : ContextConfiguration()

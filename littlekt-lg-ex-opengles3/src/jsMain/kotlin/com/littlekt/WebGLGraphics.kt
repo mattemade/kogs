@@ -4,10 +4,30 @@ import com.littlekt.graphics.Cursor
 import com.littlekt.graphics.SystemCursor
 import com.littlekt.util.internal.jsObject
 import org.khronos.webgl.*
+import org.w3c.dom.CanvasCompositing
+import org.w3c.dom.CanvasDrawImage
+import org.w3c.dom.CanvasDrawPath
+import org.w3c.dom.CanvasFillStrokeStyles
+import org.w3c.dom.CanvasFilters
+import org.w3c.dom.CanvasHitRegion
+import org.w3c.dom.CanvasImageData
+import org.w3c.dom.CanvasImageSmoothing
+import org.w3c.dom.CanvasImageSource
+import org.w3c.dom.CanvasPath
+import org.w3c.dom.CanvasPathDrawingStyles
+import org.w3c.dom.CanvasRect
+import org.w3c.dom.CanvasRenderingContext2D
+import org.w3c.dom.CanvasShadowStyles
+import org.w3c.dom.CanvasState
+import org.w3c.dom.CanvasText
+import org.w3c.dom.CanvasTextDrawingStyles
+import org.w3c.dom.CanvasTransform
+import org.w3c.dom.CanvasUserInterface
 import org.w3c.dom.Element
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLImageElement
 import org.w3c.dom.ImageData
+import org.w3c.dom.RenderingContext
 import org.w3c.dom.events.Event
 import org.w3c.dom.events.UIEvent
 
@@ -274,6 +294,16 @@ abstract external class WebGL2RenderingContext : WebGLRenderingContext {
         val RGB16F: Int
         val RGBA16F: Int
     }
+}
+
+external class OffscreenCanvas(var width: Int, var height: Int) {
+    fun getContext(contextId: String, vararg arguments: Any?): RenderingContext?
+    fun toDataURL(type: String = definedExternally, quality: Any? = definedExternally): String
+
+}
+
+abstract external class OffscreenCanvasRenderingContext2D : CanvasState, CanvasTransform, CanvasCompositing, CanvasImageSmoothing, CanvasFillStrokeStyles, CanvasShadowStyles, CanvasFilters, CanvasRect, CanvasDrawPath, CanvasUserInterface, CanvasText, CanvasDrawImage, CanvasHitRegion, CanvasImageData, CanvasPathDrawingStyles, CanvasTextDrawingStyles, CanvasPath, RenderingContext {
+    open val canvas: HTMLCanvasElement
 }
 
 abstract external class WebGLVertexArrayObject : WebGLObject

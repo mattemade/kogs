@@ -12,7 +12,6 @@ import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.w3c.dom.HTMLCanvasElement
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -21,7 +20,7 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 class WebGLContext(override val configuration: JsConfiguration) : Context() {
 
-    private val canvas = document.getElementById(configuration.canvasId) as HTMLCanvasElement
+    private val canvas = configuration.canvas
 
     override val stats: AppStats = AppStats()
     override val graphics: WebGLGraphics = WebGLGraphics(canvas, stats.engineStats)

@@ -1,5 +1,7 @@
 package com.littlekt.file.vfs
 
+import com.littlekt.OffscreenCanvas
+import com.littlekt.OffscreenCanvasRenderingContext2D
 import com.littlekt.audio.AudioClip
 import com.littlekt.audio.AudioClipEx
 import com.littlekt.audio.AudioStream
@@ -16,11 +18,7 @@ import com.littlekt.graphics.Texture
 import com.littlekt.graphics.gl.PixmapTextureData
 import com.littlekt.graphics.gl.TexMagFilter
 import com.littlekt.graphics.gl.TexMinFilter
-import kotlinx.browser.document
-import kotlinx.browser.window
 import kotlinx.coroutines.CompletableDeferred
-import org.w3c.dom.CanvasRenderingContext2D
-import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.Image
 
 /**
@@ -77,10 +75,10 @@ private suspend fun readPixmap(path: String): Pixmap {
     img.src = path
 
     val loadedImg = deferred.await()
-    val canvas = document.createElement("canvas") as HTMLCanvasElement
+    val canvas = OffscreenCanvas(loadedImg.width, loadedImg.height)
     canvas.width = loadedImg.width
     canvas.height = loadedImg.height
-    val canvasCtx = canvas.getContext("2d") as CanvasRenderingContext2D
+    val canvasCtx = canvas.getContext("2d") as OffscreenCanvasRenderingContext2D
 
     val w = loadedImg.width.toDouble()
     val h = loadedImg.height.toDouble()
@@ -112,7 +110,7 @@ actual suspend fun VfsFile.readAudioClip(): AudioClip {
  */
 actual suspend fun VfsFile.readAudioClipEx(): AudioClipEx {
     val url = if (isHttpUrl()) path else "${vfs.baseDir}/$path"
-    return WebAudioClipEx(WebAudioEx.create(vfs.job, url, vfs.logger)?: error("Could not create WebAudioEx $url"))
+    return WebAudioClipEx(WebAudioEx.create(vfs.job, url, vfs.logger) ?: error("Could not create WebAudioEx $url"))
 }
 
 actual fun VfsFile.readAudioClipExDeferred(callback: (AudioClipEx) -> Unit) {
@@ -149,7 +147,7 @@ actual suspend fun VfsFile.readAudioStream(): AudioStream {
 
 actual suspend fun VfsFile.readAudioStreamEx(): AudioStreamEx {
     val url = if (isHttpUrl()) path else "${vfs.baseDir}/$path"
-    return WebAudioStreamEx(WebAudioEx.create(vfs.job, url, vfs.logger)?: error("Could not create WebAudioEx $url"))
+    return WebAudioStreamEx(WebAudioEx.create(vfs.job, url, vfs.logger) ?: error("Could not create WebAudioEx $url"))
 }
 
 actual suspend fun VfsFile.writePixmap(pixmap: Pixmap) {
