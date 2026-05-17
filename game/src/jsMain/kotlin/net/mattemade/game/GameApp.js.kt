@@ -12,10 +12,14 @@ fun main() {
     val currentWorkerContext = currentWorkerContext()
     if (currentWorkerContext != null) {
         println("bg thread open!!")
+        var workerTicks = 0
+        var workerJobs = 0
         repeatEvery(1) {
-            println("bg thread continues!!")
+            workerTicks++
+            //println("bg thread continues!! $workerTicks")
             while (currentWorkerContext.hasNext()) {
-                println("next int: ${currentWorkerContext.readInt()}")
+                workerJobs++
+                println("next int: ${currentWorkerContext.readInt()} ${workerTicks.toFloat() / workerJobs}")
             }
         }
     } else {
