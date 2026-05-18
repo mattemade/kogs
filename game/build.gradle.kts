@@ -136,3 +136,44 @@ kotlin {
     }
 
 }
+
+tasks.register<JavaExec>("jvmHotswapRun") {
+    group = "run"
+    description = "Task for the `jvm` target and `main` compilation with Hotswap Agent (see the README.md for configuration)"
+    outputs.upToDateWhen { false }
+
+    val mainClassName = (findProperty("jvm.mainClass") as? String)?.plus("Kt")
+    mainClass.set(mainClassName)
+
+    val mainCompile = kotlin.targets["jvm"].compilations["main"]
+    classpath = mainCompile.output.classesDirs + mainCompile.runtimeDependencyFiles!!
+
+
+    val javaHome = System.getProperty("java.home")
+    val hotswapJarPath = "$javaHome/lib/hotswap/hotswap-agent.jar"
+
+    if (Os.isFamily(Os.FAMILY_MAC)) {
+        jvmArgs(
+            "-XX:+AllowEnhancedClassRedefinition",
+            "-javaagent:$hotswapJarPath=autoHotswap=true",
+            "-XX:HotswapAgent=external",
+            "-XstartOnFirstThread"
+        )
+        kotlin {
+            dependsOn(mainCompile.compileAllTaskName)
+            classpath(
+                { mainCompile.output.allOutputs.files },
+                (configurations["jvmRuntimeClasspath"])
+            )
+        }
+    } else {
+        jvmArgs(
+            "-XX:+AllowEnhancedClassRedefinition",
+            "-javaagent:$hotswapJarPath=autoHotswap=true",
+            "-XX:HotswapAgent=external"
+        )
+    }
+
+    dependsOn(tasks.named("jvmProcessResources"))
+    dependsOn(mainCompile.compileTaskProvider)
+}

@@ -13,3 +13,17 @@ If per-directory licence and credit is not specified below:
 # Game examples
 * [bigmode](/bigmode): entry to the Bigmode Jam 2026, [play on Itch](https://mattemade.itch.io/skates-n-plates)
   * [music](/bigmode/src/commonMain/resources/music) and [sound](/bigmode/src/commonMain/resources/sound) by [BingBong72000](https://therholdt7.itch.io/)
+* [platformer](/platformer): entry to the Metroidvania Month, [play on itch](https://mattemade.itch.io/pearl-of-the-deep)
+  * all the assets and some proprietary dependencies are stripped away to simplify licensing, better prepare for that beforehand next time 
+
+# Recent experiments
+* [multiplatform concurrency](/concurrent)
+  * background job execution kinda works
+  * TODO: shared memory (SharedArrayBuffer in JS) + atomics + synchronization
+* hot code reload
+  * get the JRE with DCEVM support (JetBrains' JBR 21 works alright)
+  * copy the [Hotswap Agent](https://github.com/HotswapProjects/HotswapAgent) as `$javaHome/libs/hotswap/hotswap-agent.jar`
+  * run `./gradlew :game:compileKotlinJvm -t` in the terminal
+  * run `./gradlew :game:jvmHotswapRun` in parallel
+  * change the code and observe all the changes in the running application!
+  * TODO: test resource reloading (+ add reloadable assets (filewatcher on JVM? custom websocket server on JS?))
