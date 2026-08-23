@@ -18,5 +18,7 @@ interface Audio {
 
     fun currentTime(): Double
 
+    fun sampleRate(): Double
+
     suspend fun loadModule(filename: String, tag: String)
 }

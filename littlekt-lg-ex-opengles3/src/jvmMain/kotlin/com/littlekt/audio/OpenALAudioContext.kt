@@ -141,5 +141,8 @@ class OpenALAudioContext : Audio, Releasable {
     override fun currentTime() =
         System.currentTimeMillis() / 1000.0
 
+    override fun sampleRate(): Double =
+        48000.0 // oh well
+
     override suspend fun loadModule(filename: String, tag: String) {}
 }

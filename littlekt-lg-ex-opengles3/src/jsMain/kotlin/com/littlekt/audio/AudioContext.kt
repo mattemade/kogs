@@ -158,6 +158,7 @@ internal external class AudioContext {
     val state: String
 
     val currentTime: Double
+    val sampleRate: Double
 
     fun resume()
 

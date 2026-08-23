@@ -27,6 +27,10 @@ class WebAudio: Audio {
     override fun currentTime(): Double =
         globalAudioContext?.currentTime ?: 0.0
 
+    override fun sampleRate(): Double =
+        globalAudioContext?.sampleRate ?: 0.0
+
+
     override suspend fun loadModule(filename: String, tag: String) {
         globalAudioContext?.let {
             it.audioWorklet.addModule(filename).await()

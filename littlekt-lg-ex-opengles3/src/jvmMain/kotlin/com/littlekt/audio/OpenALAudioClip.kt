@@ -85,7 +85,6 @@ class OpenALAudioClip(
         scheduleAt: Float,
         onEnded: ((Int) -> Unit)?
     ): Int = withDeviceReturning {
-        if (true) return -1
         val sourceId = context.obtainSource()
 
         if (sourceId == -1) return -1
