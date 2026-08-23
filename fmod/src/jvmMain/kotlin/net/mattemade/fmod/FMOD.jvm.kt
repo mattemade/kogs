@@ -131,6 +131,15 @@ actual class FmodStudioSystemCore(val id: Long) {
     actual fun mixerResume() {
         FMOD.FMOD_System_MixerResume(id).checkSuccess()
     }
+
+    actual fun setOutput(output: FmodOutputType) {
+        FMOD.FMOD_System_SetOutput(id, output).checkSuccess()
+    }
+
+    actual fun getOutput(): FmodOutputType {
+        FMOD.FMOD_System_GetOutput(id, intBuffer.clear()).checkSuccess()
+        return intBuffer.get()
+    }
 }
 
 actual class FmodBank(val id: Long) {

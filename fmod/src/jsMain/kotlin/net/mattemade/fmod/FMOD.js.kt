@@ -46,6 +46,7 @@ actual class FmodStudioSystem(private val actualSystem: dynamic) {
         initFlags: FmodInitFlag,
         extraDriverData: Long?
     ) {
+        coreSystem.setOutput(FMOD.OUTPUTTYPE_WEBAUDIO)
         checkSuccess(actualSystem.initialize(maxChannels, studioInitFlags, initFlags, extraDriverData))
     }
 
@@ -126,6 +127,13 @@ actual class FmodStudioSystemCore(private val actualCore: dynamic) {
     actual fun mixerResume() {
         checkSuccess(actualCore.mixerResume())
     }
+
+    actual fun setOutput(output: FmodOutputType) {
+        actualCore.setOutput(output)
+    }
+
+    actual fun getOutput(): FmodOutputType =
+        getResult { checkSuccess(actualCore.getOutput(it)) }
 }
 
 actual class FmodBank(private val actualBank: dynamic) {

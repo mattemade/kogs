@@ -67,6 +67,30 @@ object FMOD {
     const val STUDIO_PLAYBACK_STOPPED: FmodPlaybackState = 2
     const val STUDIO_PLAYBACK_STARTING: FmodPlaybackState = 3
     const val STUDIO_PLAYBACK_STOPPING: FmodPlaybackState = 4
+
+    const val OUTPUTTYPE_AUTODETECT: FmodOutputType = 0
+    const val OUTPUTTYPE_UNKNOWN: FmodOutputType = 1
+    const val OUTPUTTYPE_NOSOUND: FmodOutputType = 2
+    const val OUTPUTTYPE_WAVWRITER: FmodOutputType = 3
+    const val OUTPUTTYPE_NOSOUND_NRT: FmodOutputType = 4
+    const val OUTPUTTYPE_WAVWRITER_NRT: FmodOutputType = 5
+    const val OUTPUTTYPE_WASAPI: FmodOutputType = 6
+    const val OUTPUTTYPE_ASIO: FmodOutputType = 7
+    const val OUTPUTTYPE_PULSEAUDIO: FmodOutputType = 8
+    const val OUTPUTTYPE_ALSA: FmodOutputType = 9
+    const val OUTPUTTYPE_COREAUDIO: FmodOutputType = 10
+    const val OUTPUTTYPE_AUDIOTRACK: FmodOutputType = 11
+    const val OUTPUTTYPE_OPENSL: FmodOutputType = 12
+    const val OUTPUTTYPE_AUDIOOUT: FmodOutputType = 13
+    const val OUTPUTTYPE_AUDIO3D: FmodOutputType = 14
+    const val OUTPUTTYPE_WEBAUDIO: FmodOutputType = 15
+    const val OUTPUTTYPE_NNAUDIO: FmodOutputType = 16
+    const val OUTPUTTYPE_WINSONIC: FmodOutputType = 17
+    const val OUTPUTTYPE_AAUDIO: FmodOutputType = 18
+    const val OUTPUTTYPE_AUDIOWORKLET: FmodOutputType = 19
+    const val OUTPUTTYPE_PHASE: FmodOutputType = 20
+    const val OUTPUTTYPE_OHAUDIO: FmodOutputType = 21
+    const val OUTPUTTYPE_MAX: FmodOutputType = 22
 }
 
 expect class FmodStudioSystem {
@@ -97,6 +121,9 @@ expect class FmodStudioSystemCore {
 
     fun mixerSuspend()
     fun mixerResume()
+
+    fun setOutput(output: FmodOutputType)
+    fun getOutput(): FmodOutputType
 }
 
 expect class FmodBank {
@@ -170,6 +197,7 @@ typealias FmodStudioLoadingState = Int
 typealias FmodStudioLoadingType = Int
 typealias FmodMemoryPointer = Long
 typealias FmodStudioLoadMemoryMode = Int
+typealias FmodOutputType = Int
 
 typealias FmodStudioStopType = Int
 typealias FmodSpeakerMode = Int
