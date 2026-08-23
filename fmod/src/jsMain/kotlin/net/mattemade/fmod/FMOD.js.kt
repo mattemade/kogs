@@ -12,6 +12,16 @@ actual fun FMOD_Module_Create(preRun: () -> Unit, callback: () -> Unit) {
     fmodJS.preRun = preRun
     fmodJS.onRuntimeInitialized = callback
     fmodJS.INITIAL_MEMORY = 128 * 1024 * 1024
+
+    js("""
+        const origAudioContext = window.AudioContext || window.webkitAudioContext;
+        window.AudioContext = function(options) {
+            options = options || {};
+            options.latencyHint = 0.005;
+            return new origAudioContext(options);
+        };
+    """)
+
     FMODModule(fmodJS)
 }
 

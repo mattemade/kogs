@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.03.00">
+	<object class="AudioFile" id="{801ceec9-3293-4742-a1df-409e1906c4fb}">
+		<property name="assetPath">
+			<value>01 A Cruel Angel's Thesis (Director's Edit Version).wav</value>
+		</property>
+		<property name="isStreaming">
+			<value>true</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>245.10839002267574</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{9f853e8d-0576-4c9e-975d-7caf39951b04}</destination>
+		</relationship>
+	</object>
+</objects>

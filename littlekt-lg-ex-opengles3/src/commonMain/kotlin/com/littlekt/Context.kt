@@ -47,7 +47,7 @@ abstract class Context {
     protected val disposeCalls = mutableListOf<suspend () -> Unit>()
     protected val postRunnableCalls = mutableListOf<() -> Unit>()
     protected val quickUpdateCalls = mutableListOf<() -> Unit>()
-    var quickUpdateTimeout: Int = 1000 / 120
+    var quickUpdateTimeout: Int = 1//1000 / 120
 
     protected var lastFrame: Duration = now().milliseconds
     protected var dt: Duration = Duration.ZERO

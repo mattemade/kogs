@@ -200,7 +200,9 @@ internal val globalAudioContext: AudioContext?
         """
             var AudioContextClass = window.AudioContext || window.webkitAudioContext;
             if (AudioContextClass) {
-                return new AudioContextClass();
+                return new AudioContextClass({
+                    latencyHint: 0.005
+                });
             }
             return null;
             """
