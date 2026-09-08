@@ -146,8 +146,8 @@ tasks.register<JavaExec>("jvmHotswapRun") {
     mainClass.set(mainClassName)
 
     val mainCompile = kotlin.targets["jvm"].compilations["main"]
-    classpath = mainCompile.output.classesDirs + mainCompile.runtimeDependencyFiles!!
-
+    classpath = mainCompile.output.allOutputs + mainCompile.runtimeDependencyFiles!!
+    workingDir = mainCompile.output.resourcesDir
 
     val javaHome = System.getProperty("java.home")
     val hotswapJarPath = "$javaHome/lib/hotswap/hotswap-agent.jar"
