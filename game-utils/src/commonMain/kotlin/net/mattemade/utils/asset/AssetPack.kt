@@ -29,10 +29,10 @@ open class AssetPack(protected val context: Context, private val defaultAnimatio
             maxOrder = maxOf(maxOrder, order)
         }
 
-    private var providerWasFullyLoaded = false
+    private var isLoadingComplete = false
     val isLoaded: Boolean
         get() =
-            if (providerWasFullyLoaded) {
+            if (isLoadingComplete) {
                 true
             } else {
                 var result = true
@@ -42,7 +42,7 @@ open class AssetPack(protected val context: Context, private val defaultAnimatio
                     val currentProvidersCount = assetProviders?.size ?: 0
                     if (currentProvidersCount == 0) {
                         if (currentOrder >= maxOrder) {
-                            providerWasFullyLoaded = true
+                            isLoadingComplete = true
                             stop = true
                         } else {
                             currentOrder++

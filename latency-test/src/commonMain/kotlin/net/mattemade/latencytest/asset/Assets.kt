@@ -64,7 +64,7 @@ class Fmod(context: Context, fmodFolderPrefix: String) : AssetPack(context) {
             println(driver.systemRate)
             core.setSoftwareFormat(driver.systemRate, FMOD.SPEAKERMODE_DEFAULT, 0)
 
-            studioSystem.coreSystem.setOutput(FMOD.OUTPUTTYPE_ASIO)
+            studioSystem.coreSystem.setOutput(FMOD.OUTPUTTYPE_AUTODETECT)
             studioSystem.initialize(
                 maxChannels = 128,
                 studioInitFlags = FMOD.STUDIO_INIT_NORMAL or FMOD.STUDIO_INIT_SYNCHRONOUS_UPDATE,
