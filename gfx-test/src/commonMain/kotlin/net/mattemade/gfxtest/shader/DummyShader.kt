@@ -6,7 +6,7 @@ import com.littlekt.graphics.shader.ShaderParameter
 import com.littlekt.graphics.shader.ShaderProgram
 import com.littlekt.graphics.shader.VertexShaderModel
 
-object MsdfEffectShader {
+object DummyShader {
 
     val program: ShaderProgram<Vertex, Fragment> =
         ShaderProgram(vertexShader = Vertex(), fragmentShader = Fragment())
@@ -26,17 +26,14 @@ object MsdfEffectShader {
             
             in vec4 a_position;
             in vec4 a_color;
-            //in vec2 a_displaceEffect;
             in vec2 a_texCoord0;
             
             out vec4 v_color;
-            //out vec2 v_displaceEffect;
             out vec2 v_texCoords;
             
             void main() {
                 v_color = a_color;
                 v_texCoords = a_texCoord0;
-                //v_displaceEffect = a_displaceEffect;
                 gl_Position = u_projTrans * a_position;
             }
         """.trimIndent()
@@ -58,43 +55,13 @@ object MsdfEffectShader {
             uniform sampler2D u_texture;
             
             in vec4 v_color;
-            //in vec2 v_displaceEffect;
             in vec2 v_texCoords;
             
             uniform float u_time;
             
-            //const vec2 v_displaceEffect = vec2(0.0, 0.005);
-            const float distanceRange = 2.0;
-            
-            float median(vec3 c) {
-                return max(min(c.r, c.g), min(max(c.r, c.g), c.b));
-            }
-            
-            float random(vec2 co){
-                return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);
-            }
-            
-            float screenPxRange() {
-                vec2 unitRange = vec2(distanceRange)/vec2(textureSize(u_texture, 0));
-                vec2 screenTexSize = vec2(1.0)/fwidth(v_texCoords);
-                return max(0.5*dot(unitRange, screenTexSize), 1.0);
-            }
-            
             void main() {
-                vec2 v_displaceEffect = vec2(0.0, u_time);
-                vec2 displacement = vec2(random(vec2(v_texCoords.x + u_time, 0.0)), random(vec2(0.0, v_texCoords.y + u_time)));
-                vec2 displaced_coord = v_texCoords + displacement * v_displaceEffect;
-                vec3 color = texture2D(u_texture, displaced_coord).rgb;
-                float distance = median(color) - 0.5; // thickness can be controlled here
-                
-//              simplier, but worse results:
-              float dxy = fwidth(distance);
-              float opacity = smoothstep(-dxy, dxy, distance);
-                
-//                float dxy = screenPxRange() * distance;
-//                float opacity = clamp(dxy + 0.5, 0.0, 1.0);
-                
-                gl_FragColor = vec4(v_color.rgb, v_color.a * opacity);
+                vec4 color = texture2D(u_texture, v_texCoords);
+                gl_FragColor = vec4(color.rgb, color.a * v_color.a);
             }
         """.trimIndent()
 

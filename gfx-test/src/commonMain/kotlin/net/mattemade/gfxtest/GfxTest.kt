@@ -13,7 +13,9 @@ import com.littlekt.graphics.gl.TexMagFilter
 import com.littlekt.graphics.gl.TexMinFilter
 import com.littlekt.graphics.toFloatBits
 import com.littlekt.util.Scaler
+import com.littlekt.util.seconds
 import com.littlekt.util.viewport.ScalingViewport
+import net.mattemade.gfxtest.shader.CrtVhsShader
 import net.mattemade.gfxtest.shader.MsdfEffectShader
 import net.mattemade.utils.releasing.Releasing
 import net.mattemade.utils.releasing.Self
@@ -37,11 +39,15 @@ class GfxTest(
     private val batch = SpriteBatch(context)
     private val shapeRenderer = ShapeRenderer(batch)
 
+    private var time = 0f
 
     override suspend fun Context.start() {
 
         MsdfEffectShader.prepare(context)
         val msdfShader = MsdfEffectShader.program
+
+        CrtVhsShader.prepare(context)
+        val crtVhsShader = CrtVhsShader.program
 
         val denpa = vfs["texture/denpawarmup.png"].readTexture(minFilter = TexMinFilter.LINEAR, magFilter = TexMagFilter.LINEAR, mipmaps = false)
         val denpaHeight = 900f
@@ -65,6 +71,7 @@ class GfxTest(
 
             val oldShader = batch.shader
             batch.shader = msdfShader
+            msdfShader.fragmentShader.uTime.apply(msdfShader, time * 0.001f)
             batch.draw(denpaMsdf, x = 0f, y = 100f, width = denpaMsdfWidth, height =  denpaMsdfHeight, colorBits = Color.BLACK.toFloatBits())
             batch.shader = oldShader
         }
@@ -77,6 +84,7 @@ class GfxTest(
         }
 
         onRender { dt ->
+            time += dt.seconds
             pixelRender.render(dt)
 
             gl.clear(ClearBufferMask.COLOR_BUFFER_BIT)
@@ -84,7 +92,15 @@ class GfxTest(
 
             viewport.apply(context)
             batch.begin(camera.viewProjection)
+
+            val oldShader = batch.shader
+            batch.shader = crtVhsShader
+            crtVhsShader.fragmentShader.uTime.apply(crtVhsShader, time)
+            crtVhsShader.fragmentShader.uResolution.apply(crtVhsShader, 1920f, 1080f)
             batch.draw(pixelRender.texture, x = 0f, y = 0f, width = 1600f, height = 900f, flipY = true)
+            batch.shader = oldShader
+
+
             batch.end()
         }
 
