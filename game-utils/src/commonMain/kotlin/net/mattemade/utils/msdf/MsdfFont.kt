@@ -32,6 +32,7 @@ class MsdfFont(
         batch: Batch,
         characterLimit: Int = Int.MAX_VALUE,
         tint: Float = batch.colorBits,
+        fillOffsets: ((x: Float, y: Float, width: Float, height: Float) -> FloatArray)? = null
     ) {
         var cursorX = x
         var cursorY = y + (lineHeight - descender) * scale
@@ -46,13 +47,18 @@ class MsdfFont(
                 cursorY += lineHeight * scale
             } else {
                 specs[it]?.let { spec ->
+                    val xPos = cursorX + spec.quadLeftBound * scale
+                    val yPos = cursorY + spec.quadBottomBound * scale
+                    val width = spec.quadWidth * scale
+                    val height = spec.quadHeight * scale
                     batch.draw(
                         slice = spec.slice,
-                        x = cursorX + spec.quadLeftBound * scale,
-                        y = cursorY + spec.quadBottomBound * scale,
-                        width = spec.quadWidth * scale,
-                        height = spec.quadHeight * scale,
+                        x = xPos,
+                        y = yPos,
+                        width = width,
+                        height = height,
                         colorBits = tint,
+                        offset = fillOffsets?.invoke(xPos, yPos, width, height)
                     )
                     cursorX += spec.horizontalAdvance * scale
                 }

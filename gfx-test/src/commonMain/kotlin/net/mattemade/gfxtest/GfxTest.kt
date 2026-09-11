@@ -23,6 +23,7 @@ import com.littlekt.util.viewport.ScalingViewport
 import net.mattemade.gfxtest.shader.CrtVhsShader
 import net.mattemade.gfxtest.shader.MsdfBevelEffectShader
 import net.mattemade.gfxtest.shader.MsdfEffectShader
+import net.mattemade.utils.math.fill
 import net.mattemade.utils.msdf.MsdfFont
 import net.mattemade.utils.msdf.MsdfFontRenderer
 import net.mattemade.utils.releasing.Releasing
@@ -191,7 +192,7 @@ class GfxTest(
             bevelShader.fragmentShader.uBaseColor.apply(bevelShader, 0f, 1f, 1f)
             bevelShader.fragmentShader.uOutlineStyle.apply(bevelShader, 1f, 1f, 1f, 0.2f)
             bevelShader.fragmentShader.uBevelStyle.apply(bevelShader, 0.6f, 0.5f)
-            jbMonoFont.draw("text on top\nof CRT", x = 40f, y = 400f, scale = 200f, batch)
+            jbMonoFont.draw("text on top\nof CRT", x = 40f, y = 400f + sin(40f - time)*20f, scale = 200f, batch, fillOffsets = fillFloatingTextOffsets)
 
             batch.shader = oldShader
 
@@ -201,5 +202,20 @@ class GfxTest(
 
         onDispose(::release)
     }
+
+    private val floatingTextOffsets = FloatArray(8) // (top left), (bottom left), (bottom right), (top right)
+    private val fillFloatingTextOffsets : ((x: Float, y: Float, width: Float, height: Float) -> FloatArray) = { x: Float, y: Float, width: Float, height: Float ->
+        val leftWave = x.waving
+        val rigthWave = (x + width).waving
+        floatingTextOffsets.fill(
+            0f, leftWave,
+            0f, leftWave,
+            0f, rigthWave,
+            0f, rigthWave,
+        )
+        floatingTextOffsets
+    }
+
+    private val Float.waving: Float get() = sin(this + time) * 20f
 
 }
