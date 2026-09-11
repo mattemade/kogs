@@ -56,6 +56,7 @@ object CrtVhsShader {
 
             uniform sampler2D u_texture;
             uniform float u_time;
+            uniform float u_strength;
             uniform vec2 u_resolution;
 
             varying vec4 v_color;
@@ -64,7 +65,7 @@ object CrtVhsShader {
             // CRT screen curve
             vec2 curve(vec2 uv) {
                 uv = (uv - 0.5) * 2.0; // [0.0, 1.0] -> [-1.0, 1.0]
-                uv *= 1.0 + pow((abs(uv.yx) / 5.0), vec2(2.0));
+                uv *= 1.0 + pow((abs(uv.yx) / 5.0), vec2(2.0)) * u_strength;
                 uv = (uv / 2.0) + 0.5;  // [-1.0, 1.0] -> [0.0, 1.0] 
                 return uv;
             }
@@ -93,10 +94,10 @@ object CrtVhsShader {
                 }
                 
                 vec2 distorted_uv = uv;
-                distorted_uv.x += tape_tearing;
+                distorted_uv.x += tape_tearing * u_strength;
 
                 // chromatic aberration
-                float aberration_shift = 0.003 + (sin(u_time * 2.0) * 0.001);
+                float aberration_shift = (0.003 + (sin(u_time * 2.0) * 0.001)) * u_strength;
                 float col_r = texture2D(u_texture, vec2(distorted_uv.x + aberration_shift, distorted_uv.y)).r;
                 float col_g = texture2D(u_texture, distorted_uv).g;
                 float col_b = texture2D(u_texture, vec2(distorted_uv.x - aberration_shift, distorted_uv.y)).b;
@@ -104,23 +105,23 @@ object CrtVhsShader {
 
                 // simple CRT scanlines shadow mask
                 float scanline_shadow = sin(distorted_uv.y * u_resolution.y * 1.5) * 0.15;
-                color -= scanline_shadow;
+                color -= scanline_shadow * u_strength;
 
                 // red color bleed
-                color.r += texture2D(u_texture, distorted_uv - vec2(0.005, 0.0)).r * 0.1;
+                color.r += texture2D(u_texture, distorted_uv - vec2(0.005, 0.0)).r * 0.1 * u_strength;
                 
                 // boost contrast eaten by scanlines
-                color *= 1.15;
+                color *= 1.0 + 0.15 * u_strength;
 
                 // analogue grain
                 float grain = (random(distorted_uv * u_time) - 0.5) * 0.05;
-                color += grain;
+                color += grain * u_strength;
 
                 // vignette
                 vec2 vignette_uv = uv * (1.0 - uv.yx);
                 float vignette_factor = vignette_uv.x * vignette_uv.y * 15.0;
                 vignette_factor = clamp(pow(vignette_factor, 0.25), 0.0, 1.0);
-                color *= vignette_factor;
+                color *= 1.0 + (vignette_factor - 1.0) * u_strength;
 
                 gl_FragColor = vec4(color, v_color.a);
             }
@@ -128,9 +129,10 @@ object CrtVhsShader {
 
         val uTexture = ShaderParameter.UniformSample2D("u_texture")
         val uTime = ShaderParameter.UniformFloat("u_time")
+        val uStrength = ShaderParameter.UniformFloat("u_strength")
         val uResolution = ShaderParameter.UniformVec2("u_resolution")
 
         override val parameters: LinkedHashSet<ShaderParameter> =
-            linkedSetOf(uTexture, uTime, uResolution)
+            linkedSetOf(uTexture, uTime, uStrength, uResolution)
     }
 }
