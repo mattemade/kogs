@@ -81,7 +81,7 @@ object MsdfBevelEffectShader {
                 return sd * dot(unitRange, 0.5 * screenTexSize);
             }
             
-            float distance(vec2 uv) {
+            float sdistance(vec2 uv) {
                 vec4 sampleColor = texture(u_texture, uv);
                 return median(sampleColor.r, sampleColor.g, sampleColor.b) - 0.5;
             }
@@ -90,10 +90,10 @@ object MsdfBevelEffectShader {
                 vec2 texel_size = 1.0 / vec2(textureSize(u_texture, 0));
                 vec2 offset = texel_size * 1.5;
                 
-                float right = distance(uv + vec2(offset.x, 0.0));
-                float left  = distance(uv - vec2(offset.x, 0.0));
-                float up    = distance(uv + vec2(0.0, offset.y));
-                float down  = distance(uv - vec2(0.0, offset.y));
+                float right = sdistance(uv + vec2(offset.x, 0.0));
+                float left  = sdistance(uv - vec2(offset.x, 0.0));
+                float up    = sdistance(uv + vec2(0.0, offset.y));
+                float down  = sdistance(uv - vec2(0.0, offset.y));
                 
                 // smooth spatial derivatives
                 float dx = (right - left) / (2.0 * offset.x);
@@ -112,7 +112,7 @@ object MsdfBevelEffectShader {
                 vec2 displacement = vec2(random(vec2(v_texCoords.y, 0.0)) - 0.5, random(vec2(0.0, v_texCoords.x)) - 0.5);// * u_time;
                 vec2 displaced_coord = v_texCoords + displacement * v_displaceEffect;
                 
-                float sd = distance(displaced_coord);
+                float sd = sdistance(displaced_coord);
                 float letter_px_dist = screenPxDistance(sd, displaced_coord); // antialiased
                 float letter_alpha = clamp(letter_px_dist + 0.5, 0.0, 1.0);
                 float px_dist = screenPxDistance(sd + u_outlineStyle.a, displaced_coord); // increased by outline width

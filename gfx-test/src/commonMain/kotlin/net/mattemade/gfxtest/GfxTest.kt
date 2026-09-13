@@ -192,7 +192,8 @@ class GfxTest(
             bevelShader.fragmentShader.uBaseColor.apply(bevelShader, 0f, 1f, 1f)
             bevelShader.fragmentShader.uOutlineStyle.apply(bevelShader, 1f, 1f, 1f, 0.2f)
             bevelShader.fragmentShader.uBevelStyle.apply(bevelShader, 0.6f, 0.5f)
-            jbMonoFont.draw("text on top\nof CRT", x = 40f, y = 400f + sin(40f - time)*20f, scale = 200f, batch, fillOffsets = fillFloatingTextOffsets)
+            //jbMonoFont.draw("WWWWWWWWWWWWWWW", x = 40f, y = 400f, scale = 200f, batch, fillOffsets = fillFloatingTextOffsets)
+            jbMonoFont.draw("text on top\nof CRT", x = 40f, y = 400f, scale = 200f, batch, fillOffsets = fillFloatingTextOffsets)
 
             batch.shader = oldShader
 
@@ -206,7 +207,7 @@ class GfxTest(
     private val floatingTextOffsets = FloatArray(8) // (top left), (bottom left), (bottom right), (top right)
     private val fillFloatingTextOffsets : ((x: Float, y: Float, width: Float, height: Float) -> FloatArray) = { x: Float, y: Float, width: Float, height: Float ->
         val leftWave = x.waving
-        val rigthWave = (x + width).waving
+        val rigthWave = (x + width).waving// - x.waving
         floatingTextOffsets.fill(
             0f, leftWave,
             0f, leftWave,
@@ -216,6 +217,6 @@ class GfxTest(
         floatingTextOffsets
     }
 
-    private val Float.waving: Float get() = sin(this + time) * 20f
+    private val Float.waving: Float get() = sin(this * 100f + time * 10) * 20f
 
 }
